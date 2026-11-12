@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mesa da Glopel</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Courier+Prime&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fbf8f1;--paper2:#f1ece0;--ink:#2b2b2b;--muted:#7a746a;--red:#c0392b;--blue:#2c5d9e;--green:#2e7d4f;--globo:#1f4fa3}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:#1b1612;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;color:#f5ead8}
+header h1{font:700 30px Caveat,cursive;margin:0}
+header .sub{opacity:.75;font-size:13px}
+header .sp{flex:1}
+.search{background:#f5efe4;border:none;border-radius:20px;padding:8px 14px;font:14px Inter;width:200px}
+.hint{color:#cbbda6;font-size:12px;text-align:center;margin:0 0 8px}
+
+/* ================= CENA ================= */
+.wrap{max-width:1100px;margin:0 auto;padding:0 10px 30px}
+.stage{position:relative;width:100%;aspect-ratio:1000/1000;container-type:inline-size;overflow:hidden;border-radius:10px;
+  background:
+   linear-gradient(180deg,transparent 0 46%,rgba(0,0,0,.25) 46% 47%,transparent 47%),
+   repeating-linear-gradient(93deg,rgba(0,0,0,.06) 0 2px,transparent 2px 10px) 0 46%/100% 54% no-repeat,
+   linear-gradient(180deg,transparent 46%,#9a6a42 46%,#7c5130),
+   linear-gradient(90deg,#d9d6cf 0 9%,#7a4a26 9% 22%,#e8e4dc 22%);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+/* caixa da Daiane */
+.cx{left:1%;top:49%;width:21%;height:31%;border-radius:1cqw;z-index:4;
+  background:linear-gradient(160deg,rgba(40,40,46,.82),rgba(20,20,26,.9));box-shadow:0 1.4cqw 2cqw rgba(0,0,0,.55),inset 0 0 0 .3cqw rgba(255,255,255,.08)}
+.cx .lid{position:absolute;left:-3%;right:-3%;top:-4%;height:12%;border-radius:1cqw;background:linear-gradient(rgba(70,70,80,.9),rgba(30,30,36,.95));box-shadow:0 .4cqw .6cqw rgba(0,0,0,.5)}
+.cx .in{position:absolute;left:8%;right:8%;top:16%;height:70%;background:var(--paper);opacity:.38;transform:rotate(-3deg)}
+.cx .in.b{transform:rotate(4deg);top:22%;opacity:.3}
+/* foto 3x4 */
+.foto{left:50%;top:35%;width:6.5%;height:8.5%;background:#fff;padding:.4cqw;transform:rotate(-6deg);z-index:9;box-shadow:0 .4cqw .6cqw rgba(0,0,0,.45);cursor:default}
+.foto div{width:100%;height:100%;background:radial-gradient(circle at 50% 38%,#b98b6b 0 22%,transparent 23%),radial-gradient(ellipse at 50% 110%,#2b3a55 0 45%,transparent 46%),#dfe6ee}
+.foto:hover{filter:none}
+/* mouse */
+.mouse{position:absolute;left:70%;top:85%;width:6.5%;height:10%;border-radius:45% 45% 48% 48%;background:linear-gradient(#2a2a2a,#0e0e0e);box-shadow:0 .8cqw 1cqw rgba(0,0,0,.5);transform:rotate(8deg);z-index:40}
+.mouse::after{content:"";position:absolute;left:48%;top:6%;width:4%;height:30%;background:#000}
+.mouse::before{content:"";position:absolute;left:50%;top:-55%;width:.4cqw;height:60%;background:#111;transform:translateX(-50%)}
+.obj{position:absolute;cursor:pointer;transition:transform .18s ease, filter .18s ease}
+.obj:hover,.obj:focus{filter:brightness(1.08) drop-shadow(0 0 1.2cqw rgba(255,214,90,.9));outline:none}
+.lbl{position:absolute;z-index:30;background:#ffd54a;color:#222;font:700 2.4cqw Caveat,cursive;padding:.2cqw 1cqw;border-radius:.5cqw;
+  box-shadow:0 .4cqw .8cqw rgba(0,0,0,.35);white-space:nowrap;pointer-events:none}
+.badge{position:absolute;z-index:31;background:var(--red);color:#fff;font:700 1.5cqw Inter;border-radius:2cqw;padding:.3cqw .8cqw;pointer-events:none}
+.badge.zero{background:#555}
+.dim{opacity:.35}
+
+/* estante preta */
+.shelf{position:absolute;left:23%;right:2%;top:42%;height:24%;background:linear-gradient(#0f0f10,#1d1d1f 70%,#0b0b0b);
+  clip-path:polygon(0 6%,100% 0,100% 100%,0 100%);box-shadow:0 0 0 #000}
+.shelf-edge{position:absolute;left:23%;right:2%;top:66%;height:2%;background:#2a2a2c}
+.lower{position:absolute;left:23%;right:2%;top:68%;height:14%;background:linear-gradient(#060606,#151515);box-shadow:0 1.5cqw 2cqw rgba(0,0,0,.5)}
+.lower::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12%;background:#2a2a2c}
+
+/* monitor */
+.monitor{left:34%;top:1%;width:62%;height:39%;background:#0d0d0d;border-radius:1.2cqw;padding:1.4cqw 1.4cqw 3.6cqw;transform:rotate(4deg)}
+.monitor .brand{position:absolute;left:3cqw;bottom:.8cqw;color:#bbb;font:800 1.6cqw Inter;letter-spacing:.05em}
+.screen{width:100%;height:100%;background:#f7f9fc;border-radius:.4cqw;overflow:hidden;font-size:1.5cqw;display:flex;flex-direction:column}
+.screen .bar{background:#1f2a44;color:#fff;padding:.6cqw 1cqw;font-weight:700;display:flex;gap:1cqw;align-items:center}
+.screen .bar .dot{width:1cqw;height:1cqw;border-radius:50%;background:#4cd37a}
+.screen .row{display:flex;justify-content:space-between;padding:.8cqw 1.2cqw;border-bottom:1px solid #e3e7ee}
+.screen .row b{font-weight:600}
+.screen .row .v{font-family:'Courier Prime',monospace}
+.screen .foot{margin-top:auto;padding:.7cqw 1.2cqw;color:#5b6b85;font-size:1.3cqw}
+.stand{position:absolute;left:58%;top:38%;width:14%;height:5.5%;background:linear-gradient(#1a1a1a,#0a0a0a);border-radius:0 0 1cqw 1cqw;transform:rotate(4deg)}
+
+/* porta-canetas + caneca */
+.pens{left:4%;top:32%;width:10%;height:13%;background:linear-gradient(#2d2a27,#151311);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.pens::before{content:"";position:absolute;left:30%;top:-30%;width:6%;height:50%;background:#2c5d9e;transform:rotate(-8deg);box-shadow:1.4cqw .4cqw 0 #c0392b,2.6cqw -.2cqw 0 #222}
+.mug{left:12%;top:36%;width:10%;height:10%;border-radius:50%;background:radial-gradient(circle,#3a2414 0 38%,#f3f0ea 40% 70%,transparent 71%);cursor:default}
+.mug:hover{filter:none}
+
+/* pilha de pedidos */
+.pedidos{left:24%;top:46%;width:28%;height:17%}
+.pedidos .sh{position:absolute;inset:0;background:var(--paper);box-shadow:0 .4cqw .8cqw rgba(0,0,0,.4);border-radius:.3cqw}
+.ped-top{padding:1.4cqw 1.6cqw;overflow:hidden}
+.ped-top .logo{font:800 2.6cqw Inter;color:var(--globo);letter-spacing:-.02em}
+.ped-top .logo small{display:block;font:700 1.1cqw Inter;letter-spacing:.25em;color:#555}
+.ped-top .tt{font:800 2cqw Inter;color:var(--globo);margin-top:.6cqw}
+.ped-top .ln{height:.5cqw;background:#dcd5c6;margin:.8cqw 0;width:85%}
+.flyer{position:absolute;right:-6%;top:-8%;width:52%;height:62%;background:linear-gradient(#e9e4d8,#cfc6b1);transform:rotate(14deg);
+  box-shadow:0 .4cqw .8cqw rgba(0,0,0,.35);padding:1cqw;font:800 1.5cqw Inter;color:#3a5a2a;line-height:1.1}
+.flyer i{display:block;margin-top:1cqw;width:6cqw;height:6cqw;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/1.2cqw 1.2cqw}
+
+/* calendário magnético */
+.cal{left:36%;top:47%;width:12%;height:14%;background:#fff;border-radius:.6cqw;transform:rotate(-14deg);box-shadow:0 .5cqw 1cqw rgba(0,0,0,.45);overflow:hidden;z-index:6}
+.cal .top{background:#e8642c;color:#fff;font:800 1.6cqw Inter;padding:.5cqw .8cqw}
+.cal .mon{background:#c62828;color:#fff;font:800 1.2cqw Inter;text-align:center;padding:.2cqw}
+.cal .g{display:grid;grid-template-columns:repeat(7,1fr);font:700 1.05cqw Inter;text-align:center;padding:.3cqw;gap:.15cqw}
+.cal .g span.h{background:#ffe08a;border-radius:.3cqw}
+
+/* peso de engrenagem + urgentes */
+.urg-paper{left:50%;top:56%;width:13%;height:8%;background:var(--paper);transform:rotate(-6deg);box-shadow:0 .3cqw .6cqw rgba(0,0,0,.4)}
+.gear{left:51%;top:48%;width:11%;height:11%;z-index:8;border-radius:50%;
+  background:radial-gradient(circle,#0c0c0c 0 28%,#3b3631 30% 55%,#2a2622 57% 66%,transparent 67%),
+  repeating-conic-gradient(#4a443c 0 6deg,transparent 6deg 12deg);
+  -webkit-mask:radial-gradient(circle,#000 70%,transparent 71%);mask:radial-gradient(circle,#000 70%,transparent 71%);
+  box-shadow:0 1cqw 1.4cqw rgba(0,0,0,.6)}
+
+/* bloquinho amarrado */
+.bloco{left:67%;top:44%;width:27%;height:21%;transform:rotate(9deg);z-index:7}
+.bloco .pg{position:absolute;inset:0;background:#fff;border-radius:.3cqw;box-shadow:0 .3cqw .5cqw rgba(0,0,0,.25)}
+.bloco .front{padding:1.2cqw 1.6cqw;font:700 1.3cqw Inter;color:#444;overflow:hidden}
+.bloco .front .nf{font:800 1.8cqw Inter;color:#333;letter-spacing:.04em}
+.bloco .front .ln{height:.45cqw;background:#e2dccd;margin:.7cqw 0}
+.bloco .front .grid{height:4cqw;margin-top:.6cqw;background:repeating-linear-gradient(90deg,#ddd 0 1px,transparent 1px 3cqw),repeating-linear-gradient(#ddd 0 1px,transparent 1px 1cqw)}
+.bloco .cord{position:absolute;left:-3%;right:-3%;top:58%;height:1cqw;background:linear-gradient(#3a2418,#1a0f09);transform:rotate(-14deg);border-radius:1cqw;box-shadow:0 .3cqw .4cqw rgba(0,0,0,.5);z-index:3}
+.recado{left:70%;top:58%;width:7%;height:6%;background:#e6ff6a;transform:rotate(-4deg);z-index:9;box-shadow:0 .3cqw .5cqw rgba(0,0,0,.35);font:700 1.4cqw Caveat,cursive;padding:.4cqw;color:#333}
+
+/* prateleira de baixo */
+.prat{left:24%;right:3%;top:69%;height:12%}
+.prat .stuff{position:absolute;bottom:8%;height:85%;background:var(--paper);box-shadow:0 -.2cqw .4cqw rgba(0,0,0,.4)}
+.kbd{position:absolute;left:16%;top:84%;width:48%;height:13%;border-radius:1cqw;transform:rotate(-3deg);pointer-events:none;z-index:40;
+  background:linear-gradient(90deg,#111 0 .35cqw,transparent .35cqw) 0 0/2.6cqw 2.6cqw,linear-gradient(#111 0 .35cqw,transparent .35cqw) 0 0/2.6cqw 2.6cqw,#2e2e2e;box-shadow:0 1cqw 1.4cqw rgba(0,0,0,.55),inset 0 0 0 .6cqw #111}
+
+#scene{position:relative;width:100%;height:min(78vh,820px);border-radius:10px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.6);touch-action:none}
+#scene canvas{display:block}
+#labels{position:absolute;inset:0;pointer-events:none}
+.l3{position:absolute;left:0;top:0;pointer-events:auto;border:none;cursor:pointer;background:#ffd54a;color:#222;font:700 20px Caveat,cursive;
+  padding:2px 10px;border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.4);white-space:nowrap;transition:background .15s}
+.l3 b{font:700 12px Inter;background:#c0392b;color:#fff;border-radius:10px;padding:1px 7px;margin-left:4px;vertical-align:2px}
+.l3 b.z{background:#555}
+.l3.hot,.l3:hover{background:#fff}
+.reset{position:absolute;right:12px;bottom:12px;z-index:5;opacity:.85}
+@media (max-width:640px){.l3{font-size:16px;padding:1px 7px}#scene{height:70vh}}
+/* ================= OVERLAY ================= */
+.overlay{position:fixed;inset:0;background:rgba(20,14,8,.78);backdrop-filter:blur(2px);display:none;z-index:50;overflow:auto}
+.overlay.on{display:block}
+.ov-head{display:flex;align-items:center;gap:12px;padding:16px 22px;color:#fff;position:sticky;top:0;background:rgba(20,14,8,.7);z-index:2;flex-wrap:wrap}
+.ov-head h2{font:700 32px Caveat,cursive;margin:0}
+.ov-head .sp{flex:1}
+.btn{border:none;border-radius:8px;padding:9px 14px;font:600 14px Inter;cursor:pointer;background:#fff;color:#222;box-shadow:0 2px 5px rgba(0,0,0,.3)}
+.btn.ok{background:var(--green);color:#fff}
+.btn.ghost{background:transparent;color:#fff;box-shadow:none;border:1px solid rgba(255,255,255,.5)}
+.btn:disabled{opacity:.35}
+.spread{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:24px;padding:14px 26px 60px}
+.card{background:linear-gradient(var(--paper),var(--paper2));min-height:230px;padding:16px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.45);transition:transform .15s;position:relative;animation:deal .35s ease both}
+.card:hover{transform:translateY(-6px) rotate(0)!important}
+@keyframes deal{from{opacity:0;transform:translateY(-40px) scale(.9)}}
+.card .kind{font:700 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card h3{margin:6px 0 4px;font:700 16px Inter}
+.card .who{font-size:13px;color:#444}
+.card .val{font:700 20px 'Courier Prime',monospace;margin-top:12px}
+.card .date{font-size:12px;color:var(--muted);margin-top:4px}
+.stamp{position:absolute;right:12px;bottom:14px;font:700 13px Inter;letter-spacing:.06em;border:2px solid currentColor;padding:2px 8px;border-radius:4px;transform:rotate(-10deg);opacity:.8}
+.stamp.late{color:var(--red)}.stamp.new{color:var(--blue)}.stamp.done{color:var(--green)}
+.note-hand{font:500 19px Caveat,cursive;color:var(--blue);margin-top:10px}
+.bundles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:22px;padding:20px 26px 60px}
+.bundle{background:var(--paper);min-height:150px;padding:14px;cursor:pointer;position:relative;box-shadow:0 6px 0 #e6dfcf,0 12px 0 #d9d1bf,0 16px 20px rgba(0,0,0,.5);transition:transform .15s}
+.bundle:hover{transform:translateY(-6px)}
+.bundle .rub{position:absolute;left:-4px;right:-4px;top:55%;height:9px;background:#b5442f;border-radius:4px}
+.bundle h3{font:700 26px Caveat,cursive;margin:0}
+.bundle .n{font:600 13px Inter;color:var(--muted)}
+.docview{display:flex;flex-direction:column;align-items:center;padding:10px 16px 60px}
+.page{width:min(720px,100%);min-height:820px;background:var(--paper);padding:46px 52px;box-shadow:0 18px 40px rgba(0,0,0,.55);font-family:'Courier Prime',monospace;font-size:14px;position:relative}
+.page h1{font:700 22px Inter;margin:0 0 4px}
+.page .meta{color:var(--muted);font:13px Inter;margin-bottom:22px}
+.page table{width:100%;border-collapse:collapse;margin:16px 0}
+.page td,.page th{border-bottom:1px dashed #cfc7b6;padding:7px 4px;text-align:left}
+.page .big{font:700 26px 'Courier Prime',monospace}
+.page .barc{height:46px;margin-top:30px;background:repeating-linear-gradient(90deg,#222 0 2px,transparent 2px 4px,#222 4px 5px,transparent 5px 8px)}
+.page .placeholder{margin-top:26px;padding:12px;border:2px dashed #cbbfa6;color:var(--muted);font:13px Inter}
+.tools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:0 0 18px;width:min(720px,100%)}
+/* calendário grande */
+.bigcal{width:min(760px,100%);margin:10px auto 60px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.bigcal .t{background:#e8642c;color:#fff;font:800 22px Inter;padding:14px 18px}
+.bigcal .g{display:grid;grid-template-columns:repeat(7,1fr)}
+.bigcal .g div{min-height:84px;border:1px solid #eee;padding:6px;font:600 13px Inter;cursor:pointer;position:relative}
+.bigcal .g div.hd{min-height:auto;background:#c62828;color:#fff;text-align:center;cursor:default}
+.bigcal .g div.today{background:#fff7d6}
+.bigcal .chip{display:block;margin-top:3px;font:600 11px Inter;padding:2px 5px;border-radius:4px;background:#e3f2e6;color:#1d5b33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bigcal .chip.p{background:#fde3e0;color:#8e2418}
+/* bloquinho aberto */
+.notepad{width:min(560px,100%);margin:10px auto 60px;background:repeating-linear-gradient(#fff 0 34px,#cfe0f5 34px 35px);min-height:560px;padding:40px 36px;
+  box-shadow:0 18px 40px rgba(0,0,0,.55);font:500 30px/35px Caveat,cursive;color:#1d3f8a;outline:none;white-space:pre-wrap;border-top:22px solid #8a5a34}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font:600 14px Inter;opacity:0;transition:opacity .2s;z-index:99;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:640px){.search{width:120px}header h1{font-size:24px}.page{padding:24px 20px;min-height:560px}.notepad{font-size:24px}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<header>
+  <h1>Mesa da Glopel</h1><span class="sub" id="today"></span><span class="sp"></span>
+  <input class="search" id="q" placeholder="🔍 procurar papel…">
+</header>
+<p class="hint">Arraste pra girar · role pra aproximar · clique em qualquer coisa · papéis de exemplo</p>
+<div class="wrap"><div id="scene"><div id="labels"></div><button class="btn reset" id="resetCam">↺ vista</button></div></div>
+<div class="overlay" id="ov"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Onde cada papel mora =====
+   entrada  = tela do computador (o que o robô trouxe)
+   pedidos  = pilha da esquerda (bloco de pedidos Globo)
+   urgente  = embaixo da engrenagem
+   prateleira de baixo = maços: receber, pagar, banco, notas, contador, duvidas, arquivo
+   bloquinho amarrado = anotações dela
+   calendário = vencimentos do mês                                    */
+const PLACES={
+  entrada:{name:'Tela · Entrada do robô'}, daiane:{name:'Caixa da Daiane · pedidos pra cadastrar'},
+  pedidos:{name:'Pedidos'}, urgente:{name:'Urgente (embaixo do peso)'}, notas:{name:'Notas fiscais (elástico)'},
+  receber:{name:'A receber',shelf:1}, pagar:{name:'A pagar',shelf:1}, banco:{name:'Banco',shelf:1},
+  leads:{name:'LEADS',shelf:1}, contador:{name:'Pro contador',shelf:1}, duvidas:{name:'Ver depois',shelf:1}, arquivo:{name:'Arquivo (feito)',shelf:1}
+};
+const DOCS0=[
+ {id:1,pile:'entrada',kind:'Boleto pago',title:'Baixa Itaú',who:'Panificadora São José',val:1840,date:'2026-11-11',stamp:'new',note:'robô achou o pagamento'},
+ {id:2,pile:'entrada',kind:'Pix recebido',title:'Pix Itaú',who:'Mercado Bom Preço',val:620.5,date:'2026-11-11',stamp:'new'},
+ {id:3,pile:'entrada',kind:'Pedido',title:'Pedido 4418',who:'Padaria Trigo de Ouro',val:2310,date:'2026-11-12',stamp:'new'},
+ {id:4,pile:'urgente',kind:'Duplicata',title:'Parcela 2/3 · Pedido 4302',who:'Supermercado Real',val:3120,date:'2026-11-05',stamp:'late',note:'ligar hoje'},
+ {id:5,pile:'urgente',kind:'Boleto',title:'Papel kraft · bobinas',who:'Fornecedor de papel',val:8900,date:'2026-11-15',due:'p'},
+ {id:6,pile:'receber',kind:'Duplicata',title:'Parcela 1/2 · Pedido 4377',who:'Panificadora Bela Vista',val:980,date:'2026-11-18'},
+ {id:7,pile:'receber',kind:'Boleto Bradesco',title:'Pedido 4390',who:'Confeitaria Avenida',val:1450,date:'2026-11-20'},
+ {id:8,pile:'receber',kind:'Duplicata',title:'Parcela 3/3 · Pedido 4211',who:'Mercado Central',val:760,date:'2026-10-28',stamp:'late'},
+ {id:9,pile:'pagar',kind:'Conta',title:'Energia elétrica',who:'Copel',val:1320.4,date:'2026-11-19',due:'p'},
+ {id:10,pile:'pagar',kind:'Boleto',title:'Tinta flexo',who:'Fornecedor de tinta',val:2140,date:'2026-11-25',due:'p'},
+ {id:11,pile:'pedidos',kind:'Pedido',title:'Pedido 4410 · 20 mil saquinhos',who:'Padaria Pão Quente',val:2650,date:'2026-11-10'},
+ {id:12,pile:'pedidos',kind:'Pedido',title:'Pedido 4412 · 8 mil saquinhos',who:'Mercado Bom Preço',val:1080,date:'2026-11-10'},
+ {id:13,pile:'pedidos',kind:'Pedido',title:'Pedido 4415 · 12 mil saquinhos',who:'Panificadora Bela Vista',val:1520,date:'2026-11-11'},
+ {id:14,pile:'notas',kind:'NF-e emitida',title:'NF 18.231',who:'Supermercado Real',val:3120,date:'2026-11-03'},
+ {id:15,pile:'notas',kind:'NF-e recebida',title:'NF 77.010',who:'Fornecedor de papel',val:8900,date:'2026-11-01'},
+ {id:16,pile:'banco',kind:'Extrato',title:'Extrato Itaú · outubro',who:'Itaú',val:null,date:'2026-10-31'},
+ {id:17,pile:'banco',kind:'Borderô',title:'Desconto de duplicatas',who:'Itaú',val:5400,date:'2026-11-06'},
+ {id:18,pile:'contador',kind:'Folha',title:'Folha de outubro',who:'Contador',val:null,date:'2026-11-05'},
+ {id:20,pile:'daiane',kind:'Pedido a cadastrar',title:'Pedido manual · 15 mil saquinhos',who:'Padaria Nova Esperança',val:1980,date:'2026-11-11',note:'cliente novo?'},
+ {id:21,pile:'daiane',kind:'Pedido a cadastrar',title:'Pedido manual · 6 mil saquinhos',who:'Mercado Bom Preço',val:810,date:'2026-11-12'},
+ {id:22,pile:'daiane',kind:'Pedido a cadastrar',title:'Pedido por telefone',who:'Confeitaria Avenida',val:1200,date:'2026-11-12'},
+ {id:23,pile:'notas',kind:'NF-e emitida',title:'NF 18.240',who:'Padaria Pão Quente',val:2650,date:'2026-11-10'},
+ {id:24,pile:'leads',kind:'Lead',title:'Pediu orçamento · 10 mil saquinhos',who:'Padaria Sol Nascente',val:null,date:'2026-11-09',note:'retornar ligação'},
+ {id:25,pile:'leads',kind:'Lead',title:'Indicação de cliente',who:'Rede Pão & Cia (3 lojas)',val:null,date:'2026-11-11'},
+ {id:19,pile:'duvidas',kind:'Dúvida',title:'"DINHEIRO" caiu no banco?',who:'Mercado Central',val:400,date:'2026-11-09',note:'perguntar'},
+];
+const NOTES0='Duplicatas\nLigar Supermercado Real\nPedir bobina até sexta\nCopel dia 19\n\n';
+
+const KEY='mesa-glopel-v4';
+let state={docs:DOCS0,notes:NOTES0};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.docs)state=s}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+const $=s=>document.querySelector(s);
+const fmt=v=>v==null?'':v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dm=d=>d.slice(8,10)+'/'+d.slice(5,7);
+const rnd=i=>((i*37)%9-4)*0.8;
+const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1800)};
+const TODAY=new Date();
+$('#today').textContent=TODAY.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+const q=()=>$('#q').value.trim().toLowerCase();
+const match=d=>!q()||(d.title+d.who+d.kind).toLowerCase().includes(q());
+const inPile=id=>state.docs.filter(d=>d.pile===id);
+const shelfIds=Object.keys(PLACES).filter(k=>PLACES[k].shelf);
+
+/* ================= CENA 3D ================= */
+const sceneEl=$('#scene');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+sceneEl.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color('#1b1612');
+const camera=new THREE.PerspectiveCamera(38,1,1,2000);
+camera.position.set(0,150,108);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.target.set(0,6,-12); controls.enableDamping=true;
+controls.minPolarAngle=0.05; controls.maxPolarAngle=1.15;
+controls.minAzimuthAngle=-0.9; controls.maxAzimuthAngle=0.9;
+controls.minDistance=90; controls.maxDistance=320; controls.enablePan=false;
+
+scene.add(new THREE.HemisphereLight('#fff6e6','#3a2a1c',0.75));
+const sun=new THREE.DirectionalLight('#ffffff',0.75); sun.position.set(-60,160,90); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-110,right:110,top:90,bottom:-90});
+scene.add(sun);
+
+/* helpers */
+function ctex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');draw(g,w,h);
+  const t=new THREE.CanvasTexture(c);t.anisotropy=8;t.encoding=THREE.sRGBEncoding;t._c=c;t._draw=draw;return t}
+function redraw(t){const g=t._c.getContext('2d');g.clearRect(0,0,t._c.width,t._c.height);t._draw(g,t._c.width,t._c.height);t.needsUpdate=true}
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o));
+function box(w,h,d,mat,x,y,z,ry=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.rotation.y=ry;m.castShadow=m.receiveShadow=true;scene.add(m);return m}
+const clickables=[];
+function tag(objs,go){[].concat(objs).forEach(o=>{o.userData.go=go;clickables.push(o)})}
+renderer.outputEncoding=THREE.sRGBEncoding;
+
+/* mesa de madeira + parede */
+const woodT=ctex(1024,512,(g,w,h)=>{g.fillStyle='#93643d';g.fillRect(0,0,w,h);
+  for(let i=0;i<260;i++){g.strokeStyle=`rgba(${60+Math.random()*40},${35+Math.random()*25},15,${.08+Math.random()*.12})`;g.lineWidth=1+Math.random()*3;
+    const y=Math.random()*h;g.beginPath();g.moveTo(0,y);g.bezierCurveTo(w*.3,y+Math.random()*16-8,w*.7,y+Math.random()*16-8,w,y+Math.random()*10-5);g.stroke()}});
+box(190,4,95,M('#ffffff',{map:woodT}),0,-2,-2);
+
+/* buraco na parede → outra sala (chão + pessoa low-poly ao fundo) */
+const wallM=M('#e6e1d8');
+const W={x0:-80,x1:-48,y0:21,y1:53}; // abertura
+box(100,163,3,wallM,-130,6.5,-51);                       // esquerda
+box(228,163,3,wallM,66,6.5,-51);                        // direita
+box(32,96,3,wallM,-64,-27,-51);                           // embaixo
+box(32,35,3,wallM,-64,70.5,-51);                          // em cima
+const roomT=ctex(512,512,(g,w,h)=>{g.fillStyle='#cdbfa8';g.fillRect(0,0,w,h);g.strokeStyle='#b4a58c';g.lineWidth=3;
+  for(let i=0;i<=8;i++){g.beginPath();g.moveTo(i*64,0);g.lineTo(i*64,h);g.stroke();g.beginPath();g.moveTo(0,i*64);g.lineTo(w,i*64);g.stroke()}});
+roomT.wrapS=roomT.wrapT=THREE.RepeatWrapping;roomT.repeat.set(4,4);
+const floor2=new THREE.Mesh(new THREE.PlaneGeometry(260,200),M('#ffffff',{map:roomT}));floor2.rotation.x=-Math.PI/2;floor2.position.set(-40,-75,-153);floor2.receiveShadow=true;scene.add(floor2);
+box(260,200,2,M('#d9d2c4'),-40,25,-254);box(2,200,200,M('#d4cdbf'),-171,25,-153);box(2,200,200,M('#d4cdbf'),91,25,-153);
+const lamp2=new THREE.PointLight('#fff2dc',.9,320);lamp2.position.set(-60,90,-140);scene.add(lamp2);
+function animWave(){}
+
+/* plataforma preta (gavetas embaixo) */
+const black=M('#151517',{roughness:.5});
+const plat=box(104,2,34,black,-6,13,-23);
+box(2,12,34,black,-57,6,-23); box(2,12,34,black,45,6,-23); box(104,12,2,black,-6,6,-39);
+box(104,1,34,M('#0c0c0c'),-6,0.5,-23);
+const drawerStuff=[];
+const shelfColors=['#fbf8f1','#f3efe4','#fff','#f6f1e6','#fbf8f1','#efe9dc'];
+for(let i=0;i<6;i++){
+  const h=4+((i*7)%6);
+  const m=box(14,h,26,M(shelfColors[i]),-48+i*16.5,1+h/2,-21+(i%2)*2,(Math.random()-.5)*.25);
+  drawerStuff.push(m);
+}
+const red=box(13,.4,24,M('#c0392b'),-33,6.2,-19,.1); const grn=box(13,.4,24,M('#2e7d4f'),15,9.2,-19,-.08);
+tag([...drawerStuff.slice(1),red,grn],'prateleira');tag(drawerStuff[0],'leads');
+const leadsT=ctex(512,80,(g,w,h)=>{g.fillStyle='#f2e7c9';g.fillRect(0,0,w,h);g.strokeStyle='#8a6d3b';g.lineWidth=6;g.strokeRect(3,3,w-6,h-6);
+  g.fillStyle='#222';g.font='900 54px Inter, sans-serif';g.textAlign='center';g.fillText('LEADS',w/2,60)});
+const leadsPlate=new THREE.Mesh(new THREE.PlaneGeometry(13,2),new THREE.MeshStandardMaterial({map:leadsT,roughness:.7}));
+leadsPlate.position.set(-48,13,-5.9);scene.add(leadsPlate);tag(leadsPlate,'leads');
+
+/* monitor */
+const scrT=ctex(1024,600,drawScreen);
+function drawScreen(g,w,h){
+  g.fillStyle='#f7f9fc';g.fillRect(0,0,w,h);
+  g.fillStyle='#1f2a44';g.fillRect(0,0,w,70);
+  g.fillStyle='#4cd37a';g.beginPath();g.arc(36,35,11,0,7);g.fill();
+  g.fillStyle='#fff';g.font='bold 34px Inter, sans-serif';g.fillText('Entrada do robô · hoje',62,47);
+  const ent=state.docs.filter(d=>d.pile==='entrada');
+  g.font='30px Inter, sans-serif';
+  ent.slice(0,6).forEach((d,i)=>{const y=125+i*70;g.fillStyle='#222';g.fillText(d.who,30,y);
+    g.font='28px "Courier Prime", monospace';g.textAlign='right';g.fillText(fmt(d.val),w-30,y);g.textAlign='left';g.font='30px Inter, sans-serif';
+    g.fillStyle='#e3e7ee';g.fillRect(20,y+24,w-40,2)});
+  if(!ent.length){g.fillStyle='#555';g.fillText('Nada novo 🎉',30,130)}
+  g.fillStyle='#5b6b85';g.font='26px Inter, sans-serif';g.fillText(ent.length+' papel(is) novo(s) · clique pra abrir',30,h-26);
+}
+const monG=new THREE.Group(); monG.position.set(0,14,-31); scene.add(monG);
+const base=new THREE.Mesh(new THREE.BoxGeometry(22,1.2,13),M('#0d0d0d',{roughness:.4}));base.position.y=.6;base.castShadow=true;monG.add(base);
+const neck=new THREE.Mesh(new THREE.BoxGeometry(5,16,2.5),M('#0d0d0d'));neck.position.set(0,8,-4);neck.castShadow=true;monG.add(neck);
+const panel=new THREE.Group();panel.position.set(0,26,-3);panel.rotation.x=-0.12;monG.add(panel);
+const bezel=new THREE.Mesh(new THREE.BoxGeometry(64,38,2.4),M('#0b0b0b',{roughness:.35}));bezel.castShadow=true;panel.add(bezel);
+const screen=new THREE.Mesh(new THREE.PlaneGeometry(60,34),new THREE.MeshBasicMaterial({map:scrT}));screen.position.z=1.25;panel.add(screen);
+const logoT=ctex(256,64,(g)=>{g.fillStyle='#0b0b0b';g.fillRect(0,0,256,64);g.fillStyle='#bbb';g.font='bold 40px Inter';g.fillText('BenQ',8,46)});
+const logo=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshBasicMaterial({map:logoT}));logo.position.set(-27,-18.2,1.25);panel.add(logo);
+tag([bezel,screen],'entrada');
+
+/* foto 3x4 na base do monitor */
+const fotoT=ctex(120,160,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#dfe6ee';g.fillRect(8,8,w-16,h-16);
+  g.fillStyle='#2b3a55';g.beginPath();g.ellipse(w/2,h+10,46,58,0,0,7);g.fill();g.fillStyle='#b98b6b';g.beginPath();g.arc(w/2,62,24,0,7);g.fill()});
+const foto=new THREE.Mesh(new THREE.BoxGeometry(3.6,4.8,.15),[M('#fff'),M('#fff'),M('#fff'),M('#fff'),M('#fff',{map:fotoT}),M('#fff')]);
+foto.position.set(-8,16.4,-24.5);foto.rotation.set(-0.35,0.15,0);foto.castShadow=true;scene.add(foto);
+
+/* pilha de pedidos Globo */
+const pedT=ctex(420,600,(g,w,h)=>{g.fillStyle='#fbf8f1';g.fillRect(0,0,w,h);g.fillStyle='#1f4fa3';
+  g.font='bold 22px Inter';g.fillText('E M B A L A G E N S',24,52);g.font='900 62px Inter';g.fillText('GLOBO',22,112);
+  g.font='900 40px Inter';g.fillText('PEDIDO',22,170);g.fillStyle='#ddd5c4';for(let i=0;i<9;i++)g.fillRect(22,210+i*40,w-60-(i%3)*60,8)});
+const pedG=new THREE.Group();pedG.position.set(-34,14,-21);pedG.rotation.y=.28;scene.add(pedG);
+const pedMeshes=[];
+for(let i=0;i<7;i++){const top=i===6;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(21,.35,29.7),top?[M('#fbf8f1'),M('#fbf8f1'),M('#fbf8f1',{map:pedT}),M('#fbf8f1'),M('#fbf8f1'),M('#fbf8f1')]:M(i%2?'#f6f1e6':'#fbf8f1'));
+  m.position.set((Math.random()-.5)*1.5,.2+i*.36,(Math.random()-.5)*1.5);m.rotation.y=(Math.random()-.5)*.12;m.castShadow=m.receiveShadow=true;pedG.add(m);pedMeshes.push(m)}
+const flyT=ctex(300,400,(g,w,h)=>{g.fillStyle='#ddd5c2';g.fillRect(0,0,w,h);g.fillStyle='#3a5a2a';g.font='900 30px Inter';
+  ['FAÇA SEU','PEDIDO DIRETO','PELO NOSSO','APLICATIVO'].forEach((t,i)=>g.fillText(t,18,50+i*36));
+  for(let x=0;x<8;x++)for(let y=0;y<8;y++)if((x*3+y*5)%3)g.fillRect(150+x*14,220+y*14,13,13)});
+const fly=new THREE.Mesh(new THREE.BoxGeometry(15,.2,20),[0,0,0,0,0,0].map((_,i)=>M('#ddd5c2',i===2?{map:flyT}:{})));
+fly.position.set(9,2.7,-6);fly.rotation.y=-.45;fly.castShadow=true;pedG.add(fly);
+tag([...pedMeshes,fly],'pedidos');
+
+/* calendário magnético em cima dos pedidos */
+const calT=ctex(300,330,drawCal);
+function drawCal(g,w,h){g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#e8642c';g.fillRect(0,0,w,70);
+  g.fillStyle='#fff';g.font='bold 34px Inter';g.fillText('calendário',16,48);g.fillStyle='#c62828';g.fillRect(0,70,w,36);
+  g.fillStyle='#fff';g.font='bold 24px Inter';g.fillText('NOVEMBRO 2026',52,97);
+  const due=new Set(state.docs.filter(d=>d.date.startsWith('2026-11')&&d.pile!=='arquivo').map(d=>+d.date.slice(8)));
+  const first=new Date(2026,10,1).getDay();g.font='bold 20px Inter';g.textAlign='center';
+  'DSTQQSS'.split('').forEach((c,i)=>{g.fillStyle='#444';g.fillText(c,24+i*42,134)});
+  for(let d=1;d<=30;d++){const k=d-1+first,cx=24+(k%7)*42,cy=166+Math.floor(k/7)*34;
+    if(due.has(d)){g.fillStyle='#ffd54a';g.fillRect(cx-17,cy-23,34,30)}g.fillStyle=d===TODAY.getDate()&&TODAY.getMonth()===10?'#c0392b':'#222';g.fillText(d,cx,cy)}
+  g.textAlign='left'}
+const cal=new THREE.Mesh(new THREE.BoxGeometry(11,.4,12),[0,0,0,0,0,0].map((_,i)=>M('#fff',i===2?{map:calT}:{})));
+cal.position.set(-26,17.3,-14);cal.rotation.y=.5;cal.castShadow=true;scene.add(cal);tag(cal,'cal');
+
+/* peso: engrenagem + urgentes */
+const urgMeshes=[];
+for(let i=0;i<3;i++){const m=box(16,.3,12,M(i%2?'#f3eee2':'#fbf8f1'),-6+i*.6,14.2+i*.32,-13,-.25+i*.08);urgMeshes.push(m)}
+const gearG=new THREE.Group();gearG.position.set(-6,15.2,-13);scene.add(gearG);
+const steel=M('#3f3a34',{metalness:.7,roughness:.45});
+const ring=new THREE.Mesh(new THREE.CylinderGeometry(6.2,6.2,3,32,1,true),steel);ring.position.y=1.5;gearG.add(ring);
+const gtop=new THREE.Mesh(new THREE.RingGeometry(2.6,6.2,32),steel);gtop.rotation.x=-Math.PI/2;gtop.position.y=3;gearG.add(gtop);
+const hole=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,3,24,1,true),M('#0c0c0c',{side:THREE.DoubleSide}));hole.position.y=1.5;gearG.add(hole);
+for(let i=0;i<20;i++){const t=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,1.6),steel);const a=i/20*Math.PI*2;
+  t.position.set(Math.cos(a)*7.4,.6,Math.sin(a)*7.4);t.rotation.y=-a;gearG.add(t)}
+const flange=new THREE.Mesh(new THREE.CylinderGeometry(7,7,1.2,32),steel);flange.position.y=.6;gearG.add(flange);
+gearG.traverse(o=>{if(o.isMesh)o.castShadow=true});
+tag([...urgMeshes,...gearG.children],'urgente');
+
+/* maço de notas fiscais com elástico */
+const nfT=ctex(420,600,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#333';g.font='900 38px Inter';g.fillText('DANFE',22,58);
+  g.font='bold 22px Inter';g.fillText('Documento Auxiliar da NF-e',22,92);g.strokeStyle='#bbb';g.lineWidth=2;g.strokeRect(20,120,w-40,140);
+  for(let i=0;i<8;i++)g.strokeRect(20,290+i*34,w-40,34);g.beginPath();for(let x=130;x<w-30;x+=90){g.moveTo(x,290);g.lineTo(x,562)}g.stroke()});
+const nfG=new THREE.Group();nfG.position.set(26,14,-19);nfG.rotation.y=-.18;scene.add(nfG);
+const nfMeshes=[];
+for(let i=0;i<14;i++){const topS=i===13;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(16,.3,22),topS?[0,0,0,0,0,0].map((_,k)=>M('#fff',k===2?{map:nfT}:{})):M(i%2?'#ffffff':'#f2efe8'));
+  m.position.set((Math.random()-.5)*1.2,.15+i*.3,(Math.random()-.5)*1.2);m.rotation.y=(Math.random()-.5)*.1;m.castShadow=m.receiveShadow=true;nfG.add(m);nfMeshes.push(m)}
+const elastic=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,48),M('#1a120c',{roughness:.6}));
+elastic.scale.set(8.4,11.4,2.4);elastic.rotation.x=Math.PI/2;elastic.position.y=2.2;elastic.rotation.z=.35;nfG.add(elastic);
+tag([...nfMeshes,elastic],'notas');
+const recT=ctex(200,200,(g,w,h)=>{g.fillStyle='#e6ff6a';g.fillRect(0,0,w,h);g.fillStyle='#1d3f8a';g.font='bold 44px Caveat, cursive';g.fillText('recados',22,70);
+  g.font='34px Caveat, cursive';(state.notes.split('\n')[1]||'').slice(0,14)&&g.fillText(state.notes.split('\n')[1].slice(0,14),18,130)});
+const rec=new THREE.Mesh(new THREE.BoxGeometry(7.5,.1,7.5),[0,0,0,0,0,0].map((_,k)=>M('#e6ff6a',k===2?{map:recT}:{})));
+rec.position.set(30,18.6,-11);rec.rotation.y=.25;rec.castShadow=true;scene.add(rec);tag(rec,'notas-mae');
+
+/* porta-canetas + caneca (à esquerda) */
+const pens=new THREE.Mesh(new THREE.CylinderGeometry(5,5,11,6),M('#221f1c',{roughness:.6}));pens.position.set(-74,5.5,-34);pens.castShadow=true;scene.add(pens);
+[['#2c5d9e',-1,-1],['#c0392b',1.2,.4],['#222',.2,1.4]].forEach(([c,x,z])=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,15,8),M(c));p.position.set(-74+x,10,-34+z);p.rotation.z=x*.06;p.castShadow=true;scene.add(p)});
+const mug=new THREE.Mesh(new THREE.CylinderGeometry(4.2,3.8,9,32),M('#f3f0ea',{roughness:.3}));mug.position.set(-71,4.5,-16);mug.castShadow=true;scene.add(mug);
+const cof=new THREE.Mesh(new THREE.CircleGeometry(3.8,32),M('#3a2414',{roughness:.2}));cof.rotation.x=-Math.PI/2;cof.position.set(-71,8.3,-16);scene.add(cof);
+const handle=new THREE.Mesh(new THREE.TorusGeometry(2.4,.6,8,20,Math.PI),M('#f3f0ea'));handle.position.set(-66.2,4.5,-16);handle.rotation.z=-Math.PI/2;scene.add(handle);
+
+/* caixa da Daiane (à direita da plataforma) */
+const dG=new THREE.Group();dG.position.set(69,0,-20);dG.rotation.y=-.08;scene.add(dG);
+const daiMeshes=[];
+for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(21,.3,29.7),M(i%2?'#f6f1e6':'#fbf8f1'));m.position.set((Math.random()-.5),1+i*.8,(Math.random()-.5));m.rotation.y=(Math.random()-.5)*.15;dG.add(m);daiMeshes.push(m)}
+const glass=new THREE.MeshPhysicalMaterial({color:'#25252c',transparent:true,opacity:.55,roughness:.15,metalness:0,side:THREE.DoubleSide,depthWrite:false});
+const shell=new THREE.Mesh(new THREE.BoxGeometry(24,11,33),glass);shell.position.y=5.5;dG.add(shell);
+const lid=new THREE.Mesh(new THREE.BoxGeometry(25,1.2,34),new THREE.MeshPhysicalMaterial({color:'#1d1d22',transparent:true,opacity:.62,roughness:.1,depthWrite:false}));
+lid.position.set(0,11.6,0);dG.add(lid);
+tag([shell,lid,...daiMeshes],'daiane');
+
+/* teclado + mouse */
+const kbT=ctex(900,300,(g,w,h)=>{g.fillStyle='#111';g.fillRect(0,0,w,h);g.fillStyle='#2b2b2b';
+  for(let r=0;r<5;r++)for(let c=0;c<15;c++){const x=18+c*58,y=18+r*55;g.fillRect(x,y,50,46)}
+  g.fillStyle='#777';g.font='16px Inter';'QWERTYUIOP'.split('').forEach((k,i)=>g.fillText(k,96+i*58,140))});
+box(46,1.6,15,[0,0,0,0,0,0].map((_,k)=>M('#111',k===2?{map:kbT,roughness:.5}:{})),-8,.8,24,.04);
+const mouse=new THREE.Mesh(new THREE.SphereGeometry(1,32,16),M('#151515',{roughness:.35}));mouse.scale.set(3.2,1.6,5);mouse.position.set(30,1.2,25);mouse.rotation.y=-.15;mouse.castShadow=true;scene.add(mouse);
+
+/* rótulos HTML presos no 3D */
+const LBL=[
+  {go:'entrada',  txt:'Entrada do robô', p:[-18,56,-30], pile:'entrada'},
+  {go:'pedidos',  txt:'Pedidos',         p:[-46,20,-34], pile:'pedidos'},
+  {go:'cal',      txt:'Vencimentos',     p:[-24,20,-6]},
+  {go:'urgente',  txt:'Urgente',         p:[-6,22,-13], pile:'urgente'},
+  {go:'notas',    txt:'Notas fiscais',   p:[26,22,-28], pile:'notas'},
+  {go:'notas-mae',txt:'Recados',         p:[33,21,-6]},
+  {go:'daiane',   txt:'Caixa da Daiane', p:[64,16,-20], pile:'daiane'},
+  {go:'prateleira',txt:'Gavetas',        p:[0,4,-5], shelf:true},
+  {go:'leads',    txt:'LEADS',           p:[-48,4,-4], pile:'leads'},
+];
+const lblLayer=$('#labels');
+LBL.forEach(l=>{const e=document.createElement('button');e.className='l3';e.onclick=()=>route(l.go);lblLayer.appendChild(e);l.el=e;l.v=new THREE.Vector3(...l.p)});
+
+function renderStage(){
+  LBL.forEach(l=>{
+    let n=null,list=[];
+    if(l.pile){list=inPile(l.pile);n=list.length}
+    if(l.shelf){list=state.docs.filter(d=>PLACES[d.pile].shelf&&d.pile!=='arquivo'&&d.pile!=='leads');n=list.length}
+    l.el.innerHTML=l.txt+(n!=null?` <b class="${n?'':'z'}">${n}</b>`:'');
+    l.el.style.opacity=q()&&n!=null&&!list.some(match)?.3:1;
+  });
+  redraw(scrT);redraw(calT);redraw(recT);
+}
+
+/* clique + hover */
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let down=null,hovered=null;
+function pick(e){const r=renderer.domElement.getBoundingClientRect();ptr.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(ptr,camera);const h=ray.intersectObjects(clickables,false)[0];return h&&h.object.userData.go}
+renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
+renderer.domElement.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down[0],e.clientY-down[1])<6){const g=pick(e);if(g)route(g)}down=null});
+renderer.domElement.addEventListener('pointermove',e=>{const g=pick(e);renderer.domElement.style.cursor=g?'pointer':'grab';
+  if(g!==hovered){hovered=g;LBL.forEach(l=>l.el.classList.toggle('hot',l.go===g))}});
+
+function resize(){const w=sceneEl.clientWidth,h=sceneEl.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;
+  camera.fov=w<640?52:38;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+const tmp=new THREE.Vector3();
+(function loop(t){requestAnimationFrame(loop);animWave(t||0);controls.update();renderer.render(scene,camera);
+  const w=sceneEl.clientWidth,h=sceneEl.clientHeight;
+  LBL.forEach(l=>{tmp.copy(l.v).project(camera);l.el.style.transform=`translate(-50%,-50%) translate(${(tmp.x*.5+.5)*w}px,${(-tmp.y*.5+.5)*h}px)`})})();
+$('#resetCam').onclick=()=>{camera.position.set(0,150,108);controls.target.set(0,6,-12)};
+
+
+/* ================= VISTAS ================= */
+const ov=$('#ov');
+let back=null;
+function head(title,extra='',backFn=null){
+  back=backFn;
+  return `<div class="ov-head">${backFn?'<button class="btn ghost" id="backBtn">← Voltar</button>':''}<h2>${title}</h2>${extra}<span class="sp"></span><button class="btn" id="closeBtn">Fechar ✕</button></div>`;
+}
+function wire(){ $('#closeBtn').onclick=closeOv; const b=$('#backBtn'); if(b)b.onclick=back; ov.classList.add('on'); }
+
+function openShelf(){
+  ov.innerHTML=head('Gavetas','<span style="opacity:.8">maços embaixo da plataforma</span>')+
+   `<div class="bundles">${shelfIds.map(k=>{const n=inPile(k).length,h=inPile(k).filter(match).length;
+     return `<div class="bundle" data-k="${k}" style="${q()&&!h?'opacity:.4':''}"><h3>${PLACES[k].name}</h3><div class="n">${n} papel(is)</div><div class="rub"></div></div>`}).join('')}</div>`;
+  wire(); ov.querySelectorAll('.bundle').forEach(b=>b.onclick=()=>openPile(b.dataset.k));
+}
+
+let curPile=null;
+function openPile(id){
+  curPile=id;
+  const docs=inPile(id).filter(match);
+  ov.innerHTML=head(PLACES[id].name,`<span style="opacity:.8">${docs.length} papel(is)</span>`,PLACES[id].shelf?openShelf:null)+
+   `<div class="spread">${docs.length?docs.map(card).join(''):'<p style="color:#fff;font-size:18px">Nada aqui 🎉</p>'}</div>`;
+  wire(); ov.querySelectorAll('.card').forEach(c=>c.onclick=()=>openDoc(+c.dataset.id));
+}
+function card(d,i){
+  const st=d.stamp==='late'?'<span class="stamp late">ATRASADO</span>':d.stamp==='new'?'<span class="stamp new">NOVO</span>':d.pile==='arquivo'?'<span class="stamp done">FEITO</span>':'';
+  return `<div class="card" data-id="${d.id}" style="transform:rotate(${rnd(d.id)}deg);animation-delay:${i*40}ms">
+   <div class="kind">${d.kind}</div><h3>${d.title}</h3><div class="who">${d.who}</div>
+   <div class="val">${fmt(d.val)}</div><div class="date">${dm(d.date)}</div>${d.note?`<div class="note-hand">${d.note}</div>`:''}${st}</div>`;
+}
+
+function openDoc(id){
+  const d=state.docs.find(x=>x.id===id), list=inPile(d.pile), idx=list.indexOf(d);
+  ov.innerHTML=head('',`<button class="btn ghost" id="prev" ${idx<=0?'disabled':''}>‹</button><span style="color:#fff">${idx+1} de ${list.length}</span><button class="btn ghost" id="next" ${idx>=list.length-1?'disabled':''}>›</button>`,()=>openPile(d.pile))+
+   `<div class="docview"><div class="tools">
+     <select class="btn" id="mv"><option value="">Pôr em outro lugar…</option>${Object.keys(PLACES).filter(k=>k!==d.pile).map(k=>`<option value="${k}">→ ${PLACES[k].name}</option>`).join('')}</select>
+     ${d.pile!=='urgente'?'<button class="btn" id="urg">⚙ Pôr embaixo do peso</button>':''}
+     ${d.pile!=='arquivo'?'<button class="btn ok" id="done">✓ Feito</button>':''}
+     <button class="btn" id="noteBtn">✎ Anotar</button></div>
+    <div class="page"><h1>${d.kind} — ${d.title}</h1><div class="meta">${d.who} · ${dm(d.date)}</div>
+     <table><tr><th>Item</th><th>Valor</th></tr><tr><td>${d.title}</td><td>${fmt(d.val)||'—'}</td></tr>
+     <tr><td>Cliente / origem</td><td>${d.who}</td></tr><tr><td>Data</td><td>${dm(d.date)}</td></tr></table>
+     ${d.val!=null?`<div class="big">Total ${fmt(d.val)}</div>`:''}
+     ${d.note?`<div class="note-hand" style="font-size:26px">✎ ${d.note}</div>`:''}
+     <div class="placeholder">Aqui entra o papel digitalizado de verdade (PDF/foto do Drive).</div>
+     ${/boleto|duplicata/i.test(d.kind)?'<div class="barc"></div>':''}</div></div>`;
+  wire();
+  $('#prev').onclick=()=>idx>0&&openDoc(list[idx-1].id);
+  $('#next').onclick=()=>idx<list.length-1&&openDoc(list[idx+1].id);
+  $('#mv').onchange=e=>{if(e.target.value){move(d,e.target.value);toast('Foi pra '+PLACES[e.target.value].name);openPile(curPile)}};
+  const u=$('#urg');if(u)u.onclick=()=>{move(d,'urgente');toast('Embaixo do peso ⚙');openPile(curPile)};
+  const dn=$('#done');if(dn)dn.onclick=()=>{move(d,'arquivo');toast('Arquivado ✓');openPile(curPile)};
+  $('#noteBtn').onclick=()=>{const pg=ov.querySelector('.page');let ta=pg.querySelector('textarea');
+    if(!ta){ta=document.createElement('textarea');ta.value=d.note||'';ta.style.cssText='width:100%;margin-top:18px;font:500 22px Caveat,cursive;color:#2c5d9e;border:1px solid #cbbfa6;background:#fffdf7;padding:8px;min-height:70px';
+      pg.appendChild(ta);ta.focus();ta.oninput=()=>{d.note=ta.value;save()}}};
+}
+function move(d,to){d.pile=to;if(to!=='entrada'&&d.stamp==='new')delete d.stamp;save();renderStage()}
+
+function openCal(){
+  const y=2026,m=10,first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  const byDay={};state.docs.filter(d=>d.date.startsWith('2026-11')&&d.pile!=='arquivo').forEach(d=>(byDay[+d.date.slice(8)]??=[]).push(d));
+  let g=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="hd">${x}</div>`).join('');
+  for(let i=0;i<first;i++)g+='<div></div>';
+  const td=TODAY.getFullYear()===y&&TODAY.getMonth()===m?TODAY.getDate():-1;
+  for(let d=1;d<=days;d++)g+=`<div class="${d===td?'today':''}" data-d="${d}">${d}${(byDay[d]||[]).map(x=>`<span class="chip ${x.due==='p'||x.pile==='pagar'?'p':''}" data-id="${x.id}">${fmt(x.val)||x.kind} · ${x.who}</span>`).join('')}</div>`;
+  ov.innerHTML=head('Vencimentos','<span style="opacity:.8">🟢 entra · 🔴 sai</span>')+`<div style="padding:0 14px"><div class="bigcal"><div class="t">Novembro 2026</div><div class="g">${g}</div></div></div>`;
+  wire(); ov.querySelectorAll('.chip').forEach(c=>c.onclick=e=>{e.stopPropagation();const d=state.docs.find(x=>x.id==c.dataset.id);curPile=d.pile;openDoc(d.id)});
+}
+
+function openNotes(){
+  ov.innerHTML=head('Recados','<span style="opacity:.8">escreve à vontade</span>')+`<div style="padding:0 14px"><div class="notepad" id="np" contenteditable="true"></div></div>`;
+  wire(); const np=$('#np'); np.innerText=state.notes; np.focus();
+  np.oninput=()=>{state.notes=np.innerText;save()};
+}
+function closeOv(){ov.classList.remove('on');curPile=null;renderStage()}
+ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('spread')||e.target.classList.contains('bundles'))closeOv()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv()});
+$('#q').oninput=renderStage;
+document.fonts.ready.then(renderStage);renderStage();
+</script>
+</body>
+</html>
