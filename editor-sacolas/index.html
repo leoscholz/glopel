@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Editor de Sacolas — Glopel (demonstração)</title>
+<title>Embalagens Globo — Sacos de papel personalizados (demonstração)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Arimo:wght@400;700&family=Archivo+Narrow:wght@700&family=EB+Garamond:ital,wght@1,400;1,500&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 <style>
@@ -72,13 +72,55 @@ h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .lpinfo{background:#eef4ea;border:1px solid #cfe2c6;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px} .chk input{width:auto}
 #modal .box{max-height:92vh;overflow:auto}
+
+#loja{--azul:#1f5fae;--azul2:#2f7fd0;--cinza:#8a9099;background:#f4f6f9;color:#1f2933;font-family:Inter,system-ui,sans-serif}
+#loja button{background:#fff;border:1px solid #d6dce4;box-shadow:none;border-radius:8px;color:#1f2933}
+#loja button:hover{background:#f2f5f9}
+#loja button.pri{background:var(--azul);border-color:var(--azul);color:#fff;box-shadow:0 2px 6px rgba(31,95,174,.25)}
+#loja button.pri:hover{background:#1b539a}
+#lbar{background:var(--azul);color:#fff;font-size:12.5px;text-align:center;padding:6px 10px}
+#loja #ltop{background:#fff;border-bottom:1px solid #e3e8ee;gap:18px;padding:10px 24px;box-shadow:0 2px 10px rgba(20,40,80,.05)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo .globo{width:46px;height:42px}
+.logo .lt{display:flex;flex-direction:column;line-height:1}
+.logo .emb{font-size:9.5px;letter-spacing:.42em;color:#8a9099;font-weight:600}
+.logo .glb{font-family:'Archivo Narrow','Arial Narrow',Inter,sans-serif;font-weight:800;font-size:27px;color:var(--azul2);letter-spacing:.02em;transform:scaleX(1.25);transform-origin:left}
+.busca{flex:1;max-width:420px;position:relative;margin-left:30px} .busca input{border-radius:999px;padding:9px 16px;background:#f4f6f9;border-color:#e3e8ee}
+.busca span{position:absolute;right:14px;top:8px;opacity:.5}
+.lnav{display:flex;gap:18px} .lnav a{color:#3d4752;text-decoration:none;font-size:13.5px;font-weight:600} .lnav a:hover{color:var(--azul)}
+#loja .cartbtn{border-radius:999px;padding:8px 14px;font-weight:700}
+#vercar i{background:#e8463a}
+#loja #lmain{max-width:1180px;padding:24px 24px 50px}
+body.vloja, body.vloja #loja{background:#f4f6f9}
+#hero{display:flex;align-items:center;gap:20px;background:linear-gradient(120deg,#1f5fae 0%,#2f7fd0 60%,#5bb0ec 100%);color:#fff;border-radius:20px;padding:34px 40px;overflow:hidden;min-height:250px}
+#hero .ht{flex:1.2} #hero .hi{flex:1;display:flex;justify-content:center;align-items:flex-end;gap:6px;filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
+#hero .kicker{font-size:12px;letter-spacing:.14em;font-weight:700;opacity:.85}
+#hero h1{font-size:32px;line-height:1.15;margin:8px 0 10px;color:#fff}
+#hero p{color:#e6f0fb;font-size:15px;max-width:460px;margin:0 0 16px}
+.hcta{display:flex;align-items:center;gap:14px;flex-wrap:wrap} .hbtn{background:#fff;color:var(--azul);font-weight:800;padding:10px 18px;border-radius:999px;text-decoration:none}
+#hero .ilus{display:inline;color:#cfe3f7;font-size:12px;margin:0}
+#selos{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 26px}
+#selos div{background:#fff;border:1px solid #e3e8ee;border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:34px 1fr;font-size:20px;align-items:center}
+#selos b{font-size:13.5px} #selos span{grid-column:2;font-size:12px;color:#6b7480}
+.sech{display:flex;align-items:baseline;gap:12px;margin-bottom:12px} .sech h2{margin:0;font-size:21px} .sech span{color:#6b7480;font-size:13px}
+#loja .card{background:#fff;border:1px solid #e3e8ee;border-radius:16px;box-shadow:0 4px 16px rgba(20,40,80,.06);transition:transform .12s, box-shadow .12s}
+#loja .card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,40,80,.12)}
+#loja .card .ilu{background:linear-gradient(180deg,#f7f9fc,#e9eef5)}
+#loja .cn{color:#1f2933} #loja .cd{color:#6b7480} #loja .cp{color:var(--azul)}
+#loja .papel button.on{border-color:var(--azul);color:var(--azul);background:#eef4fc}
+#loja .qtdrow{color:#6b7480}
+#carrinho{background:#fff} #loja .ci{background:#f8fafc;border-color:#e3e8ee}
+#lfoot{background:#16365f;color:#c9d6e6;display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px;padding:28px 40px;font-size:13px}
+#lfoot div{display:flex;flex-direction:column;gap:4px} #lfoot b{color:#fff} #lfoot .fd{grid-column:1/-1;opacity:.6;font-size:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px}
+@media (max-width:900px){ .lnav,.busca{display:none} #selos{grid-template-columns:repeat(2,1fr)} #hero{flex-direction:column} }
+
 body.vloja #app{display:none} body.veditor #loja{display:none}
 #loja{min-height:100vh;background:var(--bg)}
 #ltop{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surf);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 #ltop .brand{font-size:16px} #ltop .grow{flex:1}
 #vercar i{font-style:normal;background:var(--acc);color:#fff;border-radius:999px;padding:0 7px;margin-left:4px;font-size:12px}
 #lmain{max-width:1100px;margin:0 auto;padding:22px 18px 60px}
-#hero h1{font-size:26px;margin:6px 0 6px} #hero p{color:var(--mute);margin:0 0 20px;line-height:1.5} #hero .ilus{display:block;font-size:12px;margin-top:4px}
+
 #vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
 .card{background:var(--surf);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px rgba(90,70,45,.08);display:flex;flex-direction:column}
 .card .ilu{height:200px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 60%,#fbf6ee,#ece3d6)}
@@ -214,12 +256,33 @@ button{user-select:none;-webkit-user-select:none}
 </head>
 <body class="vloja">
 <div id="loja">
-  <header id="ltop"><span class="brand">🥖 <b>Glopel</b> · sacolas para padaria</span><span class="grow"></span>
-    <button id="vercar">🛒 Carrinho <i id="carcount">0</i></button></header>
+  <div id="lbar">📦 Fabricação própria em Curitiba · Envio para todo o Brasil · Pedido mínimo: 1 milheiro</div>
+  <header id="ltop"><a class="logo" href="#loja" title="Embalagens Globo"><svg class="globo" viewBox="0 0 120 110" aria-hidden="true"><defs>
+<radialGradient id="gg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5bb8f0"/><stop offset=".55" stop-color="#2f7fd0"/><stop offset="1" stop-color="#1a3f9a"/></radialGradient>
+<linearGradient id="gs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9ecef"/><stop offset="1" stop-color="#b9bfc6"/></linearGradient>
+<clipPath id="gc"><path d="M60 6 A47 47 0 1 1 59.9 6 Z M44 22 L60 40 L76 22 Z M48 92 L64 70 L84 86 Z" clip-rule="evenodd"/></clipPath></defs>
+<ellipse cx="60" cy="54" rx="56" ry="30" transform="rotate(-38 60 54)" fill="none" stroke="url(#gs)" stroke-width="6"/>
+<g clip-path="url(#gc)"><circle cx="60" cy="53" r="47" fill="url(#gg)"/>
+<g fill="none" stroke="#fff" stroke-width="2.2" opacity=".95"><path d="M14 40 Q60 24 106 40"/><path d="M13 62 Q60 46 107 62"/><path d="M20 82 Q60 68 100 82"/>
+<path d="M40 8 Q24 53 40 98"/><path d="M60 6 Q50 53 60 100"/><path d="M80 8 Q92 53 80 98"/></g>
+<ellipse cx="44" cy="34" rx="20" ry="11" fill="#fff" opacity=".18" transform="rotate(-25 44 34)"/></g>
+<path d="M22 96 Q70 92 104 60" fill="none" stroke="url(#gs)" stroke-width="5" stroke-linecap="round"/></svg><span class="lt"><span class="emb">EMBALAGENS</span><span class="glb">GLOBO</span></span></a>
+    <div class="busca"><input placeholder="Buscar sacos, tamanhos, papel…" disabled><span>🔍</span></div>
+    <nav class="lnav"><a href="#loja">Sacos de papel</a><a href="#loja">Personalizados</a><a href="#loja">Atacado</a><a href="#loja">Fale conosco</a></nav>
+    <button id="vercar" class="cartbtn">🛒 <span>Carrinho</span> <i id="carcount">0</i></button></header>
   <div id="lmain">
-    <div id="hero"><h1>Sacolas de papel com a cara da sua padaria</h1><p>Escolha o tamanho, personalize a arte aqui mesmo e receba pronto para impressão. <span class="ilus">Loja de demonstração — preços ilustrativos.</span></p></div>
+    <div id="hero"><div class="ht"><span class="kicker">SACOS DE PAPEL PERSONALIZADOS</span><h1>A embalagem com a cara da sua padaria</h1>
+      <p>Escolha o tamanho, crie a arte aqui mesmo em minutos e receba pronto para impressão — kraft ou branco, até 3 cores.</p>
+      <div class="hcta"><a href="#vitrine" class="hbtn">Ver tamanhos</a><span class="ilus">Loja de demonstração — preços ilustrativos.</span></div></div>
+      <div class="hi" id="herosacos"></div></div>
+    <div id="selos"><div>🎨<b>Editor online</b><span>Monte a arte sem designer</span></div><div>🖨️<b>Flexografia</b><span>Até 3 cores Pantone</span></div><div>🌱<b>Papel reciclável</b><span>Kraft natural ou branco</span></div><div>🚚<b>Entrega</b><span>Para todo o Brasil</span></div></div>
+    <div class="sech"><h2>Escolha o tamanho</h2><span>6 facas · 2 papéis</span></div>
     <div id="vitrine"></div>
   </div>
+  <footer id="lfoot"><div class="fl"><b>Embalagens Globo</b><span>Sacos de papel para padarias, confeitarias e lanchonetes.</span></div>
+    <div><b>Atendimento</b><span>Seg a sex, 8h–18h</span><span>Curitiba · PR</span></div>
+    <div><b>Pagamento</b><span>Pix · Boleto · Cartão</span></div>
+    <div class="fd">Demonstração · preços e prazos ilustrativos</div></footer>
   <div id="veu"></div>
   <aside id="carrinho"><div class="dh">🛒 Seu carrinho <button id="fechacar" title="Fechar">×</button></div>
     <div id="carlista"></div>
@@ -909,7 +972,7 @@ function lerJSON(t){ t=String(t||'').trim(); const tenta=x=>{ try{ return JSON.p
   let v=tenta(t); if(v) return v; const f=t.match(/```(?:json)?\s*([\s\S]*?)```/); if(f && (v=tenta(f[1]))) return v;
   const a=t.indexOf('{'), b=t.lastIndexOf('}'); return a>=0&&b>a ? tenta(t.slice(a,b+1)) : null; }
 (async()=>{ SAMPLE=null;
-  const tag=document.querySelector('#chat .tag'); tag.textContent='desativado nesta versão'; tag.style.background='#e7e2da'; tag.style.color='#6f665c';
+  const tg0=document.querySelector('#chat .tag'); tg0.textContent='desativado nesta versão'; tg0.style.background='#e7e2da'; tg0.style.color='#6f665c';
   const pr=document.getElementById('prompt'); pr.disabled=true; pr.placeholder='Pedir ao Claude fica disponível na versão integrada. Aqui, edite direto na arte.';
   document.getElementById('send').disabled=true; document.getElementById('clip').disabled=true; document.getElementById('chips').style.display='none';
   document.getElementById('log').innerHTML=''; return;
@@ -1752,11 +1815,12 @@ function toast(t){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); c
 
 function renderLoja(){
   sincroniza();
+  if($('herosacos') && !$('herosacos').innerHTML) $('herosacos').innerHTML = ['f05_kraft','f5_branco','f3_kraft'].map((id,i)=>`<div style="transform:rotate(${[-8,0,7][i]}deg) translateY(${[18,0,24][i]}px)">${sacolaIlustra(id,[130,200,170][i])}</div>`).join('');
   design.papelSel = design.papelSel || {};
   $('vitrine').innerHTML = FACAS.map(f=>{
     const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
     return `<div class="card" data-id="${id}" data-faca="${f.faca}">
-      <div class="ilu">${sacolaIlustra(id, Math.max(46, g.paineis.frente.h*2.9))}</div>
+      <div class="ilu">${sacolaIlustra(id, Math.max(62, g.paineis.frente.h*3.2))}</div>
       <div class="cb">
         <div class="cn">${esc(f.nome)}</div>
         <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
