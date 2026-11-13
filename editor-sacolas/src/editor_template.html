@@ -69,6 +69,13 @@ h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .htedit{display:flex;gap:14px;flex-wrap:wrap} .htprev canvas{border-radius:10px;display:block;max-width:100%}
 .htctl{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
 .rng label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute)} .rng input{width:100%;padding:0}
+.swb{width:100%;text-align:left;background:none;border:none;box-shadow:none;padding:5px 14px;font-weight:500;display:flex}
+.swb:hover{background:#efe7dc}
+.ptg{margin:8px 0} .ptgt{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.pts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;font-size:11.5px;font-weight:700}
+.pt i{width:100%;height:30px;border-radius:7px;border:1px solid rgba(0,0,0,.12)} .pt[disabled]{opacity:.35}
+.ptcod{display:flex;gap:6px;align-items:center} .ptcod input[type=color]{width:44px;height:36px;padding:2px}
 .lpinfo{background:#eef4ea;border:1px solid #cfe2c6;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px} .chk input{width:auto}
 #modal .box{max-height:92vh;overflow:auto}
@@ -800,8 +807,12 @@ function listaCamadas(){
 function paleta(){
   const k = Object.keys(arte.paleta), max = GAB.regras.max_cores;
   $('ncores').textContent = `${k.length}/${max}`;
-  $('pal').innerHTML = k.map(n=>`<div class="sw"><i style="background:${cmyk2hex(arte.paleta[n].cmyk)}"></i><div><b>${esc(arte.paleta[n].pantone)}</b><div style="color:var(--mute);font-size:11px">${esc(n)}</div></div></div>`).join('') +
-    `<div class="sw"><i style="background:${KRAFT}"></i><div><b>Papel (sem tinta)</b><div style="color:var(--mute);font-size:11px">papel</div></div></div>`;
+  const usadas = design ? coresUsadas() : new Set();
+  $('pal').innerHTML = k.map(n=>`<button class="sw swb" data-k="${n}" title="Clique para trocar esta cor"><i style="background:${cmyk2hex(arte.paleta[n].cmyk)}"></i><div><b style="color:${cmyk2hex(arte.paleta[n].cmyk)}">${esc(arte.paleta[n].pantone)}</b><div style="color:var(--mute);font-size:11px">${usadas.has(n)?'em uso · clique para trocar':'sem uso · clique para trocar ou remover'}</div></div></button>`).join('') +
+    `<div class="sw"><i style="background:${KRAFT}"></i><div><b>Papel (sem tinta)</b><div style="color:var(--mute);font-size:11px">mostra o papel — não conta como cor</div></div></div>` +
+    `<div style="padding:6px 14px 4px"><button id="addCor" class="${k.length<max?'pri':''}" style="width:100%">＋ Adicionar cor ${k.length<max?`(${max-k.length} livre${max-k.length>1?'s':''})`:'(limite atingido)'}</button></div>`;
+  $('pal').querySelectorAll('.swb').forEach(b=>b.onclick=()=>editarCor(b.dataset.k));
+  $('addCor').onclick=adicionarCor;
   const m = $('modo'), cur = modo;
   m.innerHTML = `<option value="previa">🟫 Prévia no papel</option><option value="mockup">🧊 Mockup 3D</option><option value="produto">📸 Produto final</option>` + k.map(n=>`<option value="sep:${n}" style="color:${cmyk2hex(arte.paleta[n].cmyk)};font-weight:700">🖨️ Chapa: ${esc(arte.paleta[n].pantone)}</option>`).join('');
   m.value = [...m.options].some(o=>o.value===cur) ? cur : 'previa'; if(m.value!==cur) modo=m.value;
@@ -838,10 +849,14 @@ function props(){
   if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="number" step="0.1" value="${c.h}"></div></div>`;
   if(c.tipo==='vetor'||c.tipo==='meiotom'){
     h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div>`;
-    h += c.tipo==='vetor' ? `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🎨 Ajustar cores do vetor</button>` : `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🔳 Ajustar retícula</button>`;
+    if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Papel (sem tinta)</option>`].join('');
+      const orig = Object.keys(c.mapa||{}).filter(h0=>(c.svg||'').includes(`="${h0}"`));
+      h += orig.map((h0,i)=>`<div class="row"><label>${orig.length>1?'Cor '+(i+1):'Cor'}</label><select data-map="${h0}">${ops(c.mapa[h0])}</select></div>`).join('');
+      h += `<button id="pNova" style="width:100%;margin:2px 0 4px">＋ Nova cor…</button>`; }
+    h += c.tipo==='vetor' ? `<button id="pEd" style="width:100%;margin:6px 0">🎨 Mais opções de cor</button>` : `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🔳 Ajustar retícula</button>`;
   }
   if(c.tipo!=='grupo' && c.tipo!=='svg' && c.tipo!=='imagem' && c.tipo!=='vetor' && c.tipo!=='meiotom'){
-    h += `<div class="row"><label>Cor</label><select data-k="cor">${opt(c.cor)}</select></div>
+    h += `<div class="row"><label>Cor</label><select data-k="cor">${opt(c.cor)}<option value="__nova">＋ Nova cor…</option></select></div>
       <div class="row"><label>Contorno</label><select data-k="contorno">${opt(c.contorno)}</select></div>`;
     if(c.contorno) h += campo('Traço (mm)','traco_mm',c.traco_mm||0.5,'number','0.1');
   }
@@ -855,12 +870,15 @@ function props(){
       const k=inp.dataset.k; let v = inp.value;
       if(inp.type==='number') v = parseFloat(v);
       if(k==='id'){ if(!v || arte.camadas.some(x=>x.id===v && x!==c)) return render(); setSel(v); }
+      if(v==='__nova'){ render(); adicionarCor(); return; }
       if((k==='cor'||k==='contorno') && !v) delete c[k]; else c[k]=v;
       commit(); render();
     };
   });
   if($('ungrp')) $('ungrp').onclick = desagrupar;
   if($('pEd')) $('pEd').onclick = ()=> c.tipo==='vetor' ? editorVetor(c) : editorMeiotom(c);
+  P.querySelectorAll('select[data-map]').forEach(sl=>sl.onchange=()=>{ c.mapa=Object.assign({},c.mapa,{[sl.dataset.map]:sl.value}); commit(); render(); });
+  if($('pNova')) $('pNova').onclick=adicionarCor;
   $('del').onclick = ()=>{ arte.camadas = arte.camadas.filter(x=>x!==c); setSel(null); commit(); render(); };
   $('dup').onclick = ()=>{ const n=JSON.parse(JSON.stringify(c)); n.id = c.id+'_copia'; mover(n,0.5,-0.5); arte.camadas.push(n); setSel(n.id); commit(); render(); };
 }
@@ -920,6 +938,8 @@ document.addEventListener('keydown', e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
   if(e.code==='Space'){ e.preventDefault(); if(!espaco){ espaco=true; $('stage').classList.add('hand'); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='c'){ if(sels.length){ e.preventDefault(); copiar(); } return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='v'){ if(CLIP){ e.preventDefault(); colar(); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='g'){ e.preventDefault(); e.shiftKey?desagrupar():agrupar(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a'){ e.preventDefault(); sels=arte.camadas.filter(c=>c.visivel!==false&&!c.bloqueado).map(c=>c.id); sel=sels[sels.length-1]||null; render(); return; }
   if(e.key==='Escape'){ setSel(null); render(); return; }
@@ -1743,7 +1763,7 @@ function pronto(){
 function menuAjuda(){
   $('mbox').innerHTML = `<h3 style="margin:0 0 10px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Ajuda</h3>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button id="hx" class="pri">🥖 Carregar exemplo (Trigo de Ouro)</button><button id="hz">🧹 Recomeçar do zero</button></div>
-    <div style="line-height:1.9">👆 <b>Clique</b> seleciona · <b>arraste</b> move<br>⇧ <b>Shift + clique</b> ou <b>arrastar no vazio</b> seleciona vários<br>📁 <b>Ctrl+G</b> junta em pasta · <b>Ctrl+Shift+G</b> desfaz<br>🔤 <b>Duplo clique</b> num texto para editar<br>✋ <b>Segure Espaço</b> e arraste para mover a tela · roda do mouse = zoom<br>🧲 <b>N</b> liga/desliga o ímã · ↶ <b>Ctrl+Z</b> desfaz</div>
+    <div style="line-height:1.9">👆 <b>Clique</b> seleciona · <b>arraste</b> move<br>⇧ <b>Shift + clique</b> ou <b>arrastar no vazio</b> seleciona vários<br>📋 <b>Ctrl+C / Ctrl+V</b> copia e cola (até em outra sacola)<br>📁 <b>Ctrl+G</b> junta em pasta · <b>Ctrl+Shift+G</b> desfaz<br>🔤 <b>Duplo clique</b> num texto para editar<br>✋ <b>Segure Espaço</b> e arraste para mover a tela · roda do mouse = zoom<br>🧲 <b>N</b> liga/desliga o ímã · ↶ <b>Ctrl+Z</b> desfaz</div>
     <div style="text-align:right;margin-top:12px"><button id="hf">Fechar</button></div>`;
   $('modal').style.display='flex';
   $('hf').onclick=()=>$('modal').style.display='none';
@@ -2162,6 +2182,78 @@ function editorMeiotom(c){
   $('htCan').onclick=()=>{ const o=JSON.parse(antes); Object.keys(c).forEach(k=>delete c[k]); Object.assign(c,o); $('modal').style.display='none'; render(); };
   $('htOk').onclick=()=>{ $('modal').style.display='none'; commit(); render(); };
   prev();
+}
+
+/* ---------- CORES: adicionar, trocar, remover ---------- */
+const PANTONE_GRUPOS = [
+  ['Vermelhos e laranjas', ['PANTONE 485 C','PANTONE 186 C','PANTONE 1795 C','PANTONE 1805 C','PANTONE 7621 C','PANTONE 7579 C','PANTONE 165 C','PANTONE 138 C']],
+  ['Amarelos', ['PANTONE 116 C','PANTONE 7406 C','PANTONE 1235 C']],
+  ['Verdes', ['PANTONE 356 C','PANTONE 349 C','PANTONE 7724 C','PANTONE 5545 C']],
+  ['Azuis e roxo', ['PANTONE 3005 C','PANTONE 300 C','PANTONE 286 C','PANTONE 7547 C','PANTONE 2602 C']],
+  ['Marrons, neutros e preto', ['PANTONE 469 C','PANTONE 4625 C','PANTONE 7530 C','PANTONE Black C']],
+];
+const pantoneInfo = nome => PANTONES.find(p=>p[0]===nome);
+function coresEmUso(){ return coresUsadas(); }
+function seletorPantone(titulo, sub, aoEscolher, bloqueadas){
+  const tile = p=>`<button class="pt" data-p="${esc(p[0])}" ${bloqueadas.includes(p[0])?'disabled title="Já está na paleta"':''}><i style="background:${p[1]}"></i><span style="color:${p[1]}">${esc(p[0].replace('PANTONE ',''))}</span></button>`;
+  $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">${titulo}</h3>
+    <div class="hint" style="margin-bottom:10px">${sub}</div>
+    ${PANTONE_GRUPOS.map(([g,lista])=>`<div class="ptg"><div class="ptgt">${g}</div><div class="pts">${lista.map(n=>pantoneInfo(n)).filter(Boolean).map(tile).join('')}</div></div>`).join('')}
+    <div class="ptg"><div class="ptgt">Já sabe o código?</div><div class="ptcod"><input id="ptCod" placeholder="Ex.: 7409 C"><input id="ptCor" type="color" value="#cc3333" title="Cor aproximada para ver na tela"><button id="ptUsar">Usar</button></div>
+    <div class="hint">A cor da tela é só aproximada — a gráfica imprime pelo código.</div></div>
+    <div style="text-align:right;margin-top:12px"><button id="ptFx">Cancelar</button></div>`;
+  $('modal').style.display='flex';
+  $('ptFx').onclick=()=>$('modal').style.display='none';
+  $('mbox').querySelectorAll('.pt').forEach(b=>b.onclick=()=>{ const p=pantoneInfo(b.dataset.p); $('modal').style.display='none'; aoEscolher(p[0], p[2]); });
+  $('ptCod').oninput=()=>{ const v=$('ptCod').value.trim().toUpperCase().replace(/^PANTONE\s*/,''); const p=PANTONES.find(x=>x[0]==='PANTONE '+v); if(p) $('ptCor').value=p[1]; };
+  $('ptUsar').onclick=()=>{ let v=$('ptCod').value.trim().replace(/^pantone\s*/i,''); if(!v){ $('ptCod').focus(); return; }
+    const nome='PANTONE '+v.toUpperCase(); const p=PANTONES.find(x=>x[0]===nome); const [r,g,b]=hex2rgb($('ptCor').value);
+    const k=1-Math.max(r,g,b)/255, cm = k>=1?[0,0,0,100]:[ (1-r/255-k)/(1-k), (1-g/255-k)/(1-k), (1-b/255-k)/(1-k), k ].map(x=>Math.round(x*100));
+    $('modal').style.display='none'; aoEscolher(nome, p?p[2]:cm); };
+}
+function adicionarCor(){
+  const max=GAB.regras.max_cores, n=Object.keys(arte.paleta).length;
+  if(n>=max){
+    const naoUsadas=Object.keys(arte.paleta).filter(k=>!coresEmUso().has(k));
+    $('mbox').innerHTML = `<h3 style="margin:0 0 8px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Já são ${max} cores</h3>
+      <div style="line-height:1.5">A impressão aceita no máximo <b>${max} cores</b> por sacola — cada cor é uma chapa.<br>
+      ${naoUsadas.length?`Há cor sem uso na arte: <b>${naoUsadas.map(k=>esc(arte.paleta[k].pantone)).join(', ')}</b>. Clique nela na lista de Cores para remover.`:'Para usar outra cor, <b>clique numa cor da lista</b> e troque por outra.'}</div>
+      <div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Entendi</button></div>`;
+    $('modal').style.display='flex'; return;
+  }
+  seletorPantone('＋ Adicionar cor', `Escolha uma cor de impressão. Você tem ${n} de ${max}.`, (nome,cmyk)=>{
+    const k=chaveNova(nome); arte.paleta[k]={pantone:nome, cmyk}; commit(); render();
+    toast(`🎨 <b>${esc(nome)}</b> adicionada. Escolha ela em Ajustes de qualquer item.`);
+  }, Object.values(arte.paleta).map(p=>p.pantone));
+}
+function editarCor(k){
+  const p=arte.paleta[k], usada=coresEmUso().has(k);
+  seletorPantone(`Trocar ${esc(p.pantone)}`, `Tudo que está nesta cor muda junto${usada?', em todas as sacolas':''}. ${usada?'':'<button id="ptRem" style="margin-left:6px">🗑 Remover cor (sem uso)</button>'}`, (nome,cmyk)=>{
+    arte.paleta[k]={pantone:nome, cmyk}; commit(); render(); toast(`🎨 Agora é <b>${esc(nome)}</b>.`);
+  }, Object.values(arte.paleta).map(x=>x.pantone).filter(n=>n!==p.pantone));
+  if($('ptRem')) $('ptRem').onclick=()=>{ delete arte.paleta[k]; $('modal').style.display='none'; commit(); render(); };
+}
+
+/* ---------- COPIAR / COLAR camadas (também entre sacolas) ---------- */
+let CLIP = null;
+function copiar(){
+  const ls=selLayers(); if(!ls.length) return;
+  CLIP={gab:design.atual, camadas:JSON.parse(JSON.stringify(ls)), vezes:0};
+  toast(`📋 ${ls.length>1?ls.length+' itens copiados':'<b>'+esc(ls[0].id)+'</b> copiado'}. Ctrl+V cola${design.carrinho.length>1?' — inclusive em outra sacola':''}.`);
+}
+function colar(){
+  if(!CLIP) return;
+  const mesma = CLIP.gab===design.atual, gO=CATALOGO[CLIP.gab], gD=GAB; CLIP.vezes++;
+  const novos=[];
+  CLIP.camadas.forEach(c0=>{
+    let c = mesma ? JSON.parse(JSON.stringify(c0)) : adaptaCamada(c0, gO, gD);
+    if(!GAB.paineis[c.painel]) c.painel='frente';
+    if(layer(c.id)){ c.id=novoId(c0.id.replace(/(_copia)?(_\d+)?$/,'')+'_copia'); }
+    if(mesma && layer(c0.id)) mover(c, 0.5*CLIP.vezes, -0.5*CLIP.vezes);
+    arred(c); arte.camadas.push(c); novos.push(c.id);
+  });
+  sels=novos; sel=novos[novos.length-1]; commit(); render();
+  if(!mesma) toast(`📋 Colado de <b>${esc(gO.nome)}</b>, já adaptado a este tamanho.`);
 }
 
 /* ---------- init ---------- */
