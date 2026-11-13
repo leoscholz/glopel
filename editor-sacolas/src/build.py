@@ -8,6 +8,9 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 t = open(os.path.join(AQUI, 'editor_template.html'), encoding='utf-8').read()
 g = json.load(open(os.path.join(AQUI, 'gabarito_5kg.json')))
 a = json.load(open(os.path.join(AQUI, 'exemplo_padaria.json')))
+import base64, glob
+fotos = {os.path.basename(f)[:-5]+'.pdf': 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos','*.webp')))}
+t = t.replace('__FOTOS__', json.dumps(fotos))
 full = t.replace('__GABARITO__', json.dumps(g, ensure_ascii=False)).replace('__ARTE__', json.dumps(a, ensure_ascii=False))
 GANCHO = '(async()=>{ try{ SAMPLE = await claude.use("sample"); }catch(_){ SAMPLE=null; }'
 assert GANCHO in full, 'gancho do Pedir ao Claude não encontrado'

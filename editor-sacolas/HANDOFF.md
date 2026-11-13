@@ -13,6 +13,7 @@ Objetivo de negócio: o cliente (padaria) monta a arte sozinho e a Glopel manda 
 | Fonte única | `src/editor_template.html` (HTML+CSS+JS num arquivo) |
 | Build | `python3 src/build.py` → `../index.html` (GitHub) e `src/dist/artifact.html` (artifact) |
 | Facas OHDE (PDF 1:1) | `src/facas/*.pdf` (21) · originais em `~/Desktop/GABARITOS` no Mac · medidas com `src/facas/extrai_medidas.py` |
+| Fotos dos produtos | `editor-sacolas/fotos/*.webp` (extraídas dos PDFs com `src/facas/extrai_fotos.py`; embutidas no build como base64; versão "branco" = filtro CSS) |
 | Motor de PDF p/ clicheria (v1, Python/reportlab) | `src/motor_pdf_render.py` — ainda NÃO lê vetor enviado nem retícula |
 
 Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.html`). Artifact = `publish_files` com `src/dist/artifact.html` como `index.html`, mode patch, base_version = versão viva (`get_artifact`).

@@ -138,6 +138,8 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 .card .ilu{height:200px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 60%,#fbf6ee,#ece3d6)}
 .card .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
 .cn{font-weight:800;font-size:16px} .cd{color:var(--mute);font-size:13px;line-height:1.45} .cp{font-weight:800;font-size:17px} .cp span{font-weight:500;font-size:11.5px;color:var(--mute)}
+.ilu img.foto{max-width:88%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(20,40,80,.12))}
+.ilu img.foto.branco{filter:grayscale(1) brightness(1.55) contrast(.9) drop-shadow(0 6px 10px rgba(20,40,80,.12))}
 .papel{display:flex;gap:6px} .papel button{flex:1;padding:5px 6px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:center} .papel i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.2)} .papel button.on{font-weight:700}
 .qtdrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute)}
 .step{display:inline-flex;align-items:center;gap:8px} .step button{padding:4px 11px} .step b{min-width:22px;text-align:center;color:var(--ink)}
@@ -148,6 +150,7 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 #carrinho.show{transform:none}
 #carlista{flex:1;overflow:auto;padding:4px 14px}
 .ci{display:flex;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fffaf4}
+.cil img.foto.branco{filter:grayscale(1) brightness(1.55)}
 .cil{width:64px;display:flex;justify-content:center} .cim{flex:1;display:flex;flex-direction:column;gap:5px} .cist{font-size:12.5px;font-weight:700}
 .ciacts{display:flex;gap:8px;align-items:center} .ciacts button{padding:5px 10px;font-size:12.5px}
 button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-decoration:underline;font-weight:500}
@@ -1563,6 +1566,7 @@ const FACAS = [
   {faca:'t85', cat:'talher', ref:'Porta Talher 8,5×27', nome:'Porta-talher 8,5 × 27', w:8.5, h:24, H:22.95, g:0, cola:2, ve:4.3, vd:4.2, abaL:1.4, abaF:2.7, fonte:'Gabarito Porta Talher 8,5x27cm.pdf', uso:'Talheres, guardanapo, canudo'},
 ];
 const PAPEIS = {kraft:'Kraft natural', branco:'Branco monolúcido'};
+const FOTOS = __FOTOS__;  // foto do produto extraída do PDF da faca (chave = nome do PDF)
 const CATALOGO = {};
 FACAS.forEach(f=>Object.keys(PAPEIS).forEach(pp=>{ const id=f.faca+'_'+pp;
   CATALOGO[id]=geraGabarito({...f, id, papel:pp, referencia:f.ref, nome:`${f.nome} · ${pp==='kraft'?'Kraft':'Branco'}`}); }));
@@ -1872,7 +1876,7 @@ function renderLoja(){
   $('vitrine').innerHTML = FACAS.filter(f=>f.cat===design.cat).map(f=>{
     const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
     return `<div class="card" data-id="${id}" data-faca="${f.faca}">
-      <div class="ilu">${sacolaIlustra(id, Math.max(56, 170*g.paineis.frente.h/altMax))}</div>
+      <div class="ilu">${FOTOS[f.fonte] ? `<img class="foto ${pp}" src="${FOTOS[f.fonte]}" alt="${esc(f.nome)}" style="height:${Math.round(105+80*f.h/altMax)}px">` : sacolaIlustra(id, Math.max(56, 170*g.paineis.frente.h/altMax))}</div>
       <div class="cb">
         <div class="cn">${esc(f.nome)}</div>
         <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
@@ -1904,7 +1908,7 @@ function renderCarrinho(){
   let tot=0;
   L.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
     const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
-    return `<div class="ci" data-id="${id}"><div class="cil">${sacolaIlustra(id,64)}</div>
+    return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id); return FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
       <div class="cim"><b>${esc(g.nome)}</b><div class="cist" style="color:${cor}">${ic} ${txt}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>
         <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
