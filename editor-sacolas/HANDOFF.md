@@ -33,6 +33,12 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Pedir ao Claude: modelo `claude-fable-5-2` (cai para tier complex), devolve JSON `{resposta, ops[]}` com ops editar/mover/escalar/criar/apagar/ordem/agrupar/desagrupar/centralizar/cor; desfazer por pedido.
 - Marca d'água "PRÉVIA · GLOPEL"; checagem de clicheria ao vivo.
 
+## Nuvem (login + Minhas artes)
+- Supabase projeto `dzfelcufnsltutxeidow` (URL e chave publishable no template, `nuvem.js`). Tabela `public.artes` (id, dono, nome, dados jsonb {versao, design, assets}, resumo, criado, atualizado) com RLS "dono = auth.uid()".
+- Login: usuário sem @ vira `<usuario>@globoeditor.app`. Provisório: **admin / admin**. Nunca colocar a chave service_role no front.
+- Só no build do GitHub (`__NUVEM__=true`); no artifact fica escondido (CSP bloqueia outros hosts).
+- Editor: 💾 Salvar (Ctrl+S) cria/atualiza; 👤 › Minhas artes abre/renomeia/apaga; "Começar arte nova".
+
 ## Regras de produto (não quebrar)
 - Máx. **3 cores Pantone** por arte (total, não por elemento). Nada de degradê/transparência na saída.
 - Margem 0,5 cm; texto ≥ 6 pt; traço ≥ 0,3 mm; não cruzar dobra da sanfona nem emenda do verso; nada em área de cola.
