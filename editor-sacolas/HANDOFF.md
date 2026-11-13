@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 13-11-2026 14:40)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 13-11-2026 20:50)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -33,7 +33,8 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Pedir ao Claude: modelo `claude-fable-5-2` (cai para tier complex), devolve JSON `{resposta, ops[]}` com ops editar/mover/escalar/criar/apagar/ordem/agrupar/desagrupar/centralizar/cor; desfazer por pedido.
 - Cores: aba 🎨 Cores com **＋ Adicionar cor** (grade de Pantones de padaria + código livre), clicar numa cor troca em toda a arte/sacolas, remover se sem uso; limite de 3 explicado. Ajustes de vetor/texto/forma têm seletor de cor + "＋ Nova cor…".
 - **Ctrl+C / Ctrl+V** de camadas, inclusive entre sacolas (cola já adaptado ao tamanho de destino).
-- Marca d'água "PRÉVIA · GLOPEL"; checagem de clicheria ao vivo.
+- Marca d'água "EMBALAGENS GLOBO"; checagem de clicheria ao vivo.
+- **✨ Assistente "Criar com ajuda"** (`assistente.js`, inlinado no template): porta de entrada quando todas as sacolas estão vazias (opção "Começar do zero" grava `portaVista`). 4 passos: Dados (nome, slogan, telefone, Instagram, endereço, extra) → Logo (upload SVG/foto, banco ou sem logo) → Estilo (Clássico, Logo + contatos, Faixas laterais, Estampa, Selo — baseados nas artes reais da pasta Drive `11d4Ddf3mjkj8nT_9_TMmyrvhSGIc4uC1`; prévia na sacola aberta) → Cores (6 paletas prontas ≤2 Pantones). Gera em todas as sacolas do carrinho (estado 🟡, desfazível); escala tipográfica pela área da frente e bloco centralizado. Textos ficam ligados a `campo`: **📝 Dados** troca em todas as sacolas (campo vazio = camada oculta) e oferece "Trocar estilo". Testado sem alertas de checagem em 1/2 kg, 5 kg e envelope 17×21.
 
 ## Nuvem (login + Minhas artes)
 - Supabase projeto `dzfelcufnsltutxeidow` (URL e chave publishable no template, `nuvem.js`). Tabela `public.artes` (id, dono, nome, dados jsonb {versao, design, assets}, resumo, criado, atualizado) com RLS "dono = auth.uid()".
@@ -50,6 +51,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Interface para leigo: linguagem simples, botões grandes, nada destrutivo sem desfazer.
 
 ## Pendências
+- Assistente: testar com logos enviados reais (SVG multicor, foto) e nomes muito longos (hoje só encolhe até 8 pt, não quebra linha).
 0. Facas com medida **aproximada** (aviso na aba Cores): 900 g (fundo em V), Batatinha 120/180, Hambúrguer (verso ajustado p/ fechar com a frente), Semente (cola nas 2 laterais). Envelopes: frente à direita do verso, como no PDF.
 1. Ficha técnica da clicheria: formato, nº máx. de cores, lineatura máx., ponto mínimo, traço/texto mínimos.
 2. Confirmar com a Glopel: cola no verso (1/2, 1 kg); verso do Hamburgão (5,2+8,2=13,4 vs frente 13,5); quais facas existem em papel branco.
