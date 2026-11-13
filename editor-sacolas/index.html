@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de Sacolas — Glopel (demonstração)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Arimo:wght@400;700&family=Archivo+Narrow:wght@700&family=EB+Garamond:ital,wght@1,400;1,500&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#efe9e0; --surf:#f8f4ee; --surf2:#f2ece3; --line:#e2d8ca; --ink:#2f2a25; --mute:#8b8074;
+  --acc:#d2694f; --acc-d:#b8553d; --acc-soft:#f7e2d9; --sel:#3b82f6; --ok:#3f8f5a; --warn:#b7791f; --err:#c0453a;
+  --r:12px; --sh:0 1px 0 rgba(255,255,255,.8) inset, 0 2px 6px rgba(90,70,45,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,system-ui,sans-serif;font-size:14px;color:var(--ink);background:var(--bg)}
+button{font:inherit;font-weight:600;cursor:pointer;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 13px;
+  background:linear-gradient(#fbf8f4,#f0e9df);box-shadow:var(--sh);transition:transform .06s, background .15s}
+button:hover{background:linear-gradient(#fdfaf6,#f5eee5)}
+button:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(90,70,45,.12)}
+button.on{background:linear-gradient(#fbeee8,#f4d9cd);border-color:#e9b8a6;color:var(--acc-d)}
+button.pri{background:linear-gradient(#df7b61,#c9604a);border-color:#b8553d;color:#fff;box-shadow:0 2px 8px rgba(200,90,60,.30)}
+button.pri:hover{background:linear-gradient(#e5866d,#cf6750)}
+button.ic{padding:8px 11px}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:#fffcf8;color:var(--ink);width:100%}
+select{cursor:pointer}
+#app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+#top{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surf);border-bottom:1px solid var(--line);flex-wrap:wrap}
+#top .brand{font-size:15px;white-space:nowrap;margin-right:4px}
+#top #produto{width:auto;font-weight:600;background:linear-gradient(#fbf8f4,#f0e9df);box-shadow:var(--sh);border-radius:10px}
+#top #modo{width:auto;background:linear-gradient(#fbf8f4,#f0e9df);box-shadow:var(--sh);border-radius:10px}
+#top .grow{flex:1}
+#main{display:grid;grid-template-columns:auto auto 1fr auto auto;min-height:0}
+.tabs{display:flex;flex-direction:column;gap:8px;padding:12px 6px;background:var(--surf2);border-right:1px solid var(--line)}
+.tabs.right{border-right:none;border-left:1px solid var(--line)}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;width:52px;font-size:18px}
+.tab span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;letter-spacing:.04em}
+.badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;font-style:normal;font-size:11px;line-height:18px;padding:0 5px;color:#fff;display:none}
+.badge.show{display:block}
+.drawer{display:none;width:280px;background:var(--surf);overflow:auto;min-height:0;border-right:1px solid var(--line)}
+.drawer.right{border-right:none;border-left:1px solid var(--line);width:300px}
+.drawer.open{display:block}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px;font-weight:700;font-size:15px}
+.dh button{padding:3px 9px;font-size:16px}
+h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:14px 14px 6px}
+.lay{display:flex;align-items:center;gap:4px;padding:6px 8px;margin:2px 8px;border-radius:9px;cursor:pointer}
+.lay:hover{background:#efe7dc}
+.lay.sel{background:#e3ecfb;box-shadow:inset 0 0 0 1px #bcd0f5}
+.lay .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lay .chip{font-size:10px;color:var(--mute);border:1px solid var(--line);border-radius:5px;padding:0 4px;background:#fffaf4}
+.lay .ic{border:none;background:none;box-shadow:none;padding:2px 3px;font-size:12px;opacity:.7}
+.lay .ic:hover{opacity:1;background:none}
+.lay.hid .nm{opacity:.4;text-decoration:line-through}
+.sw{display:flex;align-items:center;gap:10px;padding:5px 14px}
+.sw i{width:26px;height:26px;border-radius:8px;border:1px solid rgba(0,0,0,.12);display:inline-block;box-shadow:var(--sh)}
+#gabinfo{padding:0 14px 14px;color:var(--mute);font-size:12.5px;line-height:1.55}
+#elementos .upl{padding:4px 14px 6px} #elementos .upl button{width:100%}
+.hint{font-size:11.5px;color:var(--mute);line-height:1.4}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 12px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;font-size:10.5px;font-weight:500}
+.tile .ti{width:100%;height:52px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:7px;background:#efe6d8}
+.tile .ti img{max-width:100%;max-height:100%} .tile .tn{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tiles .empty{grid-column:1/-1;font-size:12px;color:var(--mute);padding:4px 2px}
+.aviso{background:#fdecc8;border:1px solid #f0cf86;color:#6b4a07;border-radius:10px;padding:8px 10px;margin:6px 0 10px;font-size:13px}
+.vedit{display:flex;gap:14px;align-items:flex-start} .vprev{width:170px;height:170px;background:var(--kraft,#c89a62);border-radius:10px;padding:8px;flex-shrink:0;background:#e8dccb}
+.vcores{flex:1;display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto}
+.vc{display:flex;align-items:center;gap:8px} .vc i{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.15);flex-shrink:0} .vc select{flex:1}
+.vtot{margin-top:10px;font-size:13px} .vtot.err{color:var(--err);font-weight:700}
+.htedit{display:flex;gap:14px;flex-wrap:wrap} .htprev canvas{border-radius:10px;display:block;max-width:100%}
+.htctl{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.rng label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute)} .rng input{width:100%;padding:0}
+.lpinfo{background:#eef4ea;border:1px solid #cfe2c6;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px} .chk input{width:auto}
+#modal .box{max-height:92vh;overflow:auto}
+body.vloja #app{display:none} body.veditor #loja{display:none}
+#loja{min-height:100vh;background:var(--bg)}
+#ltop{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surf);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+#ltop .brand{font-size:16px} #ltop .grow{flex:1}
+#vercar i{font-style:normal;background:var(--acc);color:#fff;border-radius:999px;padding:0 7px;margin-left:4px;font-size:12px}
+#lmain{max-width:1100px;margin:0 auto;padding:22px 18px 60px}
+#hero h1{font-size:26px;margin:6px 0 6px} #hero p{color:var(--mute);margin:0 0 20px;line-height:1.5} #hero .ilus{display:block;font-size:12px;margin-top:4px}
+#vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px rgba(90,70,45,.08);display:flex;flex-direction:column}
+.card .ilu{height:200px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 60%,#fbf6ee,#ece3d6)}
+.card .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.cn{font-weight:800;font-size:16px} .cd{color:var(--mute);font-size:13px;line-height:1.45} .cp{font-weight:800;font-size:17px} .cp span{font-weight:500;font-size:11.5px;color:var(--mute)}
+.papel{display:flex;gap:6px} .papel button{flex:1;padding:5px 6px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:center} .papel i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.2)} .papel button.on{font-weight:700}
+.qtdrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute)}
+.step{display:inline-flex;align-items:center;gap:8px} .step button{padding:4px 11px} .step b{min-width:22px;text-align:center;color:var(--ink)}
+.step.sm button{padding:2px 8px;font-size:12px} .step.sm span{font-size:12px;color:var(--mute)}
+.acts{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap} .acts button{flex:1}
+#veu{position:fixed;inset:0;background:rgba(60,45,30,.28);display:none;z-index:8} #veu.show{display:block}
+#carrinho{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:94vw;background:var(--surf);z-index:9;transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(60,45,30,.18)}
+#carrinho.show{transform:none}
+#carlista{flex:1;overflow:auto;padding:4px 14px}
+.ci{display:flex;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fffaf4}
+.cil{width:64px;display:flex;justify-content:center} .cim{flex:1;display:flex;flex-direction:column;gap:5px} .cist{font-size:12.5px;font-weight:700}
+.ciacts{display:flex;gap:8px;align-items:center} .ciacts button{padding:5px 10px;font-size:12.5px}
+button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-decoration:underline;font-weight:500}
+#carfoot{padding:12px 16px 16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+#carfoot .tot{display:flex;justify-content:space-between;font-size:16px} #carmsg{font-size:12.5px;color:var(--mute);line-height:1.4}
+#finalizar[disabled]{opacity:.5;cursor:not-allowed}
+#toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#2f2a25;color:#fff;padding:10px 16px;border-radius:12px;z-index:50;transition:all .2s;font-size:13.5px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#voltaloja{padding:7px 11px}
+#center{display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:0}
+#sacbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);overflow-x:auto}
+#sacolas{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px} #conferir{flex-shrink:0}
+#sacbar{overflow:hidden}
+.sac{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 8px;text-align:left;font-weight:500;white-space:nowrap}
+.sac .t{display:flex;flex-direction:column;line-height:1.25}
+.sac .st{font-size:11.5px;font-weight:600}
+.sac.on{background:linear-gradient(#e8f0fd,#dbe7fb);border-color:#a9c3ef;box-shadow:0 0 0 2px #bcd0f5}
+.sac.cinza{opacity:.6}
+#prodwrap{position:relative}
+#prodbtn{white-space:nowrap}
+#prodmenu{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:30;min-width:330px;background:var(--surf);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(60,45,30,.2);padding:6px}
+#prodmenu.show{display:block}
+.pm{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.pm:hover{background:#efe7dc} .pm.on{background:#e3ecfb}
+.pm .nm{flex:1} .pm.feita .nm{font-weight:700} .pm.cinza{color:#a49a8e} .pm .st{font-size:12px;font-weight:600}
+.pm .leg,.leg{font-size:11.5px;color:var(--mute);padding:8px 10px 4px;border-top:1px solid var(--line);margin-top:4px}
+.salvo{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.salvo.ok{background:#dcefdf;color:#2f6b3f;border:1px solid #b9dcc0}
+.salvo.ing{background:#fbefc4;color:#7a5a0a;border:1px solid #ecd58a}
+#faixa{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:8px;background:rgba(255,251,244,.97);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px;box-shadow:0 8px 26px rgba(60,45,30,.18);max-width:calc(100% - 40px);font-size:13.5px}
+#faixa.show{display:flex}
+#faixa button{padding:5px 11px;font-size:12.5px;white-space:nowrap}
+#faixa .x{border:none;background:none;box-shadow:none;color:var(--mute)}
+#marca{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:.055;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='160'><text x='20' y='95' transform='rotate(-24 130 80)' font-family='Inter,Arial' font-size='22' font-weight='700' fill='%23000'>PRÉVIA · GLOPEL</text></svg>")}
+#chapalabel{position:absolute;top:12px;right:14px;z-index:5;display:none;font-weight:800;font-size:15px;background:rgba(255,255,255,.9);padding:6px 12px;border-radius:10px;border:1px solid var(--line)}
+.pr{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:12px;margin:6px 0;background:#fffaf4}
+.pr .nm{flex:1} .pr .st{font-size:12px;font-weight:600} .pr button{padding:6px 10px;font-size:12.5px}
+.pr.conf{background:#e8f4ea;border-color:#b9dcc0}
+.fim{margin-top:12px;padding:10px 12px;border-radius:10px;background:#e8f4ea;font-weight:700}
+.lay .prop{font-size:11px}
+#stage{position:relative;overflow:hidden;background:#ebe5db}
+#stage svg{width:100%;height:100%;display:block;touch-action:none}
+#stage.hand, #stage.hand svg{cursor:grab}
+#stage.hand.grabbing, #stage.hand.grabbing svg{cursor:grabbing}
+.float{position:absolute;display:flex;gap:6px;padding:7px;background:rgba(248,244,238,.92);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 22px rgba(90,70,45,.14);backdrop-filter:blur(6px)}
+#tools{left:12px;top:50%;transform:translateY(-50%);max-height:calc(100% - 24px);max-width:calc(100% - 24px);overflow:auto;z-index:3}
+#tools.vert{flex-direction:column}
+#tools.moved{transform:none}
+#tools:not(.vert) .sep{width:1px;height:auto;margin:4px 2px}
+#grip{display:flex;align-items:center;justify-content:space-between;gap:4px;cursor:grab;color:var(--mute);padding:0 2px;user-select:none}
+#tools:not(.vert) #grip{flex-direction:column;justify-content:center}
+#grip span{font-size:15px;letter-spacing:-2px;padding:2px 4px}
+#grip button{padding:2px 7px;font-size:13px;border-radius:7px}
+button{user-select:none;-webkit-user-select:none}
+#mock,#mock *{user-select:none;-webkit-user-select:none}
+#prod{display:none;position:absolute;inset:0;z-index:2;background:#efe4d4}
+#stage.prodmode #prod{display:block}
+#stage.prodmode #svg{visibility:hidden}
+#stage.prodmode #tools,#stage.prodmode #zoom{display:none}
+#prodcanvas{position:absolute;inset:0;cursor:grab}
+#prodcanvas canvas{display:block}
+#prodmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(248,244,238,.9);padding:10px 16px;border-radius:12px;font-weight:600;color:var(--mute)}
+#prodctl{left:50%;bottom:14px;transform:translateX(-50%)}
+#prodctl button{padding:6px 12px}
+#mockhint2{position:absolute;top:14px;left:50%;transform:translateX(-50%);color:#5d4a36;font-size:12.5px;background:rgba(248,244,238,.8);padding:4px 10px;border-radius:999px}
+#mock{display:none;position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#f6f1ea,#e6ded2);z-index:2;cursor:grab;touch-action:none}
+#stage.mockmode #mock{display:block}
+#stage.mockmode #svg{visibility:hidden}
+#stage.mockmode #tools,#stage.mockmode #zoom{display:none}
+#mockscene{position:absolute;left:50%;top:50%;perspective:1400px;transform:translate(-50%,-50%)}
+#mockbox{position:relative;transform-style:preserve-3d}
+#mockbox .face{position:absolute;transform-style:preserve-3d}
+#mockbox .face>div{position:absolute;inset:0;backface-visibility:hidden}
+#mockbox .face svg{display:block;width:100%;height:100%}
+#mockbox .face .in{background:linear-gradient(#a57a4a,#b88c5a);transform:rotateY(180deg)}
+#mockbox .face .sh{pointer-events:none}
+#mockshadow{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(60,40,20,.35),rgba(60,40,20,0) 70%)}
+#mockctl{left:50%;bottom:14px;transform:translateX(-50%)}
+#mockctl button{padding:6px 12px}
+#mockhint{position:absolute;top:14px;left:50%;transform:translateX(-50%);color:var(--mute);font-size:12.5px;background:rgba(248,244,238,.85);padding:4px 10px;border-radius:999px}
+#tools button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 6px;width:70px;font-size:11px;flex-shrink:0}
+#tools button b{font-size:17px;line-height:1}
+#tools .sep{height:1px;background:var(--line);margin:2px 4px}
+#zoom{right:12px;bottom:12px;padding:5px}
+#zoom button{padding:5px 11px}
+#chat{background:var(--surf);border-top:1px solid var(--line);padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px}
+#chat .ttl{display:flex;align-items:center;gap:8px;font-weight:700}
+#chat .ttl button{margin-left:auto;padding:3px 10px;font-size:12px}
+#log{max-height:120px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+#log.min{display:none}
+.msg{padding:8px 11px;border-radius:12px;max-width:80%;line-height:1.4;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:#e9dccd}
+.msg.a{align-self:flex-start;background:#fffaf4;border:1px solid var(--line)}
+#chips{display:flex;flex-wrap:wrap;gap:6px}
+#chips button{font-size:12.5px;padding:5px 11px;border-radius:999px;font-weight:500}
+#att{display:flex;flex-wrap:wrap;gap:4px}
+#att span{font-size:12px;background:#efe7dc;border-radius:6px;padding:2px 7px}
+#pbox{display:flex;gap:8px;align-items:flex-end}
+#pbox textarea{min-height:46px;max-height:110px;resize:none;border-radius:14px;padding:12px 14px;font-size:14.5px;background:#fffcf8;box-shadow:inset 0 1px 3px rgba(90,70,45,.08)}
+#pbox button{height:46px;border-radius:14px;white-space:nowrap}
+#top button,#top select{white-space:nowrap}
+@media (max-width:1050px){ #top .brand b, #undo .lbl{display:none} }
+.tag{font-size:10.5px;background:#f6e3a7;border-radius:5px;padding:1px 6px;color:#7a5410;font-weight:600}
+.props{padding:0 14px 10px}
+.row{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center;margin:7px 0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+.row label,.row2 label{color:var(--mute);font-size:12.5px}
+#val{padding:0 14px 14px}
+.v{font-size:13px;padding:7px 9px;margin:5px 0;border-radius:9px;cursor:pointer;background:#fffaf4;border:1px solid var(--line)}
+.v.err{color:var(--err)} .v.warn{color:var(--warn)} .v.ok{color:var(--ok)}
+#modal{position:fixed;inset:0;background:rgba(60,45,30,.30);display:none;align-items:center;justify-content:center;z-index:20}
+#modal .box{background:var(--surf);border-radius:16px;padding:20px 22px;width:480px;max-width:92vw;box-shadow:0 20px 60px rgba(60,45,30,.25)}
+#modal pre{max-height:180px;overflow:auto;background:var(--surf2);padding:9px;font-size:11px;border-radius:9px}
+.handle{fill:#fff;stroke:#3b82f6;stroke-width:.04;cursor:nwse-resize}
+#svg,#svg *{user-select:none;-webkit-user-select:none}
+.empty{color:var(--mute);padding:4px 0 10px;line-height:1.5}
+</style>
+</head>
+<body class="vloja">
+<div id="loja">
+  <header id="ltop"><span class="brand">🥖 <b>Glopel</b> · sacolas para padaria</span><span class="grow"></span>
+    <button id="vercar">🛒 Carrinho <i id="carcount">0</i></button></header>
+  <div id="lmain">
+    <div id="hero"><h1>Sacolas de papel com a cara da sua padaria</h1><p>Escolha o tamanho, personalize a arte aqui mesmo e receba pronto para impressão. <span class="ilus">Loja de demonstração — preços ilustrativos.</span></p></div>
+    <div id="vitrine"></div>
+  </div>
+  <div id="veu"></div>
+  <aside id="carrinho"><div class="dh">🛒 Seu carrinho <button id="fechacar" title="Fechar">×</button></div>
+    <div id="carlista"></div>
+    <div id="carfoot"><div class="tot"><span>Total</span><b id="cartotal">R$ 0,00</b></div><div id="carmsg"></div><button id="finalizar" class="pri" disabled>Finalizar compra</button></div></aside>
+</div>
+<div id="toast"></div>
+<div id="app">
+  <header id="top">
+    <button id="voltaloja" title="Voltar para a loja / carrinho">← Loja</button>
+    <span class="brand">🥖 <b>Editor de Sacolas</b></span>
+    <div id="prodwrap"><button id="prodbtn" title="Trocar de sacola"></button><div id="prodmenu"></div></div>
+    <span id="salvo" class="salvo ok">✓ Salvo</span>
+    <span class="grow"></span>
+    <button id="undo" class="ic" title="Desfazer (Ctrl+Z)">↶<span class="lbl"> Desfazer</span></button>
+    <button id="redo" class="ic" title="Refazer (Ctrl+Shift+Z)">↷</button>
+    <select id="modo" title="Como ver a arte"></select>
+    <button id="ajuda" class="ic" title="Ajuda, exemplo e recomeçar">❓</button>
+    <button id="export" class="pri">✅ Pronto</button>
+  </header>
+  <div id="main">
+    <nav class="tabs left">
+      <button class="tab" data-d="d-camadas" title="Camadas">📚<span>Camadas</span></button>
+      <button class="tab" data-d="d-cores" title="Cores e gabarito">🎨<span>Cores</span></button>
+      <button class="tab" data-d="d-elem" title="Elementos e imagens">🧩<span>Elementos</span></button>
+    </nav>
+    <aside id="d-camadas" class="drawer left">
+      <div class="dh">📚 Camadas <button class="fecha" title="Fechar">×</button></div>
+      <div id="layers"></div>
+    </aside>
+    <aside id="d-cores" class="drawer left">
+      <div class="dh">🎨 Cores <button class="fecha" title="Fechar">×</button></div>
+      <h3>Cores Pantone · <span id="ncores"></span></h3>
+      <div id="pal"></div>
+      <h3>Sacola</h3>
+      <div id="gabinfo"></div>
+    </aside>
+    <aside id="d-elem" class="drawer left">
+      <div class="dh">🧩 Elementos <button class="fecha" title="Fechar">×</button></div>
+      <div id="elementos"></div>
+    </aside>
+    <section id="center">
+      <div id="sacbar"><div id="sacolas"></div><button id="conferir" class="pri" title="Marcar esta sacola como conferida">Está boa ✓</button></div>
+      <div id="stage">
+        <div id="faixa"></div>
+        <div id="marca"></div>
+        <div id="chapalabel"></div>
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="mock"><div id="mockscene"><div id="mockbox"></div><div id="mockshadow"></div></div>
+          <div id="mockctl" class="float"><button data-r="0">Frente</button><button data-r="-90">Lado</button><button data-r="180">Costas</button><button id="mockspin">🔄 Girar</button></div>
+          <div id="mockhint">Arraste para girar a sacola</div></div>
+        <div id="prod"><div id="prodcanvas"></div><div id="prodmsg">Montando o produto…</div>
+          <div id="prodctl" class="float"><button data-v="0">Frente</button><button data-v="1">3/4</button><button data-v="2">Costas</button><button data-v="3">De cima</button><button id="prodspin">🔄 Girar</button></div>
+          <div id="mockhint2">Arraste para girar · roda do mouse = zoom</div></div>
+        <div id="tools" class="float vert">
+          <div id="grip" title="Arraste para mover a barra"><span>⋮⋮</span><button id="orient" title="Deixar a barra deitada/em pé">⇄</button></div>
+          <button id="t-mover" class="on" title="Selecionar e mover (V)"><b>👆</b>Selecionar</button>
+          <button id="t-escalar" title="Mudar tamanho (S)"><b>↔️</b>Tamanho</button>
+          <button id="t-texto" title="Escrever texto (T)"><b>🔤</b>Texto</button>
+          <button id="add-ret" title="Adicionar forma"><b>🟥</b>Forma</button>
+          <button id="centrar" title="Centralizar o que está selecionado (respeita dobras e emenda)"><b>🎯</b>Centralizar</button>
+          <span class="sep"></span>
+          <button id="t-mao" title="Mover a tela (H, ou segure Espaço)"><b>✋</b>Mover tela</button>
+          <button id="snap" class="on" title="Ímã: gruda e alinha sozinho (N)"><b>🧲</b>Ímã</button>
+        </div>
+        <div id="zoom" class="float">
+          <button id="zout" title="Afastar">−</button><button id="fit" title="Ver a sacola inteira">Ajustar</button><button id="zin" title="Aproximar">+</button>
+        </div>
+      </div>
+      <div id="chat">
+        <div class="ttl">✨ Pedir ao Claude <span class="tag">conectando…</span><button id="logtog">Esconder conversa</button></div>
+        <div id="log"></div>
+        <div id="chips"></div>
+        <div id="att"></div>
+        <div id="pbox">
+          <button id="clip" class="ic" title="Anexar arquivo">📎</button>
+          <textarea id="prompt" rows="1" placeholder="Escreva o que quer mudar. Ex.: aumenta o logo, troca o telefone, deixa o nome vermelho…"></textarea>
+          <button id="send" class="pri">Pedir ✨</button>
+        </div>
+      </div>
+    </section>
+    <aside id="d-ajustes" class="drawer right">
+      <div class="dh">✏️ Ajustes <button class="fecha" title="Fechar">×</button></div>
+      <div class="props" id="props"></div>
+    </aside>
+    <aside id="d-check" class="drawer right">
+      <div class="dh">✅ Checagem <button class="fecha" title="Fechar">×</button></div>
+      <div style="padding:0 14px 6px;color:var(--mute);font-size:12.5px">O que a clicheria vai conferir. Clique num item para achar na arte.</div>
+      <div id="val"></div>
+    </aside>
+    <nav class="tabs right">
+      <button class="tab" data-d="d-ajustes" title="Ajustes do item selecionado">✏️<span>Ajustes</span><i id="b-aj" class="badge" style="background:var(--sel)"></i></button>
+      <button class="tab" data-d="d-check" title="Checagem p/ clicheria">✅<span>Checagem</span><i id="b-ck" class="badge"></i></button>
+    </nav>
+  </div>
+</div>
+<input type="file" id="file" multiple accept=".svg,.png,.jpg,.jpeg,.pdf,.ai,.eps" hidden>
+<div id="modal"><div class="box" id="mbox"></div></div>
+
+<script>
+const G5KG = {"nome": "Sacola kraft 5 kg", "referencia": "5 Kg", "fonte_gabarito": "Gabarito_5_Kg.pdf (OHDE Representações)", "unidade": "cm", "regras": {"max_cores": 3, "margem_seguranca_cm": 0.5, "texto_min_pt": 6, "linha_min_mm": 0.3}, "serrilha": {"amplitude": 0.3, "passo": 0.6}, "contorno": [[0, -1.5], [18.3, -1.5], [18.3, -3.0], [35.8, -3.0], [35.8, -1.5], [54.6, -1.5], [54.6, 43.5], [35.8, 43.5], [35.8, 41.5], [18.3, 41.5], [18.3, 43.5], [0, 43.5]], "dobras": [[[3.0, 0], [3.0, 43.5]], [[10.0, 0], [10.0, 43.5]], [[14.15, 0], [14.15, 43.5]], [[18.3, 0], [18.3, 41.5]], [[35.8, 0], [35.8, 41.5]], [[39.95, 0], [39.95, 43.5]], [[44.1, 0], [44.1, 43.5]], [[0, 0], [54.6, 0]]], "areas_cola": [{"x": 0, "y": 0, "w": 3.0, "h": 43.5}, {"x": 0, "y": -3.0, "w": 54.6, "h": 3.0}], "paineis": {"frente": {"w": 17.5, "h": 41.5, "partes": [{"x": 18.3, "y": 0, "w": 17.5, "h": 41.5, "px": 0}], "linhas_internas": []}, "verso": {"w": 17.5, "h": 43.5, "partes": [{"x": 44.1, "y": 0, "w": 10.5, "h": 43.5, "px": 0}, {"x": 3.0, "y": 0, "w": 7.0, "h": 43.5, "px": 10.5}], "linhas_internas": [{"x": 10.5, "tipo": "emenda colada"}]}, "sanfona_esq": {"w": 8.3, "h": 43.5, "partes": [{"x": 10.0, "y": 0, "w": 8.3, "h": 43.5, "px": 0}], "linhas_internas": [{"x": 4.15, "tipo": "dobra da sanfona"}]}, "sanfona_dir": {"w": 8.3, "h": 43.5, "partes": [{"x": 35.8, "y": 0, "w": 8.3, "h": 43.5, "px": 0}], "linhas_internas": [{"x": 4.15, "tipo": "dobra da sanfona"}]}}};
+let GAB = G5KG;
+const ARTE0 = {"cliente": "Padaria Trigo de Ouro (exemplo)", "versao": 1, "gabarito": "../gabaritos/5kg.json", "paleta": {"vermelho": {"pantone": "PANTONE 1805 C", "cmyk": [0, 91, 100, 23]}, "preto": {"pantone": "PANTONE Black C", "cmyk": [0, 13, 49, 98]}}, "camadas": [{"id": "selo_circulo", "painel": "frente", "tipo": "elipse", "x": 8.75, "y": 26.8, "rx": 5.0, "ry": 5.0, "cor": "vermelho"}, {"id": "selo_anel", "painel": "frente", "tipo": "elipse", "x": 8.75, "y": 26.8, "rx": 4.4, "ry": 4.4, "contorno": "papel", "traco_mm": 0.8}, {"id": "trigo", "painel": "frente", "tipo": "grupo", "x": 8.75, "y": 26.6, "filhos": [{"id": "trigo_haste", "tipo": "linha", "x1": 0, "y1": -3.0, "x2": 0, "y2": 2.6, "contorno": "papel", "traco_mm": 1.4, "ponta_redonda": true}, {"id": "g1e", "tipo": "elipse", "x": -0.45, "y": -1.1, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"}, {"id": "g1d", "tipo": "elipse", "x": 0.45, "y": -1.1, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"}, {"id": "g2e", "tipo": "elipse", "x": -0.45, "y": -0.1, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"}, {"id": "g2d", "tipo": "elipse", "x": 0.45, "y": -0.1, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"}, {"id": "g3e", "tipo": "elipse", "x": -0.45, "y": 0.9, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"}, {"id": "g3d", "tipo": "elipse", "x": 0.45, "y": 0.9, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"}, {"id": "g4", "tipo": "elipse", "x": 0, "y": 2.3, "rx": 0.32, "ry": 0.8, "cor": "papel"}]}, {"id": "desde", "painel": "frente", "tipo": "texto", "texto": "desde 1987", "fonte": "Chorus", "tamanho_pt": 30, "alinhamento": "centro", "x": 8.75, "y": 33.6, "cor": "vermelho"}, {"id": "nome", "painel": "frente", "tipo": "texto", "texto": "TRIGO DE OURO", "fonte": "Bonum Bold", "tamanho_pt": 40, "alinhamento": "centro", "x": 8.75, "y": 18.4, "cor": "preto"}, {"id": "subtitulo", "painel": "frente", "tipo": "texto", "texto": "PADARIA & CONFEITARIA", "fonte": "Heros Bold", "tamanho_pt": 13, "espacamento": 220, "alinhamento": "centro", "x": 8.75, "y": 16.6, "cor": "vermelho"}, {"id": "divisor", "painel": "frente", "tipo": "linha", "x1": 4.5, "y1": 15.6, "x2": 13.0, "y2": 15.6, "contorno": "vermelho", "traco_mm": 0.6}, {"id": "slogan", "painel": "frente", "tipo": "texto", "texto": "Pão quentinho\ntoda manhã", "fonte": "Pagella Italic", "tamanho_pt": 24, "entrelinha": 1.15, "alinhamento": "centro", "x": 8.75, "y": 12.4, "cor": "preto"}, {"id": "rodape_faixa", "painel": "frente", "tipo": "retangulo", "x": 0.6, "y": 1.0, "w": 16.3, "h": 4.0, "raio": 0.4, "cor": "vermelho"}, {"id": "rodape_contato", "painel": "frente", "tipo": "texto", "texto": "(41) 3333-0000  ·  @trigodeouro", "fonte": "Heros Bold", "tamanho_pt": 15, "alinhamento": "centro", "x": 8.75, "y": 3.3, "cor": "papel"}, {"id": "rodape_endereco", "painel": "frente", "tipo": "texto", "texto": "Rua das Flores, 123 — Curitiba/PR", "fonte": "Heros", "tamanho_pt": 11, "alinhamento": "centro", "x": 8.75, "y": 1.9, "cor": "papel"}, {"id": "sanfona_e_txt1", "painel": "sanfona_esq", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18, "espacamento": 120, "alinhamento": "centro", "x": 2.4, "y": 21.75, "rotacao": 90, "cor": "vermelho"}, {"id": "sanfona_e_txt2", "painel": "sanfona_esq", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18, "espacamento": 120, "alinhamento": "centro", "x": 6.55, "y": 21.75, "rotacao": 90, "cor": "vermelho"}, {"id": "sanfona_d_txt1", "painel": "sanfona_dir", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18, "espacamento": 120, "alinhamento": "centro", "x": 2.4, "y": 21.75, "rotacao": 90, "cor": "vermelho"}, {"id": "sanfona_d_txt2", "painel": "sanfona_dir", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18, "espacamento": 120, "alinhamento": "centro", "x": 6.55, "y": 21.75, "rotacao": 90, "cor": "vermelho"}, {"id": "verso_obrigado", "painel": "verso", "tipo": "texto", "texto": "Obrigado\npela preferência!", "fonte": "Pagella Italic", "tamanho_pt": 28, "entrelinha": 1.1, "alinhamento": "centro", "x": 5.25, "y": 26.0, "cor": "preto"}, {"id": "verso_siga", "painel": "verso", "tipo": "texto", "texto": "SIGA @TRIGODEOURO", "fonte": "Heros Bold", "tamanho_pt": 14, "espacamento": 150, "alinhamento": "centro", "x": 5.25, "y": 21.6, "cor": "vermelho"}, {"id": "verso_reciclavel", "painel": "verso", "tipo": "texto", "texto": "Este papel é reciclável.\nDescarte corretamente.", "fonte": "Heros", "tamanho_pt": 8, "alinhamento": "centro", "x": 5.25, "y": 2.4, "cor": "preto"}]};
+const PT_CM = 2.54/72;
+let KRAFT = '#c89a62';
+const FONTES = {
+  "Inter":            {f:"Inter", w:400, s:"normal"},
+  "Inter Bold":       {f:"Inter", w:700, s:"normal"},
+  "Inter Black":      {f:"Inter", w:900, s:"normal"},
+  "Heros":            {f:"Arimo, Helvetica, Arial", w:400, s:"normal"},
+  "Heros Bold":       {f:"Arimo, Helvetica, Arial", w:700, s:"normal"},
+  "Heros Cond Bold":  {f:"'Archivo Narrow', 'Arial Narrow'", w:700, s:"normal"},
+  "Bonum Bold":       {f:"'Libre Baskerville', Bookman, Georgia, serif", w:700, s:"normal"},
+  "Pagella Italic":   {f:"'EB Garamond', Palatino, serif", w:400, s:"italic"},
+  "Chorus":           {f:"'EB Garamond', Palatino, serif", w:500, s:"italic"},
+  "Schola Bold":      {f:"'Libre Baskerville', Georgia, serif", w:700, s:"normal"}
+};
+let PAINEIS = Object.keys(GAB.paineis);
+const SIGLA = {frente:"FR", verso:"VS", sanfona_esq:"SE", sanfona_dir:"SD"};
+let M = GAB.regras.margem_seguranca_cm;
+let ymin = Math.min(...GAB.contorno.map(p=>p[1])), ymax = Math.max(...GAB.contorno.map(p=>p[1]));
+let xmin = Math.min(...GAB.contorno.map(p=>p[0])), xmax = Math.max(...GAB.contorno.map(p=>p[0]));
+
+let arte = {cliente:'', paleta:{}, camadas:[]};
+const PREV = ()=>modo==='previa'||modo==='mockup'||modo==='produto';
+let sel = null, sels = [], tool = 'mover', modo = 'previa', abertos = new Set(), snapOn = true;
+let hist = [JSON.stringify(arte)], hpos = 0;
+let view = {x:xmin-2, y:-(ymax+2), w:(xmax-xmin)+4, h:(ymax-ymin)+4};
+const svg = document.getElementById('svg');
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- cores ---------- */
+function cmyk2hex(c){const [C,Mg,Y,K]=c.map(v=>v/100);const r=255*(1-C)*(1-K),g=255*(1-Mg)*(1-K),b=255*(1-Y)*(1-K);return '#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}
+function cor(chave, tinta=100){
+  if(!chave) return 'none';
+  if(corOverride) return corOverride(chave);
+  if(PREV()){ if(chave==='papel') return KRAFT; const p=arte.paleta[chave]; return p?cmyk2hex(p.cmyk):'#ff00ff'; }
+  const alvo = modo.slice(4);
+  if(chave===alvo){ const g=Math.round(255*(1-tinta/100)); return `rgb(${g},${g},${g})`; }
+  return '#ffffff';
+}
+
+/* ---------- desenho de elementos ---------- */
+function elSVG(el, top){
+  if(el.visivel===false) return '';
+  const t = el.tipo;
+  const fill = el.cor ? cor(el.cor, el.tinta||100) : 'none';
+  const st = el.contorno ? `stroke="${cor(el.contorno, el.tinta||100)}" stroke-width="${(el.traco_mm||0.5)/10}"` : '';
+  const sc = el.escala||1, rot = el.rotacao||0;
+  const tr = t==='linha' ? '' : `transform="translate(${el.x||0},${-(el.y||0)}) rotate(${-rot}) scale(${sc})"`;
+  let body = '';
+  if(t==='retangulo') body = `<rect x="0" y="${-el.h}" width="${el.w}" height="${el.h}" rx="${el.raio||0}" fill="${fill}" ${st}/>`;
+  else if(t==='elipse') body = `<ellipse cx="0" cy="0" rx="${el.rx}" ry="${el.ry}" fill="${fill}" ${st}/>`;
+  else if(t==='linha') body = `<line x1="${el.x1}" y1="${-el.y1}" x2="${el.x2}" y2="${-el.y2}" ${st} stroke-linecap="${el.ponta_redonda?'round':'butt'}"/>`;
+  else if(t==='texto'){
+    const F = FONTES[el.fonte]||FONTES["Inter"], tam=(el.tamanho_pt||12)*PT_CM, lh=(el.entrelinha||1.2)*tam;
+    const anc = {esquerda:'start', centro:'middle', direita:'end'}[el.alinhamento||'esquerda'];
+    const linhas = String(el.texto||'').split('\n');
+    body = `<text font-family="${esc(F.f)}" font-weight="${F.w}" font-style="${F.s}" font-size="${tam}" text-anchor="${anc}" letter-spacing="${(el.espacamento||0)/1000*tam}" fill="${fill}" ${st}>` +
+      linhas.map((l,i)=>`<tspan x="0" y="${i*lh}">${esc(l)||' '}</tspan>`).join('') + `</text>`;
+  }
+  else if(t==='grupo') body = el.filhos.map(f=>elSVG(f,false)).join('');
+  else if(t==='svg' || t==='imagem'){
+    const h = el.w * (el._ar||1);
+    if(PREV() && el._href) body = `<image href="${el._href}" x="0" y="${-h}" width="${el.w}" height="${h}" preserveAspectRatio="none"/>`;
+    else body = `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="${PREV()?'#eee':'#888'}" />`;
+  }
+  else if(t==='caminho') body = `<path d="${el.d}" fill="${fill}" ${st}/>`;
+  else if(t==='vetor') body = svgDoVetor(el);
+  else if(t==='meiotom') body = meiotomSVG(el);
+  return `<g ${tr}>${body}</g>`;
+}
+
+function serrilha(a,b){
+  const amp=GAB.serrilha.amplitude, passo=GAB.serrilha.passo, dentro = a[1]>20?-1:1;
+  const n=Math.max(1,Math.round(Math.abs(b[0]-a[0])/passo)), dx=(b[0]-a[0])/n; let s='';
+  for(let i=0;i<n;i++){ s+=` L${a[0]+dx*(i+.5)},${-(a[1]+amp*dentro)} L${a[0]+dx*(i+1)},${-a[1]}`; } return s;
+}
+function contornoD(){
+  const P=GAB.contorno; let d=`M${P[0][0]},${-P[0][1]}`;
+  for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];
+    if(Math.abs(a[1]-b[1])<1e-6 && Math.abs(a[0]-b[0])>1) d+=serrilha(a,b); else d+=` L${b[0]},${-b[1]}`;}
+  return d+' Z';
+}
+
+function render(){
+  let s = `<defs>`;
+  PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach((p,i)=>{ s+=`<clipPath id="c-${pn}-${i}"><rect x="${p.x}" y="${-(p.y+p.h)}" width="${p.w}" height="${p.h}"/></clipPath>`; }));
+  s += `<pattern id="hat" width="0.6" height="0.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="0.6" stroke="#0004" stroke-width="0.04"/></pattern>`;
+  s += `<clipPath id="ccont"><path d="${contornoD()}"/></clipPath></defs>`;
+  s += `<pattern id="g1" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0 L0 0 0 1" fill="none" stroke="#a8977f" stroke-opacity=".16" stroke-width="1" vector-effect="non-scaling-stroke"/></pattern>`;
+  s += `<pattern id="g5" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="url(#g1)"/><path d="M5 0 L0 0 0 5" fill="none" stroke="#a8977f" stroke-opacity=".26" stroke-width="1" vector-effect="non-scaling-stroke"/></pattern>`;
+  s += `<rect x="-300" y="-300" width="700" height="600" fill="url(#g5)" pointer-events="all" data-fundo="1"/>`;
+  s += `<path d="${contornoD()}" fill="${PREV()?KRAFT:'#fff'}" stroke="none" filter="drop-shadow(0 0.15px 0.25px rgba(70,50,30,.25))"/>`;
+  arte.camadas.forEach(c=>{
+    if(c.visivel===false) return;
+    const pn = GAB.paineis[c.painel];
+    pn.partes.forEach((p,i)=>{
+      s += `<g clip-path="url(#c-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})" data-layer="${esc(c.id)}" data-part="${i}" style="cursor:${c.bloqueado?'not-allowed':'move'}">${elSVG(c,true)}</g></g>`;
+    });
+  });
+  // gabarito
+  s += `<g pointer-events="none"><path d="${contornoD()}" fill="none" stroke="#e5007e" stroke-width="0.05"/>`;
+  GAB.areas_cola.forEach(r=>{ s+=`<rect x="${r.x}" y="${-(r.y+r.h)}" width="${r.w}" height="${r.h}" fill="url(#hat)" clip-path="url(#ccont)"/>`; });
+  GAB.dobras.forEach(([a,b])=>{ s+=`<line x1="${a[0]}" y1="${-a[1]}" x2="${b[0]}" y2="${-b[1]}" stroke="#e5007e" stroke-width="0.04" stroke-dasharray="0.3 0.2"/>`; });
+  PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach(p=>{
+    s+=`<rect x="${p.x+M}" y="${-(p.y+p.h-M)}" width="${p.w-2*M}" height="${p.h-2*M}" fill="none" stroke="#2563eb55" stroke-width="0.03" stroke-dasharray="0.15 0.15"/>`;
+    s+=`<text x="${p.x+p.w/2}" y="${-(p.y+p.h)+1.0}" font-size="0.45" text-anchor="middle" fill="#e5007e" font-family="Inter" font-weight="600">${pn.toUpperCase().replace('_',' ')}</text>`;
+  }));
+  { const tira=GAB.areas_cola.find(a=>a.y>=0), c1=GAB.areas_cola.find(a=>a.y<0);
+    if(tira){ const lx=tira.x+tira.w/2, ly=-(tira.y+tira.h/2); s += `<text x="${lx}" y="${ly}" font-size="0.4" fill="#e5007e" font-family="Inter" transform="rotate(-90 ${lx} ${ly})" text-anchor="middle">ÁREA DE COLA</text>`; }
+    s += `<text x="${c1.x+c1.w/2}" y="${-(c1.y+c1.h*0.35)}" font-size="0.4" fill="#e5007e" font-family="Inter" text-anchor="middle">ÁREA DE COLA</text></g>`; }
+  s += `<g id="selbox"></g>`;
+  svg.innerHTML = s;
+  { const cl=$('chapalabel'); if(modo.startsWith('sep:') && arte.paleta[modo.slice(4)]){ const p=arte.paleta[modo.slice(4)]; cl.style.display='block'; cl.style.color=cmyk2hex(p.cmyk); cl.textContent='Chapa: '+p.pantone; } else cl.style.display='none'; }
+  const mk = modo==='mockup'; $('stage').classList.toggle('mockmode', mk); if(mk) mockup();
+  const pr = modo==='produto'; $('stage').classList.toggle('prodmode', pr); if(pr) produto();
+  svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+  desenhaSel(); listaCamadas(); paleta(); props(); valida();
+}
+
+/* ---------- geometria ---------- */
+function toSVG(cx, cy){ const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function bboxSheet(id, part=0){
+  const g = svg.querySelector(`g[data-layer="${CSS.escape(id)}"][data-part="${part}"]`); if(!g) return null;
+  const r = g.getBoundingClientRect(); if(!r.width && !r.height) return null;
+  const a = toSVG(r.left, r.top), b = toSVG(r.right, r.bottom);
+  return {x0:a.x, x1:b.x, y0:-b.y, y1:-a.y}; // coordenadas da folha, y para cima
+}
+function bboxPainel(c){
+  const p = GAB.paineis[c.painel].partes[0], b = bboxSheet(c.id, 0); if(!b) return null;
+  const off = p.x - p.px; return {x0:b.x0-off, x1:b.x1-off, y0:b.y0-p.y, y1:b.y1-p.y};
+}
+function layer(id){ return arte.camadas.find(c=>c.id===id); }
+
+function setSel(id){ sel = id||null; sels = id ? [id] : []; }
+function toggleSel(id){ sels = sels.includes(id) ? sels.filter(x=>x!==id) : [...sels, id]; sel = sels[sels.length-1]||null; }
+function selLayers(){ return arte.camadas.filter(c=>sels.includes(c.id)); }
+function uniaoPainel(ls){
+  const bs = ls.map(bboxPainel).filter(Boolean); if(!bs.length) return null;
+  return {x0:Math.min(...bs.map(b=>b.x0)), x1:Math.max(...bs.map(b=>b.x1)), y0:Math.min(...bs.map(b=>b.y0)), y1:Math.max(...bs.map(b=>b.y1))};
+}
+function centroDe(ls){ const b=uniaoPainel(ls); return b?[(b.x0+b.x1)/2,(b.y0+b.y1)/2]:[0,0]; }
+function mesmoPainel(ls){ return ls.length && ls.every(c=>c.painel===ls[0].painel); }
+let guias = [];
+function desenhaSel(){
+  const g = $('selbox'); if(!g) return; let h='';
+  const ls = selLayers().filter(c=>c.visivel!==false);
+  ls.forEach(c=>GAB.paineis[c.painel].partes.forEach((p,i)=>{
+    const b = bboxSheet(c.id, i); if(!b) return;
+    const x0=Math.max(b.x0,p.x), x1=Math.min(b.x1,p.x+p.w); if(x1<=x0) return;
+    h += `<rect x="${x0}" y="${-b.y1}" width="${x1-x0}" height="${b.y1-b.y0}" fill="none" stroke="#2563eb" stroke-width="${ls.length>1?0.035:0.05}" pointer-events="none"/>`;
+  }));
+  if(ls.length && mesmoPainel(ls)){
+    const p = GAB.paineis[ls[0].painel].partes[0], off = p.x-p.px, u = uniaoPainel(ls);
+    if(u){
+      const X0=u.x0+off, X1=u.x1+off, Y0=u.y0+p.y, Y1=u.y1+p.y;
+      if(ls.length>1) h += `<rect x="${X0}" y="${-Y1}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#2563eb" stroke-width="0.05" stroke-dasharray="0.2 0.12" pointer-events="none"/>`;
+      [[X0,Y0],[X1,Y0],[X0,Y1],[X1,Y1]].forEach(([x,y])=>{ if(x>=p.x-0.01 && x<=p.x+p.w+0.01) h += `<rect class="handle" data-handle="1" x="${x-0.18}" y="${-y-0.18}" width="0.36" height="0.36"/>`; });
+    }
+  }
+  guias.forEach(gd=>{ h += `<line x1="${gd.x1}" y1="${-gd.y1}" x2="${gd.x2}" y2="${-gd.y2}" stroke="#ff2d87" stroke-width="${gd.forte?0.05:0.03}" pointer-events="none"/>`; });
+  h += `<rect id="marq" x="0" y="0" width="0" height="0" fill="#2563eb18" stroke="#2563eb" stroke-width="0.04" stroke-dasharray="0.15 0.1" pointer-events="none" visibility="hidden"/>`;
+  g.innerHTML = h;
+}
+
+/* ---------- snap + guias inteligentes ---------- */
+function alvosSnap(painel, excluir){
+  const pn = GAB.paineis[painel], xs=[], ys=[];
+  xs.push({v:0},{v:M},{v:pn.w/2,forte:1},{v:pn.w-M},{v:pn.w}); ys.push({v:0},{v:M},{v:pn.h/2,forte:1},{v:pn.h-M},{v:pn.h});
+  (pn.linhas_internas||[]).forEach(li=>xs.push({v:li.x}));
+  arte.camadas.forEach(c=>{
+    if(c.painel!==painel || excluir.includes(c) || c.visivel===false) return;
+    const b = bboxPainel(c); if(!b) return;
+    xs.push({v:b.x0},{v:(b.x0+b.x1)/2},{v:b.x1}); ys.push({v:b.y0},{v:(b.y0+b.y1)/2},{v:b.y1});
+  });
+  return {xs, ys};
+}
+function tolCm(px=6){ return px / svg.getScreenCTM().a; }
+function resolveSnap(box, dx, dy, alvos, painel){
+  const tol = snapOn ? tolCm(7) : 0.005, cand = (a0,a1)=>[a0,(a0+a1)/2,a1];
+  let melhorX=null, melhorY=null;
+  cand(box.x0+dx, box.x1+dx).forEach(v=>alvos.xs.forEach(t=>{ const d=t.v-v; if(Math.abs(d)<=tol && (!melhorX || Math.abs(d)<Math.abs(melhorX.d))) melhorX={d,t}; }));
+  cand(box.y0+dy, box.y1+dy).forEach(v=>alvos.ys.forEach(t=>{ const d=t.v-v; if(Math.abs(d)<=tol && (!melhorY || Math.abs(d)<Math.abs(melhorY.d))) melhorY={d,t}; }));
+  if(snapOn){ if(melhorX) dx+=melhorX.d; if(melhorY) dy+=melhorY.d; }
+  // guias: todas as coincidências após o ajuste
+  const pn = GAB.paineis[painel], pt = pn.partes[0], off = pt.x-pt.px, G=[], eps=0.01;
+  const bx = cand(box.x0+dx, box.x1+dx), by = cand(box.y0+dy, box.y1+dy);
+  const vistosX=new Set(), vistosY=new Set();
+  alvos.xs.forEach(t=>{ if(bx.some(v=>Math.abs(v-t.v)<eps) && !vistosX.has(t.v.toFixed(2))){ vistosX.add(t.v.toFixed(2));
+    // linha vertical: em qual parte física fica?
+    const parte = pn.partes.find(q=>t.v>=q.px-eps && t.v<=q.px+q.w+eps) || pt;
+    G.push({x1:t.v+parte.x-parte.px, y1:parte.y, x2:t.v+parte.x-parte.px, y2:parte.y+pn.h, forte:t.forte}); } });
+  alvos.ys.forEach(t=>{ if(by.some(v=>Math.abs(v-t.v)<eps) && !vistosY.has(t.v.toFixed(2))){ vistosY.add(t.v.toFixed(2));
+    pn.partes.forEach(q=>G.push({x1:q.x, y1:t.v+q.y, x2:q.x+q.w, y2:t.v+q.y, forte:t.forte})); } });
+  return {dx, dy, G};
+}
+
+/* ---------- edição de texto no canvas ---------- */
+let editando = null;
+function editaTexto(c, selecionaTudo){
+  fechaEdicao();
+  setSel(c.id); render();
+  const g = svg.querySelector(`g[data-layer="${CSS.escape(c.id)}"][data-part="0"]`); if(!g) return;
+  const r = g.getBoundingClientRect(), st = $('stage').getBoundingClientRect(), k = svg.getScreenCTM().a;
+  const F = FONTES[c.fonte]||FONTES["Inter"], tamPx = (c.tamanho_pt||12)*PT_CM*(c.escala||1)*k;
+  const ta = document.createElement('textarea'); ta.id='inlineTxt'; ta.value = c.texto||''; ta.spellcheck=false;
+  const w = Math.max(r.width+24, 140), h = Math.max(r.height+12, tamPx*1.6);
+  let left = r.left - st.left - 12; if((c.alinhamento||'esquerda')==='centro') left = r.left - st.left + r.width/2 - w/2; if(c.alinhamento==='direita') left = r.right - st.left - w + 12;
+  Object.assign(ta.style, {position:'absolute', left:left+'px', top:(r.top-st.top-6)+'px', width:w+'px', height:h+'px', fontFamily:F.f, fontWeight:F.w, fontStyle:F.s,
+    fontSize:tamPx+'px', lineHeight:(c.entrelinha||1.2), textAlign:{esquerda:'left',centro:'center',direita:'right'}[c.alinhamento||'esquerda'],
+    color:PREV()&&c.cor&&c.cor!=='papel'&&arte.paleta[c.cor]?cmyk2hex(arte.paleta[c.cor].cmyk):'#111', background:'rgba(255,255,255,.92)', border:'2px solid #2563eb',
+    borderRadius:'4px', padding:'2px 6px', resize:'none', outline:'none', overflow:'hidden', zIndex:5, boxShadow:'0 4px 18px rgba(0,0,0,.18)'});
+  $('stage').appendChild(ta);
+  editando = {c, ta};
+  ta.addEventListener('input', ()=>{ c.texto = ta.value; render(); });
+  ta.addEventListener('keydown', e=>{ if(e.key==='Escape' || (e.key==='Enter' && (e.ctrlKey||e.metaKey))){ e.preventDefault(); fechaEdicao(); } e.stopPropagation(); });
+  setTimeout(()=>ta.addEventListener('blur', ()=>setTimeout(fechaEdicao, 0)), 50);
+  ta.addEventListener('pointerdown', e=>e.stopPropagation());
+  setTimeout(()=>{ ta.focus(); if(selecionaTudo) ta.select(); else ta.setSelectionRange(ta.value.length, ta.value.length); }, 0);
+}
+function fechaEdicao(){ if(!editando) return; const {ta}=editando; editando=null; ta.remove(); commit(); render(); }
+
+/* ---------- pastas (grupos) ---------- */
+function agrupar(){
+  const ls = selLayers();
+  if(ls.length<2){ msg('a','Selecione 2 ou mais camadas para criar uma pasta (shift+clique ou arraste um retângulo).'); return; }
+  if(!mesmoPainel(ls)){ msg('a','Para agrupar, as camadas precisam estar no mesmo painel (frente, verso ou sanfona).'); return; }
+  const idxs = ls.map(c=>arte.camadas.indexOf(c)), topo = Math.max(...idxs);
+  const g = {id:novoId('pasta'), painel:ls[0].painel, tipo:'grupo', x:0, y:0, filhos: ls.map(c=>{ const f={...c}; delete f.painel; return f; })};
+  arte.camadas = arte.camadas.filter(c=>!ls.includes(c));
+  arte.camadas.splice(topo-(ls.length-1), 0, g);
+  abertos.add(g.id); setSel(g.id); commit(); render();
+}
+function desagrupar(){
+  const g = sel && layer(sel); if(!g || g.tipo!=='grupo') return;
+  const gx=g.x||0, gy=g.y||0, gs=g.escala||1, gr=(g.rotacao||0)*Math.PI/180, cs=Math.cos(gr), sn=Math.sin(gr);
+  const T = (x,y)=>[gx + gs*(x*cs - y*sn), gy + gs*(x*sn + y*cs)];
+  const filhos = g.filhos.map(f0=>{
+    const f = JSON.parse(JSON.stringify(f0)); f.painel = g.painel;
+    if(f.tipo==='linha'){ [f.x1,f.y1]=T(f.x1,f.y1); [f.x2,f.y2]=T(f.x2,f.y2); f.traco_mm=+((f.traco_mm||.5)*gs).toFixed(2); }
+    else { [f.x,f.y]=T(f.x||0,f.y||0); if(gs!==1) f.escala=+((f.escala||1)*gs).toFixed(4); if(g.rotacao) f.rotacao=(f.rotacao||0)+g.rotacao; }
+    if(arte.camadas.some(c=>c.id===f.id && c!==g)) f.id = novoId(f.id);
+    arred(f); return f;
+  });
+  const i = arte.camadas.indexOf(g); arte.camadas.splice(i, 1, ...filhos);
+  sels = filhos.map(f=>f.id); sel = sels[sels.length-1]; commit(); render();
+}
+
+/* ---------- transformações ---------- */
+function mover(c, dx, dy){
+  if(c.tipo==='linha'){ c.x1+=dx; c.x2+=dx; c.y1+=dy; c.y2+=dy; } else { c.x=(c.x||0)+dx; c.y=(c.y||0)+dy; }
+}
+function escalarEm(c, f, cx, cy){
+  if(c.tipo==='linha'){ ['1','2'].forEach(k=>{ c['x'+k]=cx+(c['x'+k]-cx)*f; c['y'+k]=cy+(c['y'+k]-cy)*f; }); c.traco_mm=+(((c.traco_mm||.5)*f).toFixed(2)); return; }
+  c.escala = +(((c.escala||1)*f).toFixed(4));
+  c.x = cx + ((c.x||0)-cx)*f; c.y = cy + ((c.y||0)-cy)*f;
+}
+function centro(c){ const b=bboxPainel(c); return b?[(b.x0+b.x1)/2,(b.y0+b.y1)/2]:[c.x||0,c.y||0]; }
+const r2 = v => Math.round(v*100)/100;
+function arred(c){ ['x','y','x1','x2','y1','y2'].forEach(k=>{ if(typeof c[k]==='number') c[k]=r2(c[k]); }); }
+
+/* ---------- histórico ---------- */
+function commit(){ const j=JSON.stringify(arte); if(j===hist[hpos]) return; hist=hist.slice(0,hpos+1); hist.push(j); hpos++; }
+function undo(){ if(hpos>0){ hpos--; arte=JSON.parse(hist[hpos]); render(); } }
+function redo(){ if(hpos<hist.length-1){ hpos++; arte=JSON.parse(hist[hpos]); render(); } }
+
+/* ---------- interação no canvas ---------- */
+let drag=null, ultimoDown={id:null,t:0}, espaco=false;
+function iniciaEscala(p){
+  const cs = selLayers().filter(c=>!c.bloqueado); if(!cs.length || !mesmoPainel(cs)) return null;
+  const [cx,cy] = centroDe(cs), pt = GAB.paineis[cs[0].painel].partes[0];
+  return {k:'esc', cs, cx, cy, off:pt.x-pt.px, oy:pt.y, d0:Math.hypot(p.x-(cx+pt.x-pt.px), -p.y-(cy+pt.y)), snap:cs.map(c=>JSON.stringify(c))};
+}
+svg.addEventListener('pointerdown', e=>{
+  if(editando) fechaEdicao();
+  const p = toSVG(e.clientX, e.clientY);
+  if(tool==='mao' || espaco || e.button===1){ $('stage').classList.add('grabbing'); drag={k:'pan', sx:e.clientX, sy:e.clientY, v:{...view}}; svg.setPointerCapture(e.pointerId); return; }
+  if(e.target.dataset && e.target.dataset.handle && sels.length){ drag=iniciaEscala(p); if(drag) svg.setPointerCapture(e.pointerId); return; }
+  const g = e.target.closest('[data-layer]');
+  if(tool==='texto'){
+    e.preventDefault();
+    const hit = g && layer(g.dataset.layer);
+    if(hit && hit.tipo==='texto'){ editaTexto(hit); setTool('mover'); return; }
+    const sx=p.x, sy=-p.y; let alvo=null;
+    PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach(pt=>{ if(sx>=pt.x && sx<=pt.x+pt.w && sy>=pt.y && sy<=pt.y+pt.h) alvo={pn, x:sx-(pt.x-pt.px), y:sy-pt.y}; }));
+    if(!alvo){ msg('a','Clique dentro de um painel (frente, verso ou sanfonas) para criar texto.'); return; }
+    const c={id:novoId('texto'),painel:alvo.pn,tipo:'texto',texto:'Novo texto',fonte:'Heros Bold',tamanho_pt:20,alinhamento:'esquerda',x:r2(alvo.x),y:r2(alvo.y),cor:corPadrao()};
+    arte.camadas.push(c); commit(); setTool('mover'); editaTexto(c, true); return;
+  }
+  // clique no vazio dentro da caixa de seleção = arrasta a seleção (como no Figma)
+  if(!g && sels.length && !e.shiftKey){
+    const ls = selLayers().filter(x=>!x.bloqueado);
+    if(ls.length && mesmoPainel(ls)){
+      const pt = GAB.paineis[ls[0].painel].partes[0], u = uniaoPainel(ls), off = pt.x-pt.px;
+      if(u && p.x>=u.x0+off && p.x<=u.x1+off && -p.y>=u.y0+pt.y && -p.y<=u.y1+pt.y){
+        drag = {k:'mov', cs:ls, sx:p.x, sy:-p.y, snap:ls.map(x=>JSON.stringify(x)), box:u, alvos:alvosSnap(ls[0].painel, ls), painel:ls[0].painel};
+        svg.setPointerCapture(e.pointerId); return;
+      }
+    }
+  }
+  if(!g){
+    drag={k:'marq', x0:p.x, y0:p.y, base:e.shiftKey?[...sels]:[]};
+    if(!e.shiftKey){ setSel(null); render(); }
+    svg.setPointerCapture(e.pointerId); return;
+  }
+  const c = layer(g.dataset.layer), agora = Date.now();
+  const duplo = ultimoDown.id===c.id && agora-ultimoDown.t<450; ultimoDown = {id:c.id, t:agora};
+  if(duplo && c.tipo==='texto'){ e.preventDefault(); editaTexto(c); return; }
+  if(duplo && c.tipo==='vetor'){ e.preventDefault(); editorVetor(c); return; }
+  if(duplo && c.tipo==='meiotom'){ e.preventDefault(); editorMeiotom(c); return; }
+  if(e.shiftKey || e.metaKey || e.ctrlKey){ toggleSel(c.id); render(); return; }
+  if(!sels.includes(c.id)) setSel(c.id); else sel = c.id;
+  if(c.bloqueado){ render(); return; }
+  if(tool==='escalar'){ drag = iniciaEscala(p); }
+  else {
+    const cs = selLayers().filter(x=>!x.bloqueado);
+    drag = {k:'mov', cs, sx:p.x, sy:-p.y, snap:cs.map(x=>JSON.stringify(x))};
+    if(mesmoPainel(cs)){ drag.box = uniaoPainel(cs); drag.alvos = alvosSnap(cs[0].painel, cs); drag.painel = cs[0].painel; }
+  }
+  if(drag) svg.setPointerCapture(e.pointerId); render();
+});
+svg.addEventListener('dblclick', e=>{
+  const g=e.target.closest('[data-layer]'); const c=g&&layer(g.dataset.layer);
+  if(c && c.tipo==='texto') editaTexto(c);
+  else if(c && c.tipo==='grupo'){ abertos.add(c.id); render(); }
+});
+function focaTexto(){ const c = sel && layer(sel); if(c && c.tipo==='texto') editaTexto(c, true); }
+svg.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  if(drag.k==='pan'){ const r=svg.getBoundingClientRect(), k=view.w/r.width; view.x=drag.v.x-(e.clientX-drag.sx)*k; view.y=drag.v.y-(e.clientY-drag.sy)*k; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); return; }
+  const p = toSVG(e.clientX, e.clientY);
+  if(drag.k==='marq'){
+    const m=$('marq'); m.setAttribute('x',Math.min(p.x,drag.x0)); m.setAttribute('y',Math.min(p.y,drag.y0));
+    m.setAttribute('width',Math.abs(p.x-drag.x0)); m.setAttribute('height',Math.abs(p.y-drag.y0)); m.setAttribute('visibility','visible');
+    drag.x1=p.x; drag.y1=p.y; return;
+  }
+  if(drag.k==='mov'){
+    let dx = p.x-drag.sx, dy = -p.y-drag.sy; guias = [];
+    if(drag.box && !e.altKey){ const r = resolveSnap(drag.box, dx, dy, drag.alvos, drag.painel); dx=r.dx; dy=r.dy; guias=r.G; }
+    drag.cs.forEach((c,i)=>{ Object.keys(c).forEach(k=>delete c[k]); Object.assign(c, JSON.parse(drag.snap[i])); mover(c, dx, dy); });
+  }
+  if(drag.k==='esc'){
+    const d = Math.hypot(p.x-(drag.cx+drag.off), -p.y-(drag.cy+drag.oy)); if(drag.d0<0.05) return;
+    drag.cs.forEach((c,i)=>{ Object.keys(c).forEach(k=>delete c[k]); Object.assign(c, JSON.parse(drag.snap[i])); escalarEm(c, Math.max(0.05, d/drag.d0), drag.cx, drag.cy); });
+  }
+  render();
+});
+svg.addEventListener('pointerup', ()=>{
+  $('stage').classList.remove('grabbing');
+  if(!drag) return;
+  if(drag.k==='marq'){
+    if(drag.x1!==undefined){
+      const X0=Math.min(drag.x0,drag.x1), X1=Math.max(drag.x0,drag.x1), Y0=-Math.max(drag.y0,drag.y1), Y1=-Math.min(drag.y0,drag.y1);
+      const hits = arte.camadas.filter(c=>c.visivel!==false && !c.bloqueado && GAB.paineis[c.painel].partes.some((pt,i)=>{
+        const b=bboxSheet(c.id,i); if(!b) return false;
+        const bx0=Math.max(b.x0,pt.x), bx1=Math.min(b.x1,pt.x+pt.w); if(bx1<=bx0) return false;
+        return bx0<X1 && bx1>X0 && b.y0<Y1 && b.y1>Y0;
+      })).map(c=>c.id);
+      sels = [...new Set([...drag.base, ...hits])]; sel = sels[sels.length-1]||null;
+    }
+    drag=null; render(); return;
+  }
+  guias = [];
+  if(drag.cs){ drag.cs.forEach(arred); commit(); }
+  drag=null; render();
+});
+svg.addEventListener('wheel', e=>{
+  e.preventDefault(); const p=toSVG(e.clientX,e.clientY), f = e.deltaY>0?1.12:1/1.12;
+  view.x = p.x-(p.x-view.x)*f; view.y = p.y-(p.y-view.y)*f; view.w*=f; view.h*=f;
+  svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
+},{passive:false});
+
+/* ---------- painéis laterais ---------- */
+const ICO = {vetor:'✦',meiotom:'🔳',texto:'T',retangulo:'▭',elipse:'◯',linha:'╱',grupo:'📁',svg:'✦',imagem:'🖼',caminho:'✎'};
+let ultimoClique = {id:null, t:0};
+function listaCamadas(){
+  const L = $('layers'); L.innerHTML='';
+  [...arte.camadas].reverse().forEach(c=>{
+    const d=document.createElement('div'); d.className='lay'+(sels.includes(c.id)?' sel':'')+(c.visivel===false?' hid':'');
+    const pasta = c.tipo==='grupo', aberto = abertos.has(c.id);
+    d.innerHTML = `<button class="ic" data-a="eye" title="Mostrar/ocultar">${c.visivel===false?'◌':'👁'}</button>
+      <button class="ic" data-a="lock" title="Travar">${c.bloqueado?'🔒':'🔓'}</button>
+      ${pasta?`<button class="ic" data-a="fold" title="Abrir/fechar pasta" style="width:16px;padding:0">${aberto?'▾':'▸'}</button>`:''}
+      <span style="width:16px;text-align:center;color:var(--mute)">${ICO[c.tipo]||'•'}</span>
+      <span class="nm" title="${esc(c.id)}">${esc(c.id)}${pasta?` <span style="color:var(--mute)">(${c.filhos.length})</span>`:''}</span>
+      ${design && (design.sacolas[design.atual].proprio||[]).includes(c.id)?'<span class="prop" title="Mudança só nesta sacola (ainda não aplicada nas outras)">✏️</span>':''}<span class="chip">${SIGLA[c.painel]}</span>
+      <button class="ic" data-a="up" title="Subir">▲</button><button class="ic" data-a="dn" title="Descer">▼</button>`;
+    d.onclick = e=>{
+      const a = e.target.dataset.a, i = arte.camadas.indexOf(c), agora = Date.now();
+      const duplo = !a && ultimoClique.id===c.id && agora-ultimoClique.t<400; ultimoClique = {id:c.id, t:agora};
+      if(a==='eye'){ c.visivel = c.visivel===false; commit(); }
+      else if(a==='lock'){ c.bloqueado = !c.bloqueado; commit(); }
+      else if(a==='fold'){ aberto ? abertos.delete(c.id) : abertos.add(c.id); }
+      else if(a==='up' && i<arte.camadas.length-1){ arte.camadas.splice(i,1); arte.camadas.splice(i+1,0,c); commit(); }
+      else if(a==='dn' && i>0){ arte.camadas.splice(i,1); arte.camadas.splice(i-1,0,c); commit(); }
+      else if(duplo && c.tipo==='texto'){ editaTexto(c); return; }
+      else if(duplo && c.tipo==='vetor'){ editorVetor(c); return; }
+      else if(duplo && c.tipo==='meiotom'){ editorMeiotom(c); return; }
+      else if(duplo && pasta){ aberto ? abertos.delete(c.id) : abertos.add(c.id); }
+      else if(e.shiftKey || e.metaKey || e.ctrlKey) toggleSel(c.id);
+      else setSel(c.id);
+      render();
+    };
+    L.appendChild(d);
+    if(pasta && aberto) [...c.filhos].reverse().forEach(f=>{
+      const r=document.createElement('div'); r.className='lay'+(sels.includes(c.id)?' sel':'')+(f.visivel===false?' hid':'');
+      r.style.paddingLeft='46px';
+      r.innerHTML = `<span style="width:16px;text-align:center;color:var(--mute)">${ICO[f.tipo]||'•'}</span><span class="nm" style="color:#5d574e">${esc(f.id)}</span>`;
+      r.onclick = e=>{ (e.shiftKey||e.metaKey||e.ctrlKey) ? toggleSel(c.id) : setSel(c.id); render(); };
+      L.appendChild(r);
+    });
+  });
+}
+function paleta(){
+  const k = Object.keys(arte.paleta), max = GAB.regras.max_cores;
+  $('ncores').textContent = `${k.length}/${max}`;
+  $('pal').innerHTML = k.map(n=>`<div class="sw"><i style="background:${cmyk2hex(arte.paleta[n].cmyk)}"></i><div><b>${esc(arte.paleta[n].pantone)}</b><div style="color:var(--mute);font-size:11px">${esc(n)}</div></div></div>`).join('') +
+    `<div class="sw"><i style="background:${KRAFT}"></i><div><b>Papel (sem tinta)</b><div style="color:var(--mute);font-size:11px">papel</div></div></div>`;
+  const m = $('modo'), cur = modo;
+  m.innerHTML = `<option value="previa">🟫 Prévia no papel</option><option value="mockup">🧊 Mockup 3D</option><option value="produto">📸 Produto final</option>` + k.map(n=>`<option value="sep:${n}" style="color:${cmyk2hex(arte.paleta[n].cmyk)};font-weight:700">🖨️ Chapa: ${esc(arte.paleta[n].pantone)}</option>`).join('');
+  m.value = [...m.options].some(o=>o.value===cur) ? cur : 'previa'; if(m.value!==cur) modo=m.value;
+}
+function campo(lbl, key, val, type='number', step='0.1'){ return `<div class="row"><label>${lbl}</label><input data-k="${key}" type="${type}" step="${step}" value="${esc(val)}"></div>`; }
+function props(){
+  const P = $('props'); const ba=$('b-aj'); ba.className = sels.length?'badge show':'badge'; ba.textContent = sels.length;
+  if(sels.length>1){
+    const ls = selLayers(), cores = ['', ...Object.keys(arte.paleta), 'papel'];
+    P.innerHTML = `<div style="margin:2px 0 8px"><b>${ls.length} camadas selecionadas</b><div style="color:var(--mute);font-size:12px;margin-top:3px">${ls.map(c=>esc(c.id)).join(', ')}</div></div>
+      <div class="row"><label>Cor (todas)</label><select id="mcor">${cores.map(k=>`<option value="${k}">${k?esc(k==='papel'?'papel (sem tinta)':arte.paleta[k].pantone):'— manter —'}</option>`).join('')}</select></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px"><button id="mgrp" class="pri">📁 Criar pasta (Ctrl+G)</button><button id="mdel">Apagar</button></div>
+      ${mesmoPainel(ls)?'':'<div style="color:var(--warn);font-size:12px">Camadas em painéis diferentes: dá pra mover juntas, mas não agrupar nem escalar.</div>'}`;
+    $('mgrp').onclick = agrupar;
+    $('mdel').onclick = ()=>{ arte.camadas = arte.camadas.filter(c=>!sels.includes(c.id)); setSel(null); commit(); render(); };
+    $('mcor').onchange = e=>{ const k=e.target.value; if(!k) return; const pinta = el=>{ if(el.tipo==='grupo') el.filhos.forEach(pinta); else if(el.cor) el.cor=k; else if(el.contorno) el.contorno=k; }; ls.forEach(pinta); commit(); render(); };
+    return;
+  }
+  const c = sel && layer(sel);
+  if(!c){ P.innerHTML = `<div class="empty">👆 Clique em qualquer parte da arte para ajustar aqui: posição, tamanho, cor, texto…</div>`; return; }
+  const cores = ['', ...Object.keys(arte.paleta), 'papel'];
+  const opt = v => cores.map(k=>`<option value="${k}" ${k===(v||'')?'selected':''}>${k?esc(k==='papel'?'papel (sem tinta)':arte.paleta[k].pantone):'— nenhuma —'}</option>`).join('');
+  let h = `<div class="row"><label>Nome</label><input data-k="id" type="text" value="${esc(c.id)}"></div>
+    <div class="row"><label>Painel</label><select data-k="painel">${PAINEIS.map(p=>`<option ${p===c.painel?'selected':''}>${p}</option>`).join('')}</select></div>`;
+  if(c.tipo==='linha') h += `<div class="row2">${['x1','y1','x2','y2'].map(k=>`<div><label>${k} (cm)</label><input data-k="${k}" type="number" step="0.1" value="${c[k]}"></div>`).join('')}</div>`;
+  else h += `<div class="row2"><div><label>X (cm)</label><input data-k="x" type="number" step="0.1" value="${c.x||0}"></div><div><label>Y (cm)</label><input data-k="y" type="number" step="0.1" value="${c.y||0}"></div>
+     <div><label>Escala</label><input data-k="escala" type="number" step="0.05" value="${c.escala||1}"></div><div><label>Rotação (°)</label><input data-k="rotacao" type="number" step="1" value="${c.rotacao||0}"></div></div>`;
+  if(c.tipo==='texto'){
+    h += `<div class="row"><label>Texto</label><textarea data-k="texto" rows="2">${esc(c.texto)}</textarea></div>
+      <div class="row"><label>Fonte</label><select data-k="fonte">${Object.keys(FONTES).map(f=>`<option ${f===c.fonte?'selected':''}>${f}</option>`).join('')}</select></div>
+      <div class="row2"><div><label>Corpo (pt)</label><input data-k="tamanho_pt" type="number" step="1" value="${c.tamanho_pt||12}"></div>
+      <div><label>Alinhamento</label><select data-k="alinhamento">${['esquerda','centro','direita'].map(a=>`<option ${a===(c.alinhamento||'esquerda')?'selected':''}>${a}</option>`).join('')}</select></div></div>`;
+  }
+  if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="number" step="0.1" value="${c.h}"></div></div>`;
+  if(c.tipo==='vetor'||c.tipo==='meiotom'){
+    h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div>`;
+    h += c.tipo==='vetor' ? `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🎨 Ajustar cores do vetor</button>` : `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🔳 Ajustar retícula</button>`;
+  }
+  if(c.tipo!=='grupo' && c.tipo!=='svg' && c.tipo!=='imagem' && c.tipo!=='vetor' && c.tipo!=='meiotom'){
+    h += `<div class="row"><label>Cor</label><select data-k="cor">${opt(c.cor)}</select></div>
+      <div class="row"><label>Contorno</label><select data-k="contorno">${opt(c.contorno)}</select></div>`;
+    if(c.contorno) h += campo('Traço (mm)','traco_mm',c.traco_mm||0.5,'number','0.1');
+  }
+  if(c.tipo==='grupo') h += `<div style="color:var(--mute);font-size:12px;margin:6px 0">📁 Pasta com ${c.filhos.length} elementos — move e escala junto.</div><button id="ungrp">Desfazer pasta (Ctrl+Shift+G)</button>`;
+  if(c.tipo==='imagem') h += `<div style="color:var(--err);font-size:12px;margin:6px 0">Imagem raster: na versão real é vetorizada e reduzida às cores da paleta antes de ir pra clicheria.</div>`;
+  h += `<div style="display:flex;gap:6px;margin:8px 0 4px"><button id="dup">Duplicar</button><button id="del">Apagar</button></div>`;
+  P.innerHTML = h;
+  P.querySelectorAll('[data-k]').forEach(inp=>{
+    if(inp.dataset.k==='texto') inp.oninput = ()=>{ c.texto = inp.value; const pos=inp.selectionStart; render(); const t2=document.querySelector('#props textarea[data-k="texto"]'); if(t2){ t2.focus(); t2.setSelectionRange(pos,pos); } };
+    inp.onchange = ()=>{
+      const k=inp.dataset.k; let v = inp.value;
+      if(inp.type==='number') v = parseFloat(v);
+      if(k==='id'){ if(!v || arte.camadas.some(x=>x.id===v && x!==c)) return render(); setSel(v); }
+      if((k==='cor'||k==='contorno') && !v) delete c[k]; else c[k]=v;
+      commit(); render();
+    };
+  });
+  if($('ungrp')) $('ungrp').onclick = desagrupar;
+  if($('pEd')) $('pEd').onclick = ()=> c.tipo==='vetor' ? editorVetor(c) : editorMeiotom(c);
+  $('del').onclick = ()=>{ arte.camadas = arte.camadas.filter(x=>x!==c); setSel(null); commit(); render(); };
+  $('dup').onclick = ()=>{ const n=JSON.parse(JSON.stringify(c)); n.id = c.id+'_copia'; mover(n,0.5,-0.5); arte.camadas.push(n); setSel(n.id); commit(); render(); };
+}
+
+/* ---------- validação ---------- */
+function coletaEl(el, raiz, out, usadas){
+  if(el.visivel===false) return;
+  ['cor','contorno'].forEach(k=>{ const v=el[k]; if(v && v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,`cor '${v}' fora da paleta`]); } });
+  if(el.tipo==='texto' && (el.tamanho_pt||12)*(el.escala||1) < GAB.regras.texto_min_pt) out.push(['err',raiz,`texto ${((el.tamanho_pt||12)*(el.escala||1)).toFixed(1)} pt < mínimo ${GAB.regras.texto_min_pt} pt`]);
+  if(el.contorno && (el.traco_mm||0.5)*(el.escala||1) < GAB.regras.linha_min_mm) out.push(['err',raiz,`traço < ${GAB.regras.linha_min_mm} mm`]);
+  if(el.tipo==='imagem') out.push(['err',raiz,'imagem raster — precisa vetorizar']);
+  if(el.tipo==='vetor'){ const orig = el.asset && ASSETS[el.asset] ? Object.keys(ASSETS[el.asset].cores) : Object.keys(el.mapa||{});
+    const sem = orig.filter(h=>!(el.mapa||{})[h]); if(sem.length) out.push(['err',raiz,`${sem.length} cor(es) do vetor sem Pantone — duplo clique para ajustar`]);
+    Object.values(el.mapa||{}).forEach(v=>{ if(v&&v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,`cor '${v}' fora da paleta`]); } }); }
+  if(el.tipo==='meiotom') out.push(['warn',raiz,`foto em retícula: ${lpiMax()} linhas/pol., ${Math.round(el.w*(el.escala||1)/2.54*lpiMax())} pontos de largura — confirmar lineatura com a clicheria`]);
+  (el.filhos||[]).forEach(f=>coletaEl(f, raiz, out, usadas));
+}
+function valida(){
+  const out=[], usadas=new Set();
+  arte.camadas.forEach(c=>{
+    coletaEl(c, c.id, out, usadas);
+    if(c.visivel===false || c.fundo) return;
+    const pn = GAB.paineis[c.painel], b = bboxPainel(c); if(!b) return;
+    const fora = b.x1<0 || b.y1<0 || b.x0>pn.w || b.y0>pn.h;
+    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`fora do painel ${c.painel}`:`invade margem de ${M} cm`]);
+    (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `cruza a ${li.tipo}`]); });
+  });
+  const n = Object.keys(arte.paleta).length;
+  if(n>GAB.regras.max_cores) out.push(['err','paleta',`${n} cores (máx. ${GAB.regras.max_cores})`]);
+  Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta',`${arte.paleta[k].pantone} sem uso`]));
+  const V = $('val');
+  V.innerHTML = out.length ? out.map(([t,id,m])=>`<div class="v ${t}" data-id="${esc(id)}">${t==='err'?'⛔':'⚠️'} <b>${esc(id)}</b> — ${esc(m)}</div>`).join('')
+    : `<div class="v ok">✅ Pronta: ${n} cor(es), tudo dentro da área útil, sem texto/traço abaixo do mínimo.</div>`;
+  const nE = out.filter(x=>x[0]==='err').length, nW = out.length-nE, bk = $('b-ck');
+  bk.className = 'badge show'; bk.style.background = nE?'var(--err)':nW?'var(--warn)':'var(--ok)'; bk.textContent = out.length?out.length:'✓';
+  V.querySelectorAll('[data-id]').forEach(d=>d.onclick=()=>{ if(layer(d.dataset.id)){ setSel(d.dataset.id); render(); } });
+  return out;
+}
+
+/* ---------- ferramentas / topo ---------- */
+function setTool(t){ tool=t; ['mover','escalar','texto','mao'].forEach(k=>$('t-'+k).classList.toggle('on',k===t)); $('stage').classList.toggle('hand', t==='mao' || espaco); $('svg').style.cursor = t==='texto'?'text':''; }
+$('t-mover').onclick=()=>setTool('mover'); $('t-escalar').onclick=()=>setTool('escalar'); $('t-mao').onclick=()=>setTool('mao'); $('t-texto').onclick=()=>setTool('texto');
+function setSnap(v){ snapOn=v; $('snap').classList.toggle('on', v); $('snap').innerHTML = v?'<b>🧲</b>Ímã':'<b>🧲</b>Ímã off'; }
+$('snap').onclick=()=>setSnap(!snapOn);
+$('undo').onclick=undo; $('redo').onclick=redo;
+$('modo').onchange=e=>{ modo=e.target.value; render(); };
+function fit(){ const r=svg.getBoundingClientRect(); if(!r.width) return; const PADL=96, PAD=24;
+  const W=(xmax-xmin)+2, H=(ymax-ymin)+2; const k=Math.max(W/(r.width-PADL-PAD), H/(r.height-2*PAD));
+  view={w:r.width*k, h:r.height*k}; view.x = xmin-1 - PADL*k - ((r.width-PADL-PAD)*k-W)/2; view.y = -(ymax+1) - PAD*k - ((r.height-2*PAD)*k-H)/2; render(); }
+$('fit').onclick=fit;
+function novoId(base){ let i=1; while(layer(base+'_'+i)) i++; return base+'_'+i; }
+const corPadrao = ()=>Object.keys(arte.paleta)[0];
+const addTexto=()=>{ const c={id:novoId('texto'),painel:'frente',tipo:'texto',texto:'Novo texto',fonte:'Heros Bold',tamanho_pt:20,alinhamento:'centro',x:8.75,y:8,cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
+$('add-ret').onclick=()=>{ const c={id:novoId('forma'),painel:'frente',tipo:'retangulo',x:5.75,y:6,w:6,h:3,raio:0.3,cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
+document.addEventListener('keyup', e=>{ if(e.code==='Space'){ espaco=false; $('stage').classList.toggle('hand', tool==='mao'); } });
+document.addEventListener('keydown', e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+  if(e.code==='Space'){ e.preventDefault(); if(!espaco){ espaco=true; $('stage').classList.add('hand'); } return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='g'){ e.preventDefault(); e.shiftKey?desagrupar():agrupar(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a'){ e.preventDefault(); sels=arte.camadas.filter(c=>c.visivel!==false&&!c.bloqueado).map(c=>c.id); sel=sels[sels.length-1]||null; render(); return; }
+  if(e.key==='Escape'){ setSel(null); render(); return; }
+  if(e.key==='Enter' && sel && layer(sel) && layer(sel).tipo==='texto'){ e.preventDefault(); editaTexto(layer(sel)); return; }
+  if(e.key==='n'){ setSnap(!snapOn); return; }
+  if(e.key==='v') setTool('mover'); if(e.key==='s') setTool('escalar'); if(e.key==='h') setTool('mao'); if(e.key==='t') setTool('texto');
+  const ls = selLayers().filter(c=>!c.bloqueado); if(!ls.length) return;
+  const st = e.shiftKey?1:0.1, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,st],ArrowDown:[0,-st]}[e.key];
+  if(mv){ e.preventDefault(); ls.forEach(c=>{ mover(c,...mv); arred(c); }); commit(); render(); }
+  if(e.key==='Delete'||e.key==='Backspace'){ arte.camadas=arte.camadas.filter(x=>!ls.includes(x)); setSel(null); commit(); render(); }
+});
+
+/* ---------- upload ---------- */
+const anexos=[];
+$('clip').onclick=()=>$('file').click();
+$('file').onchange = async e=>{ const fs=[...e.target.files]; e.target.value=''; for(const f of fs) await recebeArquivo(f); };
+
+/* ---------- prompt (simulado) ---------- */
+function msg(q, t){ const d=document.createElement('div'); d.className='msg '+q; d.textContent=t; $('log').appendChild(d); $('log').scrollTop=1e9; }
+function acharCamada(t){
+  const c = arte.camadas.find(c=>t.includes(c.id.toLowerCase().replace(/_/g,' ')) || t.includes(c.id.toLowerCase()));
+  if(c) return c;
+  const alias = {selo:'selo_circulo', logo:'selo_circulo', nome:'nome', slogan:'slogan', rodapé:'rodape_faixa', rodape:'rodape_faixa', trigo:'trigo', telefone:'rodape_contato', endereço:'rodape_endereco', obrigado:'verso_obrigado'};
+  for(const k in alias) if(t.includes(k) && layer(alias[k])) return layer(alias[k]);
+  return null;
+}
+function simula(txt){
+  const t = txt.toLowerCase(); const nomeada = acharCamada(t); const feitos=[];
+  let alvos = nomeada ? (nomeada.id==='selo_circulo' ? ['selo_circulo','selo_anel','trigo'].map(layer).filter(Boolean) : [nomeada]) : selLayers();
+  if(!alvos.length){ return 'Selecione uma ou mais camadas ou cite o nome (ex.: "selo", "slogan", "nome").'; }
+  const c = alvos[0];
+  const pct = (t.match(/(\d+)\s*%/)||[])[1];
+  if(/aument|maior|cresc/.test(t)){ const f=1+(pct?pct/100:0.2); const [cx,cy]=centroDe(alvos); alvos.forEach(a=>{escalarEm(a,f,cx,cy);arred(a);}); feitos.push(`aumentei ${Math.round((f-1)*100)}%`); }
+  if(/diminu|menor|reduz/.test(t)){ const f=1/(1+(pct?pct/100:0.2)); const [cx,cy]=centroDe(alvos); alvos.forEach(a=>{escalarEm(a,f,cx,cy);arred(a);}); feitos.push('diminuí'); }
+  const cm = (t.match(/(\d+(?:[.,]\d+)?)\s*cm/)||[])[1]; const d = cm?parseFloat(cm.replace(',','.')):1;
+  if(/sobe|pra cima|para cima/.test(t)){ alvos.forEach(a=>mover(a,0,d)); feitos.push(`subi ${d} cm`); }
+  if(/desce|pra baixo|para baixo/.test(t)){ alvos.forEach(a=>mover(a,0,-d)); feitos.push(`desci ${d} cm`); }
+  Object.keys(arte.paleta).forEach(k=>{ if(t.includes(k)){ alvos.forEach(a=>{ if(a.cor && a.cor!=='papel') a.cor=k; else if(a.contorno && a.contorno!=='papel') a.contorno=k; }); feitos.push(`cor → ${arte.paleta[k].pantone}`); } });
+  const q = txt.match(/["“”']([^"“”']+)["“”']/);
+  if(q){ if(c.tipo==='texto'){ c.texto=q[1]; feitos.push(`texto → "${q[1]}"`); } else { const n={id:novoId('texto'),painel:c.painel,tipo:'texto',texto:q[1],fonte:'Heros Bold',tamanho_pt:18,alinhamento:'centro',x:8.75,y:8,cor:corPadrao()}; arte.camadas.push(n); setSel(n.id); feitos.push(`criei a camada "${n.id}"`); } }
+  if(/escond|ocult|tira/.test(t)){ alvos.forEach(a=>a.visivel=false); feitos.push('ocultei'); }
+  if(!feitos.length) return `No produto final o Claude interpretaria isso livremente e editaria só as camadas envolvidas.\nNeste protótipo funcionam: aumenta/diminui (X%), sobe/desce X cm, muda para ${Object.keys(arte.paleta).join('/')}, escreve "…", esconde.`;
+  commit(); render();
+  return `✔ ${alvos.length>1?alvos.length+' camadas':c.id}: ${feitos.join(', ')}. O resto da arte ficou intacto (↶ desfaz).`;
+}
+/* ---------- PEDIR AO CLAUDE (real, via capability "sample") ---------- */
+let SAMPLE = null, conversa = [], pedindo = null;
+const MODELO = 'claude-fable-5-2';
+function lerJSON(t){ t=String(t||'').trim(); const tenta=x=>{ try{ return JSON.parse(x); }catch(_){ return null; } };
+  let v=tenta(t); if(v) return v; const f=t.match(/```(?:json)?\s*([\s\S]*?)```/); if(f && (v=tenta(f[1]))) return v;
+  const a=t.indexOf('{'), b=t.lastIndexOf('}'); return a>=0&&b>a ? tenta(t.slice(a,b+1)) : null; }
+(async()=>{ SAMPLE=null;
+  const tag=document.querySelector('#chat .tag'); tag.textContent='desativado nesta versão'; tag.style.background='#e7e2da'; tag.style.color='#6f665c';
+  const pr=document.getElementById('prompt'); pr.disabled=true; pr.placeholder='Pedir ao Claude fica disponível na versão integrada. Aqui, edite direto na arte.';
+  document.getElementById('send').disabled=true; document.getElementById('clip').disabled=true; document.getElementById('chips').style.display='none';
+  document.getElementById('log').innerHTML=''; return;
+  const tag=document.querySelector('#chat .tag');
+  if(SAMPLE){ tag.textContent='conectado'; tag.style.background='#d6efd9'; tag.style.color='#245b31'; }
+  else { tag.textContent='simulado'; }
+})();
+
+function estadoParaClaude(){
+  const limpa = el => { const o={}; for(const k in el){ if(k.startsWith('_')) continue; if(k==='svg') { o[k]='(desenho vetorial — não editar)'; continue; } o[k] = k==='filhos' ? el.filhos.map(limpa) : el[k]; } return o; };
+  const camadas = arte.camadas.map((c,i)=>{ const b=bboxPainel(c); return {...limpa(c), _ordem:i, _caixa_cm: b?{x0:r2(b.x0),x1:r2(b.x1),y0:r2(b.y0),y1:r2(b.y1)}:null}; });
+  const paineis = {}; PAINEIS.forEach(p=>{ const pn=GAB.paineis[p]; paineis[p]={largura:pn.w, altura:pn.h, linhas_internas:pn.linhas_internas}; });
+  return {
+    produto: GAB.nome, paineis, regras: GAB.regras,
+    paleta: arte.paleta, fontes: Object.keys(FONTES),
+    selecionadas: sels.slice(),
+    problemas_atuais: valida().map(([t,id,m])=>`${t==='err'?'ERRO':'aviso'} ${id}: ${m}`),
+    camadas
+  };
+}
+const REGRAS_CLAUDE = `Você é o assistente de um editor de arte para sacolas de papel kraft impressas em flexografia (clicheria). Quem usa é uma pessoa leiga em design: responda em português do Brasil, curto e amigável.
+Você recebe o estado da arte em JSON e um pedido. Devolva SOMENTE um objeto JSON (sem texto antes ou depois, sem cercas de código):
+{"resposta": "1–2 frases dizendo o que você fez (ou perguntando, se o pedido for ambíguo)", "ops": [ ... ]}
+Operações permitidas (aplicadas em ordem; altere SOMENTE o necessário, nunca recrie a arte inteira):
+- {"op":"editar","id":"<id>","props":{...}}  — muda campos da camada (texto, cor, contorno, traco_mm, fonte, tamanho_pt, alinhamento, espacamento, entrelinha, x, y, escala, rotacao, w, h, raio, rx, ry, visivel, painel)
+- {"op":"mover","id":"<id>","dx":<cm>,"dy":<cm>}   (dy positivo = para cima)
+- {"op":"escalar","id":"<id>","fator":<n>}        (escala em torno do centro da camada)
+- {"op":"criar","camada":{...camada completa com id novo...}}
+- {"op":"apagar","id":"<id>"}
+- {"op":"ordem","id":"<id>","para":"frente"|"tras"}
+- {"op":"agrupar","ids":["a","b"],"nome":"<id da pasta>"}  /  {"op":"desagrupar","id":"<pasta>"}
+- {"op":"centralizar","ids":["<id>",...]}         (centraliza na horizontal respeitando dobras e emenda)
+- {"op":"cor","chave":"<nome curto>","pantone":"PANTONE xxx C","cmyk":[c,m,y,k]}  (cria/troca uma cor da paleta)
+Formato das camadas: coordenadas em cm a partir do canto inferior esquerdo do painel; y cresce para cima. texto: x,y = ponto da linha de base, alinhamento esquerda|centro|direita, tamanho_pt em pontos, "\\n" quebra linha. retangulo: x,y = canto inferior esquerdo, w,h, raio. elipse: x,y = centro, rx, ry. linha: x1,y1,x2,y2, contorno, traco_mm. grupo: filhos com coordenadas relativas a x,y do grupo. "cor" e "contorno" usam as CHAVES da paleta ou "papel" (sem tinta, mostra o kraft). "_caixa_cm" é a caixa atual ocupada pela camada (só leitura).
+Regras da clicheria (obrigatórias): no máximo regras.max_cores cores na paleta; tudo dentro do painel com margem regras.margem_seguranca_cm; texto ≥ regras.texto_min_pt (de preferência ≥ 7 pt); traço ≥ regras.linha_min_mm; evite cruzar linhas_internas (dobra da sanfona, emenda do verso); nada de degradê, foto ou transparência. Se o pedido violar uma regra, faça a versão mais próxima que respeite e explique em "resposta".
+"selecionadas" são as camadas que a pessoa marcou: "isso", "esse", "ele" se referem a elas. Se não der para entender o pedido, devolva "ops": [] e faça UMA pergunta curta em "resposta".`;
+
+function aplicarOps(ops){
+  const feitos=[], erros=[];
+  const L = id => { const c=layer(String(id)); if(!c) erros.push(`não achei "${id}"`); return c; };
+  for(const o of (Array.isArray(ops)?ops:[])){
+    try{
+      switch(o.op){
+        case 'editar': { const c=L(o.id); if(!c) break; const p=o.props||{};
+          for(const k in p){ if(k==='id'||k==='tipo'||k==='filhos'||k.startsWith('_')) continue;
+            if(k==='painel' && !GAB.paineis[p[k]]) { erros.push(`painel ${p[k]} não existe`); continue; }
+            if(p[k]===null) delete c[k]; else c[k]=p[k]; }
+          feitos.push(c.id); break; }
+        case 'mover': { const c=L(o.id); if(!c) break; mover(c, +o.dx||0, +o.dy||0); arred(c); feitos.push(c.id); break; }
+        case 'escalar': { const c=L(o.id); if(!c) break; const f=+o.fator; if(!(f>0)) break; const [cx,cy]=centro(c); escalarEm(c,f,cx,cy); arred(c); feitos.push(c.id); break; }
+        case 'criar': { const n=o.camada; if(!n||!n.tipo){ erros.push('camada nova sem tipo'); break; }
+          if(!GAB.paineis[n.painel]) n.painel='frente'; if(!n.id || layer(n.id)) n.id=novoId(n.tipo); arte.camadas.push(n); feitos.push(n.id); break; }
+        case 'apagar': { const c=L(o.id); if(!c) break; arte.camadas=arte.camadas.filter(x=>x!==c); feitos.push(c.id); break; }
+        case 'ordem': { const c=L(o.id); if(!c) break; arte.camadas=arte.camadas.filter(x=>x!==c); if(o.para==='tras') arte.camadas.unshift(c); else arte.camadas.push(c); feitos.push(c.id); break; }
+        case 'agrupar': { const ids=(o.ids||[]).map(String).filter(id=>L(id)); if(ids.length<2) break; sels=ids; sel=ids[ids.length-1]; const antes=arte.camadas.length; agruparSilencioso(o.nome); if(arte.camadas.length<antes) feitos.push(sel); break; }
+        case 'desagrupar': { const c=L(o.id); if(!c||c.tipo!=='grupo') break; setSel(c.id); desagrupar(); feitos.push(c.id); break; }
+        case 'centralizar': { const ids=(o.ids||[]).map(String).filter(id=>L(id)); if(!ids.length) break; sels=ids; sel=ids[ids.length-1]; centralizarSilencioso(); feitos.push(...ids); break; }
+        case 'cor': { if(!o.chave||!o.pantone||!Array.isArray(o.cmyk)) break; arte.paleta[String(o.chave)]={pantone:String(o.pantone), cmyk:o.cmyk.map(Number)}; feitos.push('paleta'); break; }
+        default: erros.push(`operação desconhecida: ${o.op}`);
+      }
+    }catch(e){ erros.push(String(e.message||e)); }
+  }
+  return {feitos:[...new Set(feitos)], erros};
+}
+function agruparSilencioso(nome){
+  const ls=selLayers(); if(ls.length<2 || !mesmoPainel(ls)) return;
+  const topo=Math.max(...ls.map(c=>arte.camadas.indexOf(c)));
+  const id = nome && !layer(nome) ? String(nome) : novoId('pasta');
+  const g={id, painel:ls[0].painel, tipo:'grupo', x:0, y:0, filhos:ls.map(c=>{ const f={...c}; delete f.painel; return f; })};
+  arte.camadas=arte.camadas.filter(c=>!ls.includes(c)); arte.camadas.splice(topo-(ls.length-1),0,g); abertos.add(id); setSel(id);
+}
+function centralizarSilencioso(){
+  selLayers().filter(c=>!c.bloqueado).forEach(c=>{
+    const pn=GAB.paineis[c.painel], b=bboxPainel(c); if(!b) return;
+    const cortes=[0,...(pn.linhas_internas||[]).map(l=>l.x),pn.w].sort((a,b)=>a-b), cx=(b.x0+b.x1)/2; let seg=[0,pn.w];
+    for(let i=0;i<cortes.length-1;i++) if(cx>=cortes[i]&&cx<=cortes[i+1]){ seg=[cortes[i],cortes[i+1]]; break; }
+    if(b.x1-b.x0>seg[1]-seg[0]-2*M) seg=[0,pn.w];
+    mover(c,(seg[0]+seg[1])/2-cx,0); arred(c);
+  });
+}
+
+function msgEl(q, t){ const d=document.createElement('div'); d.className='msg '+q; d.textContent=t; $('log').appendChild(d); $('log').classList.remove('min'); $('logtog').textContent='Esconder conversa'; $('log').scrollTop=1e9; return d; }
+function textoErro(code){
+  return ({not_granted:'Sem permissão para usar o Claude nesta página. Dá para liberar quando o aviso aparecer de novo (recarregue a página).',
+    sampling_disabled:'O Claude não está disponível nesta conta.', rate_limited:'Muitos pedidos seguidos — espere um pouco e tente de novo.',
+    session_expired:'A sessão expirou — entre de novo no Claude.', invalid_json:'Não entendi a resposta do Claude. Tente pedir de outro jeito.',
+    refused:'O Claude não quis fazer esse pedido. Tente de outra forma.', empty_completion:'O Claude não respondeu nada. Tente pedir de outro jeito.',
+    prompt_too_large:'A arte ficou grande demais para mandar de uma vez.'})[code] || 'Deu um problema na conexão. Tente de novo.';
+}
+async function pedirClaude(pedido){
+  if(pedindo) return;
+  msgEl('u', pedido);
+  if(!SAMPLE){ setTimeout(()=>msgEl('a', simula(pedido)), 250); return; }
+  const bolha = msgEl('a', '✨ Pensando…');
+  const ctl = new AbortController(); pedindo = ctl;
+  $('send').textContent='Parar ■'; $('send').classList.remove('pri');
+  const antes = hpos;
+  const turnos = [{role:'user', content: REGRAS_CLAUDE}];
+  conversa.slice(-6).forEach(t=>turnos.push(t));
+  turnos.push({role:'user', content: `ESTADO DA ARTE:\n${JSON.stringify(estadoParaClaude())}\n\nPEDIDO: ${pedido}`});
+  try{
+    let chars=0;
+    const out = await SAMPLE(turnos, { signal: ctl.signal, cache:false, model: MODELO, modelTier:'complex',
+      onText: ({text})=>{ chars=text.length; bolha.textContent='✨ Trabalhando… '+'•'.repeat(Math.min(12, Math.ceil(chars/80))); } });
+    const res = lerJSON(out.text); if(!res) throw {code:'invalid_json'};
+    const quem = out.modelApplied===MODELO ? 'Fable 5.2' : `outro modelo (${out.modelTierApplied||'?'}) — Fable 5.2 indisponível nesta conta`;
+    const resposta = String((res && res.resposta) || 'Pronto.');
+    const {feitos, erros} = aplicarOps(res && res.ops);
+    if(feitos.length){ commit(); render(); }
+    bolha.textContent = resposta + (erros.length ? `\n(⚠️ não consegui: ${erros.join('; ')})` : '');
+    const qm=document.createElement('div'); qm.textContent='via '+quem; qm.style.cssText='font-size:11px;color:var(--mute);margin-top:4px'; bolha.appendChild(qm);
+    if(feitos.length){
+      const b=document.createElement('button'); b.textContent='↶ Desfazer isto'; b.style.cssText='display:block;margin-top:6px;padding:3px 10px;font-size:12px';
+      b.onclick=()=>{ if(hpos>antes){ restaura(antes); b.disabled=true; b.textContent='Desfeito'; } };
+      bolha.appendChild(b);
+      setSel(null); const novos=feitos.filter(id=>layer(id)); if(novos.length){ sels=novos; sel=novos[novos.length-1]; render(); }
+    }
+    conversa.push({role:'user', content:`PEDIDO: ${pedido}`}, {role:'assistant', content: JSON.stringify(res)});
+  }catch(e){
+    bolha.textContent = e && e.code==='cancelled' ? 'Parei. Nada foi alterado.' : textoErro(e && e.code);
+    if(e && (e.code==='not_granted' || e.code==='sampling_disabled')){ SAMPLE=null; const tag=document.querySelector('#chat .tag'); tag.textContent='simulado'; tag.style.background=''; tag.style.color=''; }
+  }finally{
+    pedindo=null; $('send').textContent='Pedir ✨'; $('send').classList.add('pri');
+  }
+}
+$('send').onclick=()=>{ if(pedindo){ pedindo.abort(); return; } const v=$('prompt').value.trim(); if(!v) return; $('prompt').value=''; $('prompt').style.height=''; pedirClaude(v); };
+
+$('prompt').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('send').click(); } });
+
+/* ---------- exportar (dummy) ---------- */
+$('export').onclick=()=>{
+  const v = valida(), errs = v.filter(x=>x[0]==='err').length, warns = v.length-errs;
+  const json = JSON.stringify(arte, (k,val)=>k.startsWith('_')?undefined:val, 2);
+  $('mbox').innerHTML = `<h3 style="margin:0 0 8px;color:var(--ink);font-size:15px;text-transform:none;letter-spacing:0">Gerar arquivo para a clicheria</h3>
+    <div style="margin-bottom:8px">${errs?`⛔ ${errs} erro(s) — corrija antes de enviar.`:'✅ Sem erros.'} ${warns?`⚠️ ${warns} aviso(s).`:''}</div>
+    <div style="color:var(--mute);margin-bottom:8px;line-height:1.45">No fluxo real este botão gera o <b>ARTE_FINAL.pdf</b> (vetor, ${Object.keys(arte.paleta).length} cores Pantone separadas, texto em curvas, gabarito não-imprimível) + prévia PNG pro cliente aprovar.<br>Neste protótipo: copie o JSON da arte (é o que o motor de PDF lê).</div>
+    <pre>${esc(json.slice(0,1500))}${json.length>1500?'\n…':''}</pre>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button id="cp">Copiar JSON</button><button id="fx" class="pri">Fechar</button></div>`;
+  $('modal').style.display='flex';
+  $('fx').onclick=()=>$('modal').style.display='none';
+  $('cp').onclick=async()=>{ try{ await navigator.clipboard.writeText(json); $('cp').textContent='Copiado ✓'; }catch(_){ $('cp').textContent='Bloqueado — selecione o texto'; } };
+};
+
+/* ---------- comida 3D de referência (escala real, em cm) ---------- */
+function texCrosta(base, escuro, n){
+  const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+  x.fillStyle=base; x.fillRect(0,0,256,256);
+  for(let i=0;i<n;i++){ const r=2+Math.random()*10; x.fillStyle=`rgba(${escuro},${0.05+Math.random()*0.12})`; x.beginPath(); x.arc(Math.random()*256,Math.random()*256,r,0,7); x.fill(); }
+  for(let i=0;i<900;i++){ x.fillStyle=`rgba(255,240,210,${Math.random()*0.10})`; x.fillRect(Math.random()*256,Math.random()*256,1.5,1.5); }
+  const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+function paoFrances(){
+  const T=THREE, g=new T.SphereGeometry(1, 64, 40), p=g.attributes.position, v=new T.Vector3();
+  const L=7.5, R=2.9, H=2.6;   // ~15 × 6 × 5 cm
+  for(let i=0;i<p.count;i++){
+    v.fromBufferAttribute(p,i); let x=v.x, y=v.y, z=v.z;
+    const ponta = 1-Math.pow(Math.abs(x),2.2)*0.35;                 // pontas mais finas
+    y = y<0 ? y*0.35 : y;                                            // base achatada
+    let px=x*L, py=Math.max(0,y)*H*ponta + Math.min(0,y)*H, pz=z*R*ponta;
+    // pestana: corte longitudinal no topo (sulco + borda levantada)
+    if(y>0.2){ const sul=Math.exp(-Math.pow(z/0.12,2))*Math.max(0,1-Math.abs(x)*1.1);
+      const borda=Math.exp(-Math.pow((z-0.2)/0.12,2))*Math.max(0,1-Math.abs(x)*1.2);
+      py += -0.55*sul + 0.35*borda; }
+    p.setXYZ(i, px, py, pz);
+  }
+  g.computeVertexNormals();
+  const m=new T.MeshStandardMaterial({map:texCrosta('#b8682a','90,40,5',320), roughness:0.55, metalness:0, color:0xffffff});
+  const pao=new T.Mesh(g,m); pao.castShadow=true; pao.receiveShadow=true; return pao;
+}
+function batatas(){
+  const T=THREE, grp=new T.Group();
+  const mat=new T.MeshStandardMaterial({map:texCrosta('#e5ae45','160,90,15',90), roughness:0.45, metalness:0});
+  // cestinha de papel vermelho e branco
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=64; const x=cv.getContext('2d');
+  for(let i=0;i<8;i++){ x.fillStyle=i%2?'#f6f1ea':'#c8352b'; x.fillRect(i*32,0,32,64); }
+  const tx=new T.CanvasTexture(cv); tx.encoding=T.sRGBEncoding;
+  const cesto=new T.Mesh(new T.CylinderGeometry(4.2,3.2,5.5,40,1,true), new T.MeshStandardMaterial({map:tx, side:T.DoubleSide, roughness:0.8}));
+  cesto.position.y=2.75; cesto.castShadow=true; cesto.receiveShadow=true; grp.add(cesto);
+  const fundo=new T.Mesh(new T.CircleGeometry(3.2,32), new T.MeshStandardMaterial({color:0xf3eee6, roughness:0.9})); fundo.rotation.x=-Math.PI/2; fundo.position.y=0.05; grp.add(fundo);
+  for(let i=0;i<34;i++){
+    const len=6+Math.random()*4, b=new T.Mesh(new T.BoxGeometry(0.75,len,0.75), mat);
+    const a=Math.random()*Math.PI*2, r=Math.random()*2.6;
+    b.position.set(Math.cos(a)*r, 2.4+len/2-1.5+Math.random()*1.2, Math.sin(a)*r);
+    b.rotation.set((Math.random()-.5)*0.6, Math.random()*Math.PI, (Math.random()-.5)*0.6);
+    b.castShadow=true; grp.add(b);
+  }
+  // umas soltas na mesa
+  for(let i=0;i<3;i++){ const b=new T.Mesh(new T.BoxGeometry(0.75,0.75,6+Math.random()*3), mat);
+    b.position.set(5+i*1.3, 0.38, -1+i*1.6); b.rotation.y=0.6+i*0.5; b.castShadow=true; b.receiveShadow=true; grp.add(b); }
+  return grp;
+}
+function adicionaComida(scene){
+  const W=GAB.paineis.frente.w, D=GAB.paineis.sanfona_esq.w;
+  const p1=paoFrances(); p1.position.set(W/2+8, 2.6*0.35, -1); p1.rotation.y=-1.1; scene.add(p1);
+  const p2=paoFrances(); p2.position.set(W/2+13, 2.6*0.35, 6); p2.rotation.y=-0.4; p2.scale.setScalar(0.92); scene.add(p2);
+  const bt=batatas(); bt.position.set(-W/2-9, 0, 2); bt.rotation.y=0.4; scene.add(bt);
+  return [p1,p2,bt];
+}
+
+let P3_comida=null, contatoAjusta=null;
+/* ---------- PRODUTO FINAL (render realista, three.js) ---------- */
+let P3 = null;           // estado do renderizador
+let corOverride = null;  // usado para gerar mapas (rugosidade/alpha)
+function carregaThree(cb){
+  if(window.THREE) return cb();
+  const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  sc.onload=cb; sc.onerror=()=>{ $('prodmsg').textContent='Não consegui carregar o motor 3D (sem internet?).'; };
+  document.head.appendChild(sc);
+}
+function marcaSheet(opts){
+  // SVG da folha planificada inteira, para virar textura
+  const vb = `${xmin} ${-ymax} ${xmax-xmin} ${ymax-ymin}`;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${opts.px*(xmax-xmin)}" height="${opts.px*(ymax-ymin)}">`;
+  if(opts.fundo) s += `<rect x="${xmin}" y="${-ymax}" width="${xmax-xmin}" height="${ymax-ymin}" fill="${opts.fundo}"/>`;
+  s += `<defs>`; PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach((p,i)=>{ s+=`<clipPath id="pc-${pn}-${i}"><rect x="${p.x}" y="${-(p.y+p.h)}" width="${p.w}" height="${p.h}"/></clipPath>`; }));
+  s += `</defs><path d="${contornoD()}" fill="${opts.papel}"/>`;
+  if(!opts.semCamadas) arte.camadas.forEach(c=>{ if(c.visivel===false) return;
+    GAB.paineis[c.painel].partes.forEach((p,i)=>{ s+=`<g clip-path="url(#pc-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})">${elSVG(c,true)}</g></g>`; }); });
+  return s + `</svg>`;
+}
+function svgCanvas(svgTxt, w, h){
+  return new Promise(res=>{
+    const img=new Image(), url=URL.createObjectURL(new Blob([svgTxt],{type:'image/svg+xml'}));
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); URL.revokeObjectURL(url); res(c); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); const c=document.createElement('canvas'); c.width=w; c.height=h; res(c); };
+    img.src=url;
+  });
+}
+// ruído de valor suave (para kraft e amassado)
+function hash(i,j){ const s=Math.sin(i*127.1+j*311.7)*43758.5453; return s-Math.floor(s); }
+function vnoise(x,y){ const i=Math.floor(x), j=Math.floor(y), f=x-i, g=y-j, u=f*f*(3-2*f), v=g*g*(3-2*g);
+  return (hash(i,j)*(1-u)+hash(i+1,j)*u)*(1-v)+(hash(i,j+1)*(1-u)+hash(i+1,j+1)*u)*v; }
+function fbm(x,y){ let a=0, amp=.5, f=1; for(let k=0;k<4;k++){ a+=amp*vnoise(x*f,y*f); f*=2.03; amp*=.5; } return a; }
+function kraftNoise(w,h){
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d');
+  // variação média bem sutil (≈2–3 mm), sem manchas grandes
+  const sm=document.createElement('canvas'); sm.width=Math.ceil(w/3); sm.height=Math.ceil(h/3); const sx=sm.getContext('2d'), sd=sx.createImageData(sm.width,sm.height);
+  for(let i=0;i<sd.data.length;i+=4){ const v=228+Math.random()*27; sd.data[i]=sd.data[i+1]=sd.data[i+2]=v; sd.data[i+3]=255; }
+  sx.putImageData(sd,0,0); x.imageSmoothingEnabled=true; x.drawImage(sm,0,0,w,h);
+  const id=x.getImageData(0,0,w,h), d=id.data;
+  // grão fino por pixel
+  for(let i=0;i<d.length;i+=4){ const n=(Math.random()-.5)*30 + (Math.random()<0.012 ? -40*Math.random() : 0); const v=Math.max(0,Math.min(255, d[i]*0.5+0.5*242+n)); d[i]=d[i+1]=d[i+2]=v; }
+  x.putImageData(id,0,0);
+  // fibras curtas e finas (1–4 mm), muitas
+  x.lineCap='round';
+  for(let k=0;k<w*h/70;k++){ const px=Math.random()*w, py=Math.random()*h, a=Math.random()*Math.PI*2, L=1.5+Math.random()*7;
+    x.strokeStyle = Math.random()<.55 ? `rgba(110,85,60,${.05+Math.random()*.10})` : `rgba(255,250,238,${.06+Math.random()*.12})`;
+    x.lineWidth=.4+Math.random()*.6; x.beginPath(); x.moveTo(px,py); x.lineTo(px+Math.cos(a)*L, py+Math.sin(a)*L); x.stroke(); }
+  return c;
+}
+function rugas(w,h,pxcm){
+  // vincos/amassados largos para o bump (linhas suaves desfocadas)
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d');
+  x.fillStyle='rgb(128,128,128)'; x.fillRect(0,0,w,h); x.filter='blur(5px)';
+  for(let k=0;k<26;k++){ const px=Math.random()*w, py=Math.random()*h, a=Math.random()*Math.PI, L=(4+Math.random()*12)*pxcm;
+    x.strokeStyle = k%2 ? 'rgba(255,255,255,.35)' : 'rgba(0,0,0,.30)'; x.lineWidth=(0.15+Math.random()*0.35)*pxcm;
+    x.beginPath(); x.moveTo(px,py); x.quadraticCurveTo(px+Math.cos(a+.4)*L/2, py+Math.sin(a+.4)*L/2, px+Math.cos(a)*L, py+Math.sin(a)*L); x.stroke(); }
+  x.filter='none'; return c;
+}
+// ambiente tipo HDRI (padaria desfocada), equiretangular
+function ambienteCanvas(){
+  const w=1024, h=512, c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d');
+  let g=x.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,'#fffaf2'); g.addColorStop(.36,'#f3e6d3'); g.addColorStop(.49,'#d9bf9c'); g.addColorStop(.515,'#efe4d4'); g.addColorStop(.75,'#e6d6bf'); g.addColorStop(1,'#d2bc9c');
+  x.fillStyle=g; x.fillRect(0,0,w,h);
+  // janelas claras
+  [[120,95,150,150],[560,80,210,170]].forEach(([a,b,cw,ch])=>{ const gg=x.createRadialGradient(a+cw/2,b+ch/2,10,a+cw/2,b+ch/2,cw); gg.addColorStop(0,'rgba(255,255,250,1)'); gg.addColorStop(1,'rgba(255,250,235,0)'); x.fillStyle=gg; x.fillRect(a-cw/2,b-ch/2,cw*2,ch*2); });
+  // prateleiras e pães (bokeh quente)
+  for(let k=0;k<70;k++){ const px=Math.random()*w, py=170+Math.random()*80, r=6+Math.random()*22;
+    x.fillStyle=`hsla(${25+Math.random()*20},${50+Math.random()*30}%,${45+Math.random()*30}%,${.35+Math.random()*.4})`; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); }
+  x.fillStyle='rgba(90,60,35,.35)'; for(let k=0;k<4;k++) x.fillRect(0,165+k*26,w,5);
+  // luzes pontuais
+  for(let k=0;k<16;k++){ const px=Math.random()*w, py=40+Math.random()*90, gg=x.createRadialGradient(px,py,0,px,py,26); gg.addColorStop(0,'rgba(255,240,200,.95)'); gg.addColorStop(1,'rgba(255,230,180,0)'); x.fillStyle=gg; x.fillRect(px-26,py-26,52,52); }
+  // veios de madeira na mesa
+  x.globalAlpha=.07; for(let k=0;k<40;k++){ x.strokeStyle=k%2?'#8a6a4a':'#fff4e0'; x.lineWidth=1+Math.random()*3; const y0=270+Math.random()*240; x.beginPath(); x.moveTo(0,y0); x.bezierCurveTo(w*.3,y0+8,w*.6,y0-8,w,y0+4); x.stroke(); }
+  x.globalAlpha=1;
+  const b=document.createElement('canvas'); b.width=w; b.height=h; const bx=b.getContext('2d'); bx.filter='blur(14px)'; bx.drawImage(c,0,0); bx.filter='none';
+  return b;
+}
+
+async function texturasSaco(){
+  const PX=34, W=Math.round((xmax-xmin)*PX), H=Math.round((ymax-ymin)*PX);
+  // tinta flexo é translúcida: base kraft + tintas em "multiplicar"
+  const arteC = await svgCanvas(marcaSheet({px:PX, papel:KRAFT, semCamadas:true}), W, H);
+  corOverride = k => k==='papel' ? '#ffffff' : (arte.paleta[k]?cmyk2hex(arte.paleta[k].cmyk):'#ffffff');
+  const tintaC = await svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#ffffff'}), W, H);
+  corOverride = null;
+  { const ax=arteC.getContext('2d'); ax.globalCompositeOperation='multiply'; ax.globalAlpha=0.95; ax.drawImage(tintaC,0,0); ax.globalAlpha=1; ax.globalCompositeOperation='destination-in'; ax.drawImage(await svgCanvas(marcaSheet({px:PX, papel:'#000', semCamadas:true}), W, H),0,0); ax.globalCompositeOperation='source-over'; }
+  corOverride = k => k==='papel' ? '#e8e8e8' : '#6f6f6f';
+  const rugC = await svgCanvas(marcaSheet({px:PX, papel:'#e8e8e8', fundo:'#e8e8e8'}), W, H);
+  corOverride = null;
+  const alphaC = await svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#000000', semCamadas:true}), W, H);
+  // kraft de verdade: multiplica fibras/manchas sobre a arte
+  const nz = kraftNoise(W,H), cx=arteC.getContext('2d');
+  cx.globalCompositeOperation='multiply'; cx.drawImage(nz,0,0); cx.globalCompositeOperation='source-over';
+  // bump = fibras + vincos
+  const bump=document.createElement('canvas'); bump.width=W; bump.height=H; const bx=bump.getContext('2d');
+  bx.drawImage(nz,0,0); bx.globalAlpha=.85; bx.globalCompositeOperation='overlay'; bx.drawImage(rugas(W,H,PX),0,0); bx.globalAlpha=1;
+  return {arteC, rugC, alphaC, bump};
+}
+
+function geometriaSaco(interno){
+  // saco EM PÉ sobre a base achatada; Y = altura (y da folha), frente voltada para +Z
+  const T=THREE, Wd=GAB.paineis.frente.w, half=GAB.paineis.sanfona_esq.w/2, L=ymax, Lf=GAB.paineis.frente.h;
+  const xsS=[]; const add=(a,b,n)=>{ for(let i=0;i<n;i++) xsS.push(a+(b-a)*i/n); };
+  const PF=GAB.paineis.frente.partes[0], PSD=GAB.paineis.sanfona_dir.partes[0], PV0=GAB.paineis.verso.partes[0], PV1=GAB.paineis.verso.partes[1], PSE=GAB.paineis.sanfona_esq.partes[0];
+  const F0=PF.x, F1=PF.x+PF.w, S1=PSD.x+PSD.w, V0E=PV0.x+PV0.w, V1=PV1.x, V1E=PV1.x+PV1.w, SE1=PSE.x+PSE.w, VW0=PV0.w;
+  add(F0,F1,46); add(F1,S1,24); add(PV0.x,V0E,28); xsS.push(V0E); add(V1,V1E,20); add(PSE.x,SE1,24); xsS.push(SE1);  // emenda: fim do verso 1 e início do verso 2 no mesmo ponto
+  const NY=80;
+  // profundidade aberta: base quase toda aberta (fundo chato), boca um pouco mais fechada
+  // abertura: estufado perto da base (cheio de pães), máximo antes da metade, fecha um pouco até a boca
+  const sm=t=>{ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); };
+  // base achatada (frente e verso se encontram), abre rápido, máximo ~30% da altura, fecha um pouco até a boca
+  const abre = u => u<0.3 ? 0.02+0.98*(1-Math.pow(1-u/0.3, 2.4)) : 1.0-0.26*sm((u-0.3)/0.7);
+  const barriga = (sy,u) => Math.pow(Math.min(1, abre(u)), 1.5) * (0.35 + 1.9*Math.exp(-Math.pow((u-0.32)/0.27,2)));
+  const prof = sy=>2*half*abre(Math.min(1,sy/Lf));
+  function secao(sx, d, bul){
+    const inset=Math.sqrt(Math.max(0, half*half-(d/2)*(d/2)));
+    const lado = (t)=> 0.4*bul*Math.sin(Math.PI*t);   // sanfona também estufa
+    if(sx>=F0 && sx<=F1){ const x=-Wd/2+(sx-F0); return [x, d/2+bul*(1-Math.pow(2*x/Wd,2)), 'f', 9]; }
+    if(sx>F1 && sx<=S1){ const g=sx-F1, f=g<=half?g/half:(g-half)/half, o=lado(g/(2*half));
+      return g<=half ? [Wd/2-inset*f+o, d/2-(d/2)*f, 'g', Math.abs(g-half)] : [Wd/2-inset*(1-f)+o, -(d/2)*f, 'g', Math.abs(g-half)]; }
+    if(sx>=PV0.x){ const x=Wd/2-(sx-PV0.x); return [x, -d/2-bul*(1-Math.pow(2*x/Wd,2)), 'b', 9]; }
+    if(sx<V1E){ const x=Wd/2-VW0-(sx-V1); return [x, -d/2-bul*(1-Math.pow(2*x/Wd,2)), 'b', 9]; }
+    const g=sx-PSE.x, f=g<=half?g/half:(g-half)/half, o=lado(g/(2*half));
+    return g<=half ? [-Wd/2+inset*f-o, -d/2+(d/2)*f, 'g', Math.abs(g-half)] : [-Wd/2+inset*(1-f)-o, (d/2)*f, 'g', Math.abs(g-half)];
+  }
+  const pos=[], uv=[], col=[], idx=[], NX=xsS.length;
+  for(let j=0;j<=NY;j++){
+    const sy=L*j/NY, d=prof(sy), bul=barriga(sy, Math.min(1,sy/Lf));
+    for(let i=0;i<NX;i++){
+      const sx=xsS[i]; let [x,z,tipo,dc]=secao(sx,d,bul);
+      // amassado leve, maior no meio da altura, quase nada junto da base dobrada
+      const amp=0.20*Math.min(1,sy/5);
+      const n1=(fbm(sx*0.24, sy*0.2)-0.5)*2*amp, n2=(fbm(sx*0.2+40, sy*0.23+9)-0.5)*2*amp;
+      if(tipo==='g') x += (x>0?1:-1)*n1*0.8; else z += (z>0?1:-1)*n1;
+      x += n2*0.25;
+      pos.push(x, sy+(fbm(sx*0.13+70, sy*0.1)-0.5)*0.15, z);
+      const ux = sx>=V0E-1e-6 ? V0E-0.04 : (Math.abs(sx-V1)<1e-6 ? V1+0.04 : sx);   // não amostra fora do contorno na emenda
+      uv.push((ux-xmin)/(xmax-xmin), (sy-ymin)/(ymax-ymin));
+      let ao=1;
+      if(!interno){
+        ao *= 0.55+0.45*Math.min(1, sy/5);                         // dobra da base / contato com o chão
+        if(tipo==='g') ao *= 1-0.38*Math.exp(-Math.pow(dc/1.0,2));  // vinco das sanfonas
+        if(tipo==='g') ao *= 0.9;                                   // laterais recolhidas
+      } else {
+        const k=Math.min(1, Math.max(0, (sy-4)/(Lf-4)));
+        ao *= 0.12+0.88*Math.pow(k,1.6);                            // fundo escuro, boca clara
+        if(tipo==='g') ao *= 1-0.45*Math.exp(-Math.pow(dc/1.3,2));
+      }
+      col.push(ao,ao,ao);
+    }
+  }
+  for(let j=0;j<NY;j++) for(let i=0;i<NX-1;i++){ const a=j*NX+i, b=a+1, c=a+NX, d=c+1; idx.push(a,b,c, b,d,c); }
+  const g=new T.BufferGeometry();
+  g.setAttribute('position', new T.Float32BufferAttribute(pos,3));
+  g.setAttribute('uv', new T.Float32BufferAttribute(uv,2));
+  g.setAttribute('color', new T.Float32BufferAttribute(col,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+function produtoIniciar(){
+  const T=THREE, host=$('prodcanvas');
+  const r=new T.WebGLRenderer({antialias:true, alpha:false, preserveDrawingBuffer:true});
+  r.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+  r.outputEncoding=T.sRGBEncoding; r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=0.95;
+  r.shadowMap.enabled=true; r.shadowMap.type=T.VSMShadowMap; r.physicallyCorrectLights=true;
+  host.innerHTML=''; host.appendChild(r.domElement);
+  const scene=new T.Scene();
+  const env=new T.CanvasTexture(ambienteCanvas()); env.mapping=T.EquirectangularReflectionMapping; env.encoding=T.sRGBEncoding;
+  const pm=new T.PMREMGenerator(r); const envMap=pm.fromEquirectangular(env).texture;
+  scene.background=env; scene.environment=envMap;
+  const cam=new T.PerspectiveCamera(32, 1, 1, 2000);
+  const key=new T.DirectionalLight(0xfff1dc, 2.6); key.position.set(-30,115,62); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); Object.assign(key.shadow.camera,{left:-45,right:45,top:45,bottom:-45,near:1,far:220}); key.shadow.radius=14; key.shadow.bias=-0.0008; key.shadow.normalBias=0.04;
+  scene.add(key); scene.add(new T.HemisphereLight(0xfff4e6, 0x6b4f37, 0.55));
+  const fill=new T.DirectionalLight(0xdfe8ff, 0.35); fill.position.set(40,25,-30); scene.add(fill);
+  // chão: só sombra (o "piso" é o ambiente) + sombra de contato
+  const chao=new T.Mesh(new T.PlaneGeometry(400,400), new T.ShadowMaterial({opacity:.24})); chao.rotation.x=-Math.PI/2; chao.position.y=-0.02; chao.receiveShadow=true; scene.add(chao);
+  const cc=document.createElement('canvas'); cc.width=cc.height=256; const cx=cc.getContext('2d'); const gr=cx.createRadialGradient(128,128,10,128,128,128); gr.addColorStop(0,'rgba(30,18,8,.55)'); gr.addColorStop(.6,'rgba(30,18,8,.18)'); gr.addColorStop(1,'rgba(30,18,8,0)'); cx.fillStyle=gr; cx.fillRect(0,0,256,256);
+  const contato=new T.Mesh(new T.PlaneGeometry(1,1), new T.MeshBasicMaterial({map:new T.CanvasTexture(cc), transparent:true, depthWrite:false}));
+  contato.rotation.x=-Math.PI/2; contato.position.set(0, 0.01, 0); contato.scale.set(GAB.paineis.frente.w*1.5, GAB.paineis.sanfona_esq.w*1.6, 1); scene.add(contato);
+  P3_comida = adicionaComida(scene);
+  contatoAjusta = ()=>contato.scale.set(GAB.paineis.frente.w*1.5, GAB.paineis.sanfona_esq.w*1.6, 1);
+  P3={T, r, scene, cam, key, theta:Math.PI/2-0.5, phi:1.2, rad:120, alvo:new T.Vector3(0, ymax*0.47, 0), girando:false, malhas:[], pronto:false, gen:0};
+  // órbita
+  const el=r.domElement; let d=null;
+  el.addEventListener('pointerdown', e=>{ d={x:e.clientX,y:e.clientY,t:P3.theta,p:P3.phi}; el.setPointerCapture(e.pointerId); el.style.cursor='grabbing'; });
+  el.addEventListener('pointermove', e=>{ if(!d) return; P3.theta=d.t-(e.clientX-d.x)*0.006; P3.phi=Math.max(0.2,Math.min(1.52,d.p-(e.clientY-d.y)*0.005)); });
+  el.addEventListener('pointerup', ()=>{ d=null; el.style.cursor=''; });
+  el.addEventListener('wheel', e=>{ e.preventDefault(); P3.rad=Math.max(45,Math.min(200,P3.rad*(e.deltaY>0?1.08:1/1.08))); },{passive:false});
+  const loop=()=>{ if(modo!=='produto'){ P3.raf=null; return; }
+    if(P3.girando) P3.theta+=0.004;
+    const st=$('prodcanvas').getBoundingClientRect(); if(st.width && (r.domElement.width!==Math.round(st.width*r.getPixelRatio()) || r.domElement.height!==Math.round(st.height*r.getPixelRatio()))){ r.setSize(st.width, st.height, false); r.domElement.style.width='100%'; r.domElement.style.height='100%'; cam.aspect=st.width/st.height; cam.updateProjectionMatrix(); }
+    const s=P3; cam.position.set(s.alvo.x+s.rad*Math.sin(s.phi)*Math.cos(s.theta), s.alvo.y+s.rad*Math.cos(s.phi), s.alvo.z+s.rad*Math.sin(s.phi)*Math.sin(s.theta)); cam.lookAt(s.alvo);
+    r.render(scene,cam); P3.raf=requestAnimationFrame(loop); };
+  P3.loop=loop;
+}
+let prodTimer=null;
+function produto(){
+  $('prodmsg').textContent='Montando o produto…'; $('prodmsg').style.display='block';
+  carregaThree(()=>{
+    if(!P3) produtoIniciar();
+    if(!P3.raf) P3.loop();
+    clearTimeout(prodTimer); prodTimer=setTimeout(produtoAtualiza, 120);
+  });
+}
+async function produtoAtualiza(){
+  const T=P3.T, gen=++P3.gen; P3.alvo.set(0, ymax*0.47, 0);
+  if(P3_comida){ P3_comida.forEach(o=>P3.scene.remove(o)); P3_comida=adicionaComida(P3.scene); }
+  contatoAjusta && contatoAjusta();
+  const tx = await texturasSaco(); if(gen!==P3.gen) return;
+  const mk=(c,srgb)=>{ const t=new T.CanvasTexture(c); t.anisotropy=8; if(srgb) t.encoding=T.sRGBEncoding; return t; };
+  P3.malhas.forEach(m=>{ P3.scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
+  const alpha=mk(tx.alphaC), bump=mk(tx.bump);
+  const ext=new T.MeshStandardMaterial({map:mk(tx.arteC,true), roughnessMap:mk(tx.rugC), roughness:1, metalness:0, bumpMap:bump, bumpScale:0.022,
+    alphaMap:alpha, alphaTest:0.5, vertexColors:true, side:T.FrontSide, envMapIntensity:0.9});
+  // interior: kraft liso (sem impressão), mais fosco
+  const inC=document.createElement('canvas'); inC.width=tx.arteC.width; inC.height=tx.arteC.height; const ix=inC.getContext('2d'); ix.fillStyle=GAB.papel==='branco'?'#e9e5dc':'#b98d5d'; ix.fillRect(0,0,inC.width,inC.height);
+  ix.globalCompositeOperation='multiply'; ix.drawImage(tx.bump,0,0);
+  const int=new T.MeshStandardMaterial({map:mk(inC,true), roughness:.95, metalness:0, bumpMap:bump, bumpScale:0.03, alphaMap:alpha, alphaTest:0.5, vertexColors:true, side:T.BackSide, envMapIntensity:.5, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:4});
+  const m1=new T.Mesh(geometriaSaco(false), ext), m2=new T.Mesh(geometriaSaco(true), int);
+  const d0=GAB.paineis.sanfona_esq.w*0.93, base=new T.Mesh(new T.PlaneGeometry(GAB.paineis.frente.w, d0), new T.MeshStandardMaterial({color:0x3a2a1a, roughness:1}));
+  base.rotation.x=-Math.PI/2; base.position.y=0.06;
+  [m1,m2].forEach(m=>{ m.castShadow=true; m.receiveShadow=true; P3.scene.add(m); });
+  base.geometry.dispose(); base.material.dispose();
+  P3.malhas=[m1,m2]; $('prodmsg').style.display='none';
+}
+
+/* ---------- mockup 3D ---------- */
+let rotY=-32, rotX=-10, spin=null;
+function arteMarkup(prefixo){
+  let s=`<defs>`;
+  PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach((p,i)=>{ s+=`<clipPath id="${prefixo}c-${pn}-${i}"><rect x="${p.x}" y="${-(p.y+p.h)}" width="${p.w}" height="${p.h}"/></clipPath>`; }));
+  s+=`</defs><path d="${contornoD()}" fill="${KRAFT}"/>`;
+  arte.camadas.forEach(c=>{ if(c.visivel===false) return;
+    GAB.paineis[c.painel].partes.forEach((p,i)=>{ s+=`<g clip-path="url(#${prefixo}c-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})">${elSVG(c,true)}</g></g>`; }); });
+  return s;
+}
+function faceSVG(parte, n){ return `<svg viewBox="${parte.x} ${-(parte.y+parte.h)} ${parte.w} ${parte.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${arteMarkup('mk'+n)}</svg>`; }
+function mockup(){
+  const st=$('stage').getBoundingClientRect(), P=GAB.paineis, H=Math.max(P.verso.h, P.frente.h);
+  const S = Math.max(4, Math.min((st.height-150)/H, (st.width-80)/(P.frente.w+P.sanfona_esq.w*1.2)));
+  const W=P.frente.w*S, D=P.sanfona_esq.w*S, HH=H*S;
+  const box=$('mockbox'); box.style.width=W+'px'; box.style.height=HH+'px';
+  box.style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  let n=0;
+  const face=(conteudo, fw, fh, tr, sombra)=>`<div class="face" style="width:${fw}px;height:${fh}px;left:${(W-fw)/2}px;top:${HH-fh}px;transform:${tr}">
+      <div>${conteudo}${sombra?`<div class="sh" style="position:absolute;inset:0;background:${sombra}"></div>`:''}</div><div class="in"></div></div>`;
+  const fr=P.frente.partes[0], sd=P.sanfona_dir.partes[0], se=P.sanfona_esq.partes[0], vs=P.verso.partes;
+  const verso = `<div style="display:flex;width:100%;height:100%">${vs.map(v=>`<div style="width:${v.w/P.verso.w*100}%;height:100%">${faceSVG(v, n++)}</div>`).join('')}</div>`;
+  box.innerHTML =
+    face(faceSVG(fr,n++), W, P.frente.h*S, `rotateY(0deg) translateZ(${D/2}px)`, 'linear-gradient(90deg,rgba(255,255,255,.06),rgba(0,0,0,.04))') +
+    face(faceSVG(sd,n++), D, P.sanfona_dir.h*S, `rotateY(90deg) translateZ(${W/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,.22) 50%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.16))') +
+    face(verso, W, P.verso.h*S, `rotateY(180deg) translateZ(${D/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,.14))') +
+    face(faceSVG(se,n++), D, P.sanfona_esq.h*S, `rotateY(-90deg) translateZ(${W/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.16),rgba(0,0,0,.08) 50%,rgba(0,0,0,.22) 50%,rgba(0,0,0,.10))') +
+    `<div class="face" style="width:${W}px;height:${D}px;left:0;top:${HH-D/2}px;transform:rotateX(90deg)"><div style="background:#9c7346"></div><div class="in" style="background:#9c7346"></div></div>`;
+  const sh=$('mockshadow'); sh.style.width=(W*1.9)+'px'; sh.style.height=(D*1.4)+'px'; sh.style.top=(HH/2+HH*0.47)+'px'; sh.style.left='0px';
+  $('mockscene').style.width=W+'px'; $('mockscene').style.height=HH+'px';
+  sh.style.left=(W/2)+'px';
+}
+function giraPara(y){ rotY=y; $('mockbox').style.transition='transform .5s ease'; $('mockbox').style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`; setTimeout(()=>$('mockbox').style.transition='',520); }
+(()=>{ let d=null; const m=$('mock');
+  m.addEventListener('pointerdown', e=>{ if(e.target.closest('#mockctl')) return; d={x:e.clientX,y:e.clientY,ry:rotY,rx:rotX}; m.setPointerCapture(e.pointerId); m.style.cursor='grabbing'; });
+  m.addEventListener('pointermove', e=>{ if(!d) return; rotY=d.ry+(e.clientX-d.x)*0.45; rotX=Math.max(-35,Math.min(15,d.rx-(e.clientY-d.y)*0.25)); $('mockbox').style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`; });
+  m.addEventListener('pointerup', ()=>{ d=null; m.style.cursor=''; });
+  document.querySelectorAll('#mockctl [data-r]').forEach(b=>b.onclick=()=>{ if(spin){clearInterval(spin);spin=null;$('mockspin').classList.remove('on');} giraPara(+b.dataset.r); });
+  $('mockspin').onclick=()=>{ if(spin){ clearInterval(spin); spin=null; $('mockspin').classList.remove('on'); return; }
+    $('mockspin').classList.add('on'); spin=setInterval(()=>{ rotY+=0.6; $('mockbox').style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`; },16); };
+})();
+
+const VISTAS=[{theta:Math.PI/2,phi:1.42,rad:100},{theta:Math.PI/2-0.62,phi:1.22,rad:105},{theta:-Math.PI/2+0.5,phi:1.3,rad:105},{theta:Math.PI/2-0.3,phi:0.5,rad:125}];
+document.querySelectorAll('#prodctl [data-v]').forEach(b=>b.onclick=()=>{ if(!P3) return; const v=VISTAS[+b.dataset.v], a={t:P3.theta,p:P3.phi,r:P3.rad}; let k=0;
+  const an=()=>{ k=Math.min(1,k+0.06); const e=k*k*(3-2*k); P3.theta=a.t+(v.theta-a.t)*e; P3.phi=a.p+(v.phi-a.p)*e; P3.rad=a.r+(v.rad-a.r)*e; if(k<1) requestAnimationFrame(an); }; P3.girando=false; $('prodspin').classList.remove('on'); an(); });
+$('prodspin').onclick=()=>{ if(!P3) return; P3.girando=!P3.girando; $('prodspin').classList.toggle('on',P3.girando); };
+
+/* ---------- barra de ferramentas móvel ---------- */
+(()=>{ const T=$('tools'), G=$('grip'); let d=null;
+  const salva=()=>{ try{ localStorage.setItem('sacola_tools', JSON.stringify({l:T.style.left,t:T.style.top,v:T.classList.contains('vert'),m:T.classList.contains('moved')})); }catch(_){} };
+  try{ const o=JSON.parse(localStorage.getItem('sacola_tools')||'null'); if(o){ T.classList.toggle('vert',o.v); if(o.m){ T.classList.add('moved'); T.style.left=o.l; T.style.top=o.t; } } }catch(_){}
+  const prende=()=>{ const st=$('stage').getBoundingClientRect(), r=T.getBoundingClientRect();
+    T.style.left=Math.max(6,Math.min(st.width-r.width-6, r.left-st.left))+'px'; T.style.top=Math.max(6,Math.min(st.height-r.height-6, r.top-st.top))+'px'; };
+  G.addEventListener('pointerdown', e=>{ if(e.target.id==='orient') return; const st=$('stage').getBoundingClientRect(), r=T.getBoundingClientRect();
+    T.classList.add('moved'); T.style.left=(r.left-st.left)+'px'; T.style.top=(r.top-st.top)+'px';
+    d={x:e.clientX,y:e.clientY,l:r.left-st.left,t:r.top-st.top}; G.setPointerCapture(e.pointerId); G.style.cursor='grabbing'; e.preventDefault(); });
+  G.addEventListener('pointermove', e=>{ if(!d) return; T.style.left=(d.l+e.clientX-d.x)+'px'; T.style.top=(d.t+e.clientY-d.y)+'px'; prende(); });
+  G.addEventListener('pointerup', ()=>{ if(d){ d=null; G.style.cursor=''; salva(); } });
+  $('orient').onclick=()=>{ T.classList.toggle('vert'); if(!T.classList.contains('moved')){ const st=$('stage').getBoundingClientRect(), r=T.getBoundingClientRect(); T.classList.add('moved'); T.style.left=(r.left-st.left)+'px'; T.style.top=(r.top-st.top)+'px'; } prende(); salva(); };
+  new ResizeObserver(()=>{ if(T.classList.contains('moved')) prende(); }).observe($('stage'));
+})();
+
+/* ---------- auto-centralizar ---------- */
+function centralizar(){
+  let ls = selLayers().filter(c=>!c.bloqueado);
+  if(!ls.length){ msg('a','🎯 Selecione o que quer centralizar (clique, Shift+clique ou Ctrl+A) e aperte Centralizar de novo.'); return; }
+  let n=0;
+  ls.forEach(c=>{
+    const pn=GAB.paineis[c.painel], b=bboxPainel(c); if(!b) return;
+    const cortes=[0, ...(pn.linhas_internas||[]).map(l=>l.x), pn.w].sort((a,b)=>a-b), cx=(b.x0+b.x1)/2;
+    let seg=[0,pn.w];
+    for(let i=0;i<cortes.length-1;i++) if(cx>=cortes[i] && cx<=cortes[i+1]){ seg=[cortes[i],cortes[i+1]]; break; }
+    // se o item é mais largo que o trecho, centraliza no painel inteiro
+    if(b.x1-b.x0 > seg[1]-seg[0]-2*M) seg=[0,pn.w];
+    const dx=(seg[0]+seg[1])/2-cx; if(Math.abs(dx)>0.005){ mover(c,dx,0); arred(c); n++; }
+  });
+  commit(); render();
+  msg('a', n?`🎯 Centralizei ${n} ${n>1?'itens':'item'} (respeitando dobras e emenda).`:'🎯 Já estava tudo centralizado.');
+}
+$('centrar').onclick=centralizar;
+
+/* =====================================================================
+   VÁRIAS SACOLAS: catálogo, carrinho, adaptação, propagação, status
+   ===================================================================== */
+function geraGabarito(o){
+  // o: {id,nome,referencia,papel,w (frente),h (altura frente),H (altura corpo),g (sanfona),cola,ve,vd,abaL,abaF}
+  const r1=v=>Math.round(v*100)/100, C=o.cola, G=o.g, H=o.H, ve=o.ve, vd=o.vd;
+  const xSe=r1(C+ve), xFr=r1(xSe+G), xSd=r1(xFr+o.w), xVd=r1(xSd+G), X=r1(xVd+vd);
+  const colaNoVerso = ve===0;   // facas pequenas: a tira de cola compõe o verso (vd + cola = frente)
+  const versoPartes = [{x:xVd,y:0,w:vd,h:H,px:0}, colaNoVerso ? {x:0,y:0,w:C,h:H,px:vd} : {x:C,y:0,w:ve,h:H,px:vd}];
+  return {
+    id:o.id, faca:o.faca, nome:o.nome, referencia:o.referencia, papel:o.papel||'kraft', unidade:'cm', fonte:o.fonte,
+    regras:{max_cores:3, margem_seguranca_cm:0.5, texto_min_pt:6, linha_min_mm:0.3, lpi_max: o.papel==='branco'?40:30},
+    serrilha:{amplitude:0.3, passo:0.6},
+    contorno:[[0,-o.abaL],[xFr,-o.abaL],[xFr,-o.abaF],[xSd,-o.abaF],[xSd,-o.abaL],[X,-o.abaL],[X,H],[xSd,H],[xSd,o.h],[xFr,o.h],[xFr,H],[0,H]],
+    dobras:[[[C,0],[C,H]],[[xSe,0],[xSe,H]],[[r1(xSe+G/2),0],[r1(xSe+G/2),H]],[[xFr,0],[xFr,o.h]],[[xSd,0],[xSd,o.h]],[[r1(xSd+G/2),0],[r1(xSd+G/2),H]],[[xVd,0],[xVd,H]],[[0,0],[X,0]]],
+    areas_cola: colaNoVerso ? [{x:0,y:-o.abaF,w:X,h:o.abaF}] : [{x:0,y:0,w:C,h:H},{x:0,y:-o.abaF,w:X,h:o.abaF}],
+    paineis:{
+      frente:{w:o.w,h:o.h,partes:[{x:xFr,y:0,w:o.w,h:o.h,px:0}],linhas_internas:[]},
+      verso:{w:r1(vd+(colaNoVerso?C:ve)),h:H,partes:versoPartes,linhas_internas:[{x:vd,tipo:'emenda colada'}]},
+      sanfona_esq:{w:G,h:H,partes:[{x:xSe,y:0,w:G,h:H,px:0}],linhas_internas:[{x:r1(G/2),tipo:'dobra da sanfona'}]},
+      sanfona_dir:{w:G,h:H,partes:[{x:xSd,y:0,w:G,h:H,px:0}],linhas_internas:[{x:r1(G/2),tipo:'dobra da sanfona'}]}
+    }
+  };
+}
+// Facas reais (OHDE), medidas extraídas dos PDFs em escala 1:1
+const FACAS = [
+  {faca:'f05', ref:'1/2 Kg',    nome:'Saco 1/2 kg',    w:10,   h:16,   H:19,   g:6.5,  cola:3,   ve:0,   vd:7,    abaL:1.5, abaF:3.2, fonte:'Gabarito_05_Kg.pdf', uso:'Pães pequenos, salgados'},
+  {faca:'f1',  ref:'1 Kg',      nome:'Saco 1 kg',      w:10,   h:25,   H:28,   g:5.5,  cola:3,   ve:0,   vd:7,    abaL:1.5, abaF:3.2, fonte:'Gabarito_1_Kg.pdf',  uso:'Pão francês (até ~10 un.)'},
+  {faca:'fham',ref:'Hamburgão', nome:'Saco Hamburgão', w:13.5, h:11.5, H:13.5, g:5.5,  cola:2.5, ve:5.2, vd:8.2,  abaL:1.5, abaF:3.0, fonte:'Gabarito_Hamburg_o.pdf', uso:'Lanches, hambúrguer'},
+  {faca:'f3',  ref:'3 Kg',      nome:'Saco 3 kg',      w:16,   h:35.2, H:37.5, g:5.9,  cola:3,   ve:6,   vd:10,   abaL:1.5, abaF:3.0, fonte:'Gabarito_3_Kg.pdf',  uso:'Pães médios, roscas'},
+  {faca:'f5',  ref:'5 Kg',      nome:'Saco 5 kg',      w:17.5, h:41.5, H:43.5, g:8.3,  cola:3,   ve:7,   vd:10.5, abaL:1.5, abaF:3.0, fonte:'Gabarito_5_Kg.pdf',  uso:'Pães grandes, baguetes'},
+  {faca:'f10', ref:'10 Kg',     nome:'Saco 10 kg',     w:20,   h:55.5, H:56.5, g:10.8, cola:3,   ve:7,   vd:13,   abaL:1.5, abaF:2.5, fonte:'Gabarito_10_Kg.pdf', uso:'Volumes grandes, encomendas'},
+];
+const PAPEIS = {kraft:'Kraft natural', branco:'Branco monolúcido'};
+const CATALOGO = {};
+FACAS.forEach(f=>Object.keys(PAPEIS).forEach(pp=>{ const id=f.faca+'_'+pp;
+  CATALOGO[id]=geraGabarito({...f, id, papel:pp, referencia:f.ref, nome:`${f.nome} · ${pp==='kraft'?'Kraft':'Branco'}`}); }));
+const COR_PAPEL = {kraft:'#c89a62', branco:'#f3f0ea'};
+function setGab(g){
+  GAB = g; PAINEIS = Object.keys(GAB.paineis); M = GAB.regras.margem_seguranca_cm;
+  ymin = Math.min(...GAB.contorno.map(p=>p[1])); ymax = Math.max(...GAB.contorno.map(p=>p[1]));
+  xmin = Math.min(...GAB.contorno.map(p=>p[0])); xmax = Math.max(...GAB.contorno.map(p=>p[0]));
+  KRAFT = COR_PAPEL[GAB.papel||'kraft'];
+}
+
+/* ---------- estado do projeto ---------- */
+// design = {cliente, paleta, atual, carrinho:[ids], ultima, sacolas:{id:{estado:'nenhum'|'auto'|'conferida', proprio:[ids], camadas:[]}}}
+const CHAVE_LS = 'glopel_editor_projeto_v2';
+const PALETA_INICIAL = {preto:{pantone:'PANTONE Black C', cmyk:[0,13,49,98]}};
+function designVazio(){
+  const d = {cliente:'Minha padaria', paleta:JSON.parse(JSON.stringify(PALETA_INICIAL)), atual:'f5_kraft', ultima:'f5_kraft', carrinho:[], qtd:{}, confirmadas:[], sacolas:{}};
+  Object.keys(CATALOGO).forEach(id=>d.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]});
+  return d;
+}
+let design = null;
+function carregaDesign(){
+  try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return d; } } }catch(_){}
+  return designVazio();
+}
+function sincroniza(){ if(!design) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
+function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:design.paleta, camadas:b.camadas}; }
+
+/* ---------- adaptação automática entre tamanhos ---------- */
+const CAMPOS_LAYOUT = new Set(['x','y','escala','rotacao','w','h','rx','ry','x1','y1','x2','y2','raio','tamanho_pt','painel','bloqueado','traco_mm']);
+function adaptaCamada(c, gOrig, gDest){
+  const n = JSON.parse(JSON.stringify(c));
+  const po = gOrig.paineis[c.painel], pd = gDest.paineis[c.painel]; if(!po||!pd) return n;
+  const sx = pd.w/po.w, sy = pd.h/po.h, s = Math.min(sx, sy);
+  const ancY = (y)=>{ const r=y/po.h; return r>0.62 ? pd.h-(po.h-y)*s : r<0.38 ? y*s : y*sy; };   // topo/base ancorados, meio proporcional
+  if(n.tipo==='linha'){ const ym=(n.y1+n.y2)/2, ny=ancY(ym); n.x1*=sx; n.x2*=sx; n.y1=ny+(n.y1-ym)*s; n.y2=ny+(n.y2-ym)*s; }
+  else if(n.tipo==='retangulo' && n.w >= po.w*0.7){   // faixas largas acompanham a largura
+    n.x=(n.x||0)*sx; n.w*=sx; const yc=(n.y||0)+n.h/2, nyc=ancY(yc); n.h*=s; n.y=nyc-n.h/2;
+  } else {
+    let cy = c.y||0; try{ const b=bboxPainelEm(c, gOrig); if(b) cy=(b.y0+b.y1)/2; }catch(_){}
+    const dy = ancY(cy) - cy*1;  // move pelo centro visual
+    n.x = (n.x||0)*sx; n.y = (c.y||0) + (ancY(cy)-cy) + 0*dy;
+    n.escala = +(((n.escala||1)*s).toFixed(4));
+  }
+  const minPt=(gDest.regras.texto_min_pt||6)+0.5, minMm=(gDest.regras.linha_min_mm||0.3);
+  const garante = (el, escPai)=>{ const e=(el.escala||1)*escPai;
+    if(el.tipo==='texto' && (el.tamanho_pt||12)*e < minPt) el.tamanho_pt = +(minPt/e).toFixed(2);
+    if(el.contorno && (el.traco_mm||0.5)*e < minMm) el.traco_mm = +((minMm+0.02)/e).toFixed(3);
+    (el.filhos||[]).forEach(f=>garante(f, e)); };
+  garante(n, 1);
+  ['x','y','x1','x2','y1','y2','w','h'].forEach(k=>{ if(typeof n[k]==='number') n[k]=Math.round(n[k]*100)/100; });
+  return n;
+}
+function bboxPainelEm(c, g){ return g===GAB ? bboxPainel(c) : null; }
+function geraAdaptada(idDest){
+  // origem: sacola já criada com menos ajustes próprios (conteúdo "geral"); empate → a última editada
+  const criadas = design.carrinho.filter(id=>id!==idDest && design.sacolas[id] && design.sacolas[id].estado!=='nenhum');
+  criadas.sort((a,b)=>((design.sacolas[a].proprio||[]).length-(design.sacolas[b].proprio||[]).length) || ((b===design.ultima)-(a===design.ultima)));
+  const fonte = criadas[0];
+  const b = design.sacolas[idDest];
+  if(!fonte){ b.camadas=[]; b.estado='auto'; return; }
+  const gO = CATALOGO[fonte], gD = CATALOGO[idDest];
+  const gAtual = GAB; setGab(gO);   // para medir caixas na origem
+  const prevArte = arte; arte = {cliente:design.cliente, paleta:design.paleta, camadas:design.sacolas[fonte].camadas}; render();
+  b.camadas = design.sacolas[fonte].camadas.map(c=>adaptaCamada(c, gO, gD));
+  arte = prevArte; setGab(gAtual);
+  b.estado='auto'; b.proprio=[];
+}
+
+/* ---------- propagação de conteúdo ---------- */
+let ultimoBag = null;          // JSON da sacola atual no último commit
+let faixaTimer = null;
+function camposConteudo(c){ const o={}; for(const k in c){ if(!CAMPOS_LAYOUT.has(k) && !k.startsWith('_') && k!=='id') o[k]=c[k]; } return JSON.stringify(o); }
+function diffConteudo(antes, depois){
+  const A=new Map(antes.map(c=>[c.id,c])), D=new Map(depois.map(c=>[c.id,c]));
+  const add=[], rem=[], mud=[];
+  D.forEach((c,id)=>{ if(!A.has(id)) add.push(id); else if(camposConteudo(A.get(id))!==camposConteudo(c)) mud.push(id); });
+  A.forEach((c,id)=>{ if(!D.has(id)) rem.push(id); });
+  return {add, rem, mud};
+}
+function outrasCriadas(){ return design.carrinho.filter(id=>id!==design.atual && design.sacolas[id] && design.sacolas[id].estado!=='nenhum'); }
+function propagaPara(ids, df){
+  const gO = GAB, src = design.sacolas[design.atual].camadas;
+  ids.forEach(bid=>{
+    const b = design.sacolas[bid], gD = CATALOGO[bid];
+    df.rem.forEach(id=>{ b.camadas = b.camadas.filter(c=>c.id!==id); });
+    df.mud.forEach(id=>{ const s=src.find(c=>c.id===id), t=b.camadas.find(c=>c.id===id); if(!s) return;
+      if(!t){ b.camadas.push(adaptaCamada(s,gO,gD)); return; }
+      for(const k in s){ if(!CAMPOS_LAYOUT.has(k) && k!=='id') t[k]=JSON.parse(JSON.stringify(s[k])); }
+      for(const k in t){ if(!CAMPOS_LAYOUT.has(k) && k!=='id' && !(k in s)) delete t[k]; } });
+    df.add.forEach(id=>{ const s=src.find(c=>c.id===id); if(s && !b.camadas.some(c=>c.id===id)){ const i=src.indexOf(s); const n=adaptaCamada(s,gO,gD); b.camadas.splice(Math.min(i,b.camadas.length),0,n); } });
+    if(b.estado==='conferida') b.estado='auto';     // conteúdo mudou: pede nova conferida
+  });
+}
+function faixa(html, acoes, ms=9000){
+  const f=$('faixa'); f.innerHTML=html; acoes&&acoes.forEach(([txt,fn,pri])=>{ const b=document.createElement('button'); b.textContent=txt; if(pri) b.className='pri'; b.onclick=()=>{ fn(); f.classList.remove('show'); }; f.appendChild(b); });
+  const x=document.createElement('button'); x.textContent='×'; x.className='x'; x.onclick=()=>f.classList.remove('show'); f.appendChild(x);
+  f.classList.add('show'); clearTimeout(faixaTimer); if(ms) faixaTimer=setTimeout(()=>f.classList.remove('show'), ms);
+}
+let propagando = true;  // desligado em undo/troca de sacola/carregamentos
+// Padrão: mudança de conteúdo fica SÓ na sacola atual (marcada ✏️). O botão leva o estado FINAL para as outras.
+function aposEdicao(){
+  if(!design || !propagando) return;
+  const b = design.sacolas[design.atual];
+  const antes = ultimoBag ? JSON.parse(ultimoBag) : [];
+  if(JSON.stringify(antes)!==JSON.stringify(arte.camadas)){ if(b.estado!=='conferida') b.estado='conferida'; design.confirmadas=(design.confirmadas||[]).filter(x=>x!==design.atual); }
+  design.ultima = design.atual;
+  const df = diffConteudo(antes, arte.camadas);
+  const ids = [...df.add, ...df.rem, ...df.mud];
+  if(!ids.length) return;
+  if(!outrasCriadas().length) return;            // sem outras sacolas criadas: nada a sincronizar
+  b.proprio = [...new Set([...(b.proprio||[]), ...ids])];
+  mostraPendentes();
+}
+function mostraPendentes(){
+  const b = design.sacolas[design.atual], pend = b.proprio||[], outras = outrasCriadas();
+  if(!pend.length || !outras.length){ $('faixa').classList.remove('show'); return; }
+  const nomes = pend.map(i=>`<b>${esc(i)}</b>`).slice(0,3).join(', ')+(pend.length>3?` +${pend.length-3}`:'');
+  faixa(`✏️ Mudança só nesta sacola: ${nomes}.`, [['Aplicar nas outras sacolas', aplicaNasOutras, true]], 0);
+}
+function aplicaNasOutras(){
+  sincroniza();
+  const b = design.sacolas[design.atual], pend = b.proprio||[], outras = outrasCriadas(), gO = GAB, src = b.camadas;
+  outras.forEach(bid=>{
+    const t = design.sacolas[bid], gD = CATALOGO[bid];
+    pend.forEach(id=>{
+      const sL = src.find(c=>c.id===id), tL = t.camadas.find(c=>c.id===id);
+      if(!sL){ t.camadas = t.camadas.filter(c=>c.id!==id); return; }                       // apagada aqui → apaga lá
+      if(!tL){ const n=adaptaCamada(sL,gO,gD); t.camadas.splice(Math.min(src.indexOf(sL), t.camadas.length),0,n); return; } // nova → entra adaptada (posição/tamanho finais)
+      for(const k in sL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id') tL[k]=JSON.parse(JSON.stringify(sL[k])); }
+      for(const k in tL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id' && !(k in sL)) delete tL[k]; }
+    });
+    if(t.estado==='conferida') t.estado='auto';   // conteúdo mudou lá: pede nova conferida
+    design.confirmadas=(design.confirmadas||[]).filter(x=>x!==bid);
+  });
+  b.proprio = [];
+  salvaHist(); render(); atualizaSacolas();
+  faixa(`✅ Aplicado em ${outras.length} outra${outras.length>1?'s':''} sacola${outras.length>1?'s':''}. Elas ficaram 🟡 para você conferir.`, null, 6000);
+}
+
+/* ---------- histórico do projeto inteiro ---------- */
+function snap(){ sincroniza(); return JSON.stringify(design); }
+function salvaHist(){ const j=snap(); if(j===hist[hpos]) return; hist=hist.slice(0,hpos+1); hist.push(j); hpos++; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+commit = function(){ sincroniza(); aposEdicao(); salvaHist(); };
+function restaura(i){ hpos=i; design=JSON.parse(hist[hpos]); propagando=false; abreSacola(design.atual, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+undo = function(){ if(hpos>0) restaura(hpos-1); };
+redo = function(){ if(hpos<hist.length-1) restaura(hpos+1); };
+
+/* ---------- salvar sozinho ---------- */
+let salvarTimer=null;
+function agendaSalvar(){ const s=$('salvo'); s.className='salvo ing'; s.textContent='Salvando…'; clearTimeout(salvarTimer);
+  salvarTimer=setTimeout(()=>{ try{ localStorage.setItem(CHAVE_LS, snap()); }catch(_){} s.className='salvo ok'; s.textContent='✓ Salvo'; }, 700); }
+
+/* ---------- abrir / trocar sacola ---------- */
+function abreSacola(id, semGerar, semSync){
+  if(editando) fechaEdicao();
+  if(!semSync) sincroniza();
+  const b = design.sacolas[id];
+  if(!semGerar && b.estado==='nenhum'){ geraAdaptada(id); }
+  design.atual = id; setGab(CATALOGO[id]); apontaArte(); setSel(null);
+  ultimoBag = JSON.stringify(arte.camadas);
+  $('gabinfo').innerHTML = infoGab();
+  fit(); render(); atualizaSacolas();
+  if((b.proprio||[]).length && outrasCriadas().length) mostraPendentes();
+  else if(!semGerar && b.estado==='auto' && b.camadas.length) faixa(`🟡 <b>${esc(GAB.nome)}</b> foi adaptada sozinha a partir de outra sacola. Confira e ajuste se precisar.`, [['Está boa ✓', marcaConferida, true]], 12000);
+}
+function marcaConferida(){ design.sacolas[design.atual].estado='conferida'; design.ultima=design.atual; salvaHist(); atualizaSacolas(); }
+function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.7">(faca ${esc(GAB.fonte)})</span>`:''}<br>Frente ${GAB.paineis.frente.w} × ${GAB.paineis.frente.h} cm · sanfonas ${GAB.paineis.sanfona_esq.w} cm<br>Máx. ${GAB.regras.max_cores} cores · margem ${M} cm · texto ≥ ${GAB.regras.texto_min_pt} pt · traço ≥ ${GAB.regras.linha_min_mm} mm · retícula ${lpiMax()} lpi<br><span style="color:#e5007e">rosa</span> = gabarito · <span style="color:#2563eb">azul tracejado</span> = área útil`; }
+
+/* ---------- status visível: faixa de miniaturas + menu ---------- */
+const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Conferir','#d9a400'], conferida:['🟢','Conferida','#3f8f5a']};
+function miniSacola(g, cor){ const w=g.paineis.frente.w, h=g.paineis.frente.h, k=38/h; return `<svg width="${Math.max(16,w*k)}" height="38" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="0.6" fill="${cor}" stroke="rgba(0,0,0,.18)" stroke-width="0.3"/><path d="M0 0.8 ${Array.from({length:Math.floor(w/1.2)},(_,i)=>`L${i*1.2+0.6} 0 L${i*1.2+1.2} 0.8`).join(' ')}" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="0.25"/></svg>`; }
+function atualizaSacolas(){
+  const S=$('sacolas'); S.innerHTML='';
+  design.carrinho.forEach(id=>{
+    const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], prop=(b.proprio||[]).length;
+    const d=document.createElement('button'); d.className='sac'+(id===design.atual?' on':'')+(b.estado==='nenhum'?' cinza':'');
+    d.innerHTML = `${miniSacola(g, COR_PAPEL[g.papel])}<span class="t"><b>${esc(g.nome)}</b><span class="st" style="color:${cor}">${ic} ${txt}${prop?' · ✏️ só nesta':''}</span></span>`;
+    d.onclick=()=>{ if(id!==design.atual) abreSacola(id); };
+    S.appendChild(d);
+  });
+  // botão do dropdown
+  const b=design.sacolas[design.atual], [ic]=ST[b.estado];
+  $('prodbtn').innerHTML = `${ic} <b>${esc(GAB.nome)}</b> ▾`;
+  // conferir (atalho)
+  $('conferir').style.display = b.estado==='auto' ? '' : 'none';
+}
+function menuProdutos(){
+  const m=$('prodmenu');
+  if(m.classList.contains('show')){ m.classList.remove('show'); return; }
+  m.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], prop=(b.proprio||[]).length;
+    return `<div class="pm ${b.estado==='nenhum'?'cinza':'feita'} ${id===design.atual?'on':''}" data-id="${id}"><span>${ic}</span><span class="nm">${esc(g.nome)}</span><span class="st" style="color:${cor}">${txt}${prop?' · ✏️':''}</span></div>`; }).join('')
+    + `<div class="leg">🟢 conferida · 🟡 adaptada sozinha, conferir · ⚪ falta criar · ✏️ tem mudança só nela</div>`;
+  m.querySelectorAll('[data-id]').forEach(e=>e.onclick=()=>{ m.classList.remove('show'); if(e.dataset.id!==design.atual) abreSacola(e.dataset.id); });
+  m.classList.add('show');
+}
+
+/* ---------- PRONTO: confirmar cada produto do carrinho ---------- */
+function pronto(){
+  sincroniza();
+  const linhas = design.carrinho.map(id=>{ const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado];
+    const bloq = b.estado!=='conferida';
+    const jaOk=(design.confirmadas||[]).includes(id);
+    return `<div class="pr${jaOk?' conf':''}" data-id="${id}">${miniSacola(g, COR_PAPEL[g.papel])}<div class="nm"><b>${esc(g.nome)}</b><div class="st" style="color:${cor}">${ic} ${txt}${(b.proprio||[]).length?' · ✏️ mudança só nesta':''}${b.camadas.length?'':' · sem arte'}</div></div>
+      <button data-a="rem" title="Tirar do carrinho">🗑 Remover</button><button data-a="edit">✏️ Editar</button>
+      <button data-a="ok" class="${bloq||jaOk?'':'pri'}" ${bloq||jaOk?'disabled':''} ${bloq?'title="Abra e confira esta sacola antes"':''}>${jaOk?'✓ Confirmada':'✓ Confirmar'}</button></div>`; }).join('');
+  $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Tudo pronto?</h3>
+    <div style="color:var(--mute);margin-bottom:10px">Confirme cada sacola do carrinho. As que estão 🟡 ou ⚪ precisam ser abertas e conferidas antes.</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="fx">Voltar a editar</button></div>`;
+  $('modal').style.display='flex';
+  $('fx').onclick=()=>$('modal').style.display='none';
+  $('mbox').querySelectorAll('.pr button').forEach(bt=>bt.onclick=()=>{
+    const id=bt.closest('.pr').dataset.id, a=bt.dataset.a;
+    if(a==='edit'){ $('modal').style.display='none'; abreSacola(id); }
+    if(a==='rem'){ sincroniza(); remCarrinho(id); novaHistoria();
+      if(!design.carrinho.length){ $('modal').style.display='none'; vaiLoja(); toast('Carrinho vazio.'); return; }
+      if(design.atual===id) abreSacola(design.carrinho[0], false, true); atualizaSacolas(); pronto(); }
+    if(a==='ok'){ bt.closest('.pr').classList.add('conf'); bt.textContent='✓ Confirmada'; bt.disabled=true;
+      design.confirmadas=[...new Set([...(design.confirmadas||[]), id])]; agendaSalvar();
+      const todas=[...$('mbox').querySelectorAll('.pr')].every(p=>p.classList.contains('conf'));
+      if(todas){ const f=document.createElement('div'); f.className='fim'; f.innerHTML='🎉 Tudo confirmado! <button id="irCar" class="pri" style="margin-left:8px">Voltar ao carrinho e finalizar</button>'; $('mbox').appendChild(f);
+        $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); }; } }
+  });
+}
+
+/* ---------- menu ? : atalhos, exemplo, recomeçar ---------- */
+function menuAjuda(){
+  $('mbox').innerHTML = `<h3 style="margin:0 0 10px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Ajuda</h3>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button id="hx" class="pri">🥖 Carregar exemplo (Trigo de Ouro)</button><button id="hz">🧹 Recomeçar do zero</button></div>
+    <div style="line-height:1.9">👆 <b>Clique</b> seleciona · <b>arraste</b> move<br>⇧ <b>Shift + clique</b> ou <b>arrastar no vazio</b> seleciona vários<br>📁 <b>Ctrl+G</b> junta em pasta · <b>Ctrl+Shift+G</b> desfaz<br>🔤 <b>Duplo clique</b> num texto para editar<br>✋ <b>Segure Espaço</b> e arraste para mover a tela · roda do mouse = zoom<br>🧲 <b>N</b> liga/desliga o ímã · ↶ <b>Ctrl+Z</b> desfaz</div>
+    <div style="text-align:right;margin-top:12px"><button id="hf">Fechar</button></div>`;
+  $('modal').style.display='flex';
+  $('hf').onclick=()=>$('modal').style.display='none';
+  $('hx').onclick=()=>{ $('modal').style.display='none'; carregaExemplo(); };
+  $('hz').onclick=()=>{ $('modal').style.display='none'; recomeca(); };
+}
+function carregaExemplo(){
+  sincroniza(); const antes = hpos;
+  const ex = JSON.parse(JSON.stringify(ARTE0));
+  design.cliente = ex.cliente; design.paleta = ex.paleta;
+  Object.keys(CATALOGO).forEach(id=>{ design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]}; }); design.confirmadas=[];
+  const destino = design.carrinho.includes(design.atual) ? design.atual : design.carrinho[0];
+  // o exemplo foi desenhado na faca de 5 kg: adapta para a sacola aberta
+  const gO=CATALOGO.f5_kraft, gD=CATALOGO[destino], gA=GAB, aA=arte;
+  setGab(gO); arte={cliente:ex.cliente, paleta:ex.paleta, camadas:ex.camadas}; render();
+  design.sacolas[destino].camadas = destino.startsWith('f5_') ? ex.camadas : ex.camadas.map(c=>adaptaCamada(c,gO,gD));
+  setGab(gA); arte=aA;
+  design.sacolas[destino].estado = destino.startsWith('f5_') ? 'conferida' : 'auto'; design.ultima=destino;
+  propagando=false; abreSacola(destino, false, true); propagando=true; salvaHist();
+  faixa('🥖 Exemplo carregado. As outras sacolas se adaptam quando você abrir cada uma.', [['↶ Desfazer', ()=>restaura(antes)]], 10000);
+}
+function recomeca(){
+  sincroniza(); const antes = hpos;
+  design.paleta = JSON.parse(JSON.stringify(PALETA_INICIAL)); design.cliente='Minha padaria';
+  Object.keys(CATALOGO).forEach(id=>{ design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]}; }); design.confirmadas=[];
+  design.sacolas[design.atual].estado='auto';
+  propagando=false; abreSacola(design.atual, true, true); propagando=true; salvaHist();
+  faixa('🧹 Arte apagada em todas as sacolas. Mudou de ideia?', [['↶ Desfazer', ()=>restaura(antes), true]], 20000);
+}
+
+/* =====================================================================
+   LOJA (fase 2): vitrine → carrinho → personalizar → pronto → finalizar
+   ===================================================================== */
+const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
+const facaDe = id=>FACAS.find(f=>id.startsWith(f.faca+'_'));
+const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm · sanfona ${String(f.g).replace('.',',')} cm. ${f.uso}.`; }});
+const brl = v => 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+function sacolaIlustra(id, alt=150){
+  const g=CATALOGO[id], w=g.paineis.frente.w, h=g.paineis.frente.h, s=g.paineis.sanfona_esq.w, cor=COR_PAPEL[g.papel];
+  const W=w+s*0.55, k=alt/h, dente=Array.from({length:Math.floor(w/1.1)},(_,i)=>`L${i*1.1+0.55} 0.7 L${i*1.1+1.1} 0`).join(' ');
+  return `<svg width="${W*k}" height="${alt}" viewBox="-0.5 -0.5 ${W+1} ${h+1}">
+    <path d="M${w} 0.6 L${W} 1.6 L${W} ${h-0.4} L${w} ${h} Z" fill="${cor}" filter="brightness(.82)"/>
+    <path d="M${w+s*0.27} 1.1 L${w+s*0.27} ${h-0.2}" stroke="rgba(0,0,0,.18)" stroke-width="0.15"/>
+    <path d="M0 0 ${dente} L${w} ${h} L0 ${h} Z" fill="${cor}" stroke="rgba(0,0,0,.15)" stroke-width="0.12"/>
+    <ellipse cx="${w/2}" cy="${h*0.42}" rx="${w*0.22}" ry="${w*0.22}" fill="none" stroke="rgba(120,80,40,.25)" stroke-width="0.25" stroke-dasharray="0.6 0.5"/>
+    <text x="${w/2}" y="${h*0.44}" font-size="${w*0.075}" text-anchor="middle" fill="rgba(120,80,40,.45)" font-family="Inter,Arial" font-weight="700">SUA MARCA</text></svg>`;
+}
+function statusArte(id){
+  const b=design.sacolas[id]; if(!b) return ['⚪','Sem arte','#a49a8e'];
+  if((design.confirmadas||[]).includes(id)) return ['✅','Arte aprovada','#2f6b3f'];
+  return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Arte para conferir','#b07f00'], conferida:['🟢','Arte pronta — falta aprovar','#3f8f5a']})[b.estado];
+}
+function novaHistoria(){ hist=[snap()]; hpos=0; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+function noCarrinho(id){ return design.carrinho.includes(id); }
+function addCarrinho(id, qtd){
+  design.qtd = design.qtd || {};
+  if(!design.sacolas[id]) design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]};
+  if(!noCarrinho(id)) design.carrinho.push(id);
+  design.qtd[id] = Math.max(1, (qtd||design.qtd[id]||1));
+}
+function remCarrinho(id){
+  design.carrinho = design.carrinho.filter(x=>x!==id);
+  design.confirmadas = (design.confirmadas||[]).filter(x=>x!==id);
+}
+function toast(t){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); clearTimeout(d._t); d._t=setTimeout(()=>d.classList.remove('show'), 2600); }
+
+function renderLoja(){
+  sincroniza();
+  design.papelSel = design.papelSel || {};
+  $('vitrine').innerHTML = FACAS.map(f=>{
+    const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
+    return `<div class="card" data-id="${id}" data-faca="${f.faca}">
+      <div class="ilu">${sacolaIlustra(id, Math.max(46, g.paineis.frente.h*2.9))}</div>
+      <div class="cb">
+        <div class="cn">${esc(f.nome)}</div>
+        <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
+        <div class="cd">${DESC[id]}</div>
+        <div class="cp">${brl(PRECO[id])} <span>/ milheiro · preço ilustrativo</span></div>
+        <div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">milheiro${q>1?'s':''}</span></div>
+        <div class="acts">
+          <button data-a="add" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button>
+          <button data-a="pers">🎨 Personalizar</button>
+        </div>
+      </div></div>`; }).join('');
+  $('vitrine').querySelectorAll('.card').forEach(c=>{
+    const id=c.dataset.id;
+    c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
+      design.qtd=design.qtd||{}; const q=design.qtd[id]||1;
+      if(bt.dataset.a==='papel'){ design.papelSel[c.dataset.faca]=bt.dataset.p; agendaSalvar(); renderLoja(); return; }
+      if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
+      if(bt.dataset.a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); renderLoja(); }
+      if(bt.dataset.a==='add'){ if(noCarrinho(id)){ abreCarrinho(); return; } addCarrinho(id,q); novaHistoria(); renderLoja(); toast(`🛒 <b>${esc(CATALOGO[id].nome)}</b> adicionada ao carrinho.`); }
+      if(bt.dataset.a==='pers'){ const era=noCarrinho(id); addCarrinho(id,q); novaHistoria(); if(!era) toast(`🛒 Adicionada ao carrinho para você personalizar.`); vaiEditor(id); }
+    });
+  });
+  const n=design.carrinho.length; $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
+  renderCarrinho();
+}
+function renderCarrinho(){
+  const L=$('carlista');
+  if(!design.carrinho.length){ L.innerHTML='<div class="empty" style="padding:20px 4px">Seu carrinho está vazio. Escolha uma sacola ao lado.</div>'; $('cartotal').textContent=brl(0); $('finalizar').disabled=true; $('carmsg').textContent=''; return; }
+  let tot=0;
+  L.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
+    const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
+    return `<div class="ci" data-id="${id}"><div class="cil">${sacolaIlustra(id,64)}</div>
+      <div class="cim"><b>${esc(g.nome)}</b><div class="cist" style="color:${cor}">${ic} ${txt}</div>
+        <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>
+        <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+  $('cartotal').textContent=brl(tot);
+  const pend = design.carrinho.filter(id=>!(design.confirmadas||[]).includes(id));
+  $('finalizar').disabled = !!pend.length;
+  $('carmsg').innerHTML = pend.length ? `Para finalizar, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Pronto</b> no editor).` : '✅ Todas as artes aprovadas.';
+  L.querySelectorAll('.ci').forEach(c=>{ const id=c.dataset.id;
+    c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
+      const q=design.qtd[id]||1;
+      if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
+      if(bt.dataset.a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); renderLoja(); }
+      if(bt.dataset.a==='rem'){ remCarrinho(id); novaHistoria(); renderLoja(); toast('Removida do carrinho.'); }
+      if(bt.dataset.a==='pers'){ vaiEditor(id); }
+    }); });
+}
+function abreCarrinho(){ $('carrinho').classList.add('show'); $('veu').classList.add('show'); }
+function fechaCarrinho(){ $('carrinho').classList.remove('show'); $('veu').classList.remove('show'); }
+
+/* ---------- navegação entre loja e editor ---------- */
+function vaiEditor(id){
+  fechaCarrinho();
+  if(location.hash!=='#editor') location.hash='#editor';
+  mostraVista('editor');
+  propagando=false; abreSacola(id, false, false); propagando=true;
+  requestAnimationFrame(()=>{ fit(); atualizaSacolas(); });
+}
+function vaiLoja(abrirCarrinho){
+  if(editando) fechaEdicao();
+  sincroniza(); agendaSalvar();
+  if(location.hash!=='#loja') location.hash='#loja';
+  mostraVista('loja'); renderLoja(); if(abrirCarrinho) abreCarrinho();
+}
+function mostraVista(v){ document.body.classList.toggle('vloja', v==='loja'); document.body.classList.toggle('veditor', v==='editor'); }
+window.addEventListener('hashchange', ()=>{
+  if(location.hash==='#editor' && design.carrinho.length){ if(!document.body.classList.contains('veditor')) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); }
+  else if(!document.body.classList.contains('vloja')) vaiLoja();
+});
+
+/* =====================================================================
+   ELEMENTOS: banco de vetores, uploads (vetor e imagem), editor de cores
+   do vetor (reduz p/ ≤3) e editor de retícula (halftone) p/ imagens
+   ===================================================================== */
+const PANTONES = [ // aproximações sRGB/CMYK para sugerir a cor especial mais próxima
+  ['PANTONE Black C','#2b2926',[0,13,49,98]], ['PANTONE 1805 C','#af2626',[0,91,100,23]], ['PANTONE 485 C','#da291c',[0,95,100,0]],
+  ['PANTONE 186 C','#c8102e',[0,100,81,4]], ['PANTONE 7621 C','#ab2328',[0,93,85,28]], ['PANTONE 1795 C','#d22630',[0,96,94,2]],
+  ['PANTONE 165 C','#ff671f',[0,70,100,0]], ['PANTONE 1235 C','#ffb81c',[0,31,98,0]], ['PANTONE 116 C','#ffcd00',[0,14,100,0]],
+  ['PANTONE 7406 C','#f1c400',[0,18,100,0]], ['PANTONE 349 C','#046a38',[90,12,95,40]], ['PANTONE 356 C','#007a33',[91,0,100,27]],
+  ['PANTONE 5545 C','#4f6f62',[60,25,52,35]], ['PANTONE 7724 C','#00704a',[86,10,79,33]], ['PANTONE 286 C','#0033a0',[100,75,0,0]],
+  ['PANTONE 300 C','#005eb8',[99,50,0,0]], ['PANTONE 2602 C','#80379b',[59,93,0,0]], ['PANTONE 4625 C','#4f2c1d',[30,72,80,70]],
+  ['PANTONE 469 C','#693f23',[20,70,95,55]], ['PANTONE 7530 C','#a39382',[33,35,42,8]], ['PANTONE 7547 C','#131e29',[90,68,45,85]],
+  ['PANTONE 138 C','#de7c00',[0,52,100,0]], ['PANTONE 7579 C','#dc582a',[0,75,100,0]], ['PANTONE 3005 C','#0077c8',[100,34,0,2]]
+];
+const hex2rgb = h=>{ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return [n>>16&255, n>>8&255, n&255]; };
+const rgb2hex = (r,g,b)=>'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+function lab(c){ const f=v=>{ v/=255; return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4); }; const r=f(c[0]),g=f(c[1]),b=f(c[2]);
+  let x=(r*0.4124+g*0.3576+b*0.1805)/0.95047, y=r*0.2126+g*0.7152+b*0.0722, z=(r*0.0193+g*0.1192+b*0.9505)/1.08883;
+  const h=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116; x=h(x); y=h(y); z=h(z); return [116*y-16, 500*(x-y), 200*(y-z)]; }
+const dist = (a,b)=>{ const A=lab(a), B=lab(b); return 2.2*Math.hypot(A[0]-B[0], A[1]-B[1], A[2]-B[2]); };
+const luz = c=>(0.299*c[0]+0.587*c[1]+0.114*c[2])/255;
+function pantoneProximo(hex){ const c=hex2rgb(hex); let m=null; PANTONES.forEach(p=>{ const d=dist(c,hex2rgb(p[1])); if(!m||d<m.d) m={d,p}; }); return m.p; }
+
+/* ---------- assets (fora do histórico, salvos à parte) ---------- */
+const CHAVE_ASSETS='glopel_editor_assets_v1';
+let ASSETS = {}; try{ ASSETS = JSON.parse(localStorage.getItem(CHAVE_ASSETS)||'{}'); }catch(_){ ASSETS={}; }
+function salvaAssets(){ try{ localStorage.setItem(CHAVE_ASSETS, JSON.stringify(ASSETS)); }catch(_){ toast('⚠️ Arquivo grande demais para guardar neste navegador — ele some ao recarregar.'); } }
+const novoAsset = p=>{ let i=1; while(ASSETS[p+'_'+i]) i++; return p+'_'+i; };
+
+/* ---------- SVG: normalizar cores (computadas) e limpar ---------- */
+function normalizaSVG(texto){
+  const doc = new DOMParser().parseFromString(texto, 'image/svg+xml');
+  const raiz = doc.documentElement; if(!raiz || raiz.nodeName.toLowerCase()!=='svg') throw new Error('Arquivo não é um SVG válido.');
+  raiz.querySelectorAll('script,foreignObject,image,style,metadata,title,desc').forEach(e=>e.remove());
+  const host=document.createElement('div'); host.style.cssText='position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden';
+  const el = document.importNode(raiz, true); host.appendChild(el); document.body.appendChild(host);
+  // estilos do arquivo original (classes) ficam no host temporário só para o cálculo
+  const st=document.createElement('style'); st.textContent=[...doc.querySelectorAll('style')].map(s=>s.textContent).join('\n'); el.prepend(st);
+  const toHex = v=>{ if(!v||v==='none'||v.startsWith('url')) return v&&v.startsWith('url') ? '#808080' : 'none';
+    const m=v.match(/rgba?\(([^)]+)\)/); if(!m) return 'none'; const p=m[1].split(',').map(x=>parseFloat(x)); if(p.length>3 && p[3]===0) return 'none'; return rgb2hex(p[0],p[1],p[2]); };
+  const cores = {};
+  el.querySelectorAll('path,rect,circle,ellipse,polygon,polyline,line,text').forEach(s=>{
+    if(s.closest('defs,clipPath,mask')) return;
+    const cs=getComputedStyle(s), f=toHex(cs.fill), k=toHex(cs.stroke), sw=parseFloat(cs.strokeWidth)||0;
+    s.setAttribute('fill', f); s.setAttribute('stroke', k); if(k!=='none') s.setAttribute('stroke-width', sw);
+    s.removeAttribute('style'); s.removeAttribute('class'); s.removeAttribute('opacity'); s.removeAttribute('fill-opacity');
+    [f,k].forEach(c=>{ if(c!=='none'){ let a=1; try{ const bb=s.getBBox(); a=Math.max(1, bb.width*bb.height); }catch(_){} cores[c]=(cores[c]||0)+a; } });
+  });
+  el.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{ if(/^on/i.test(a.name)||(/href$/i.test(a.name)&&/^\s*javascript:/i.test(a.value))) e.removeAttribute(a.name); }));
+  let vb = (el.getAttribute('viewBox')||'').split(/[\s,]+/).map(Number);
+  if(vb.length!==4 || vb.some(isNaN)){ try{ const b=el.getBBox(); vb=[b.x,b.y,b.width||100,b.height||100]; }catch(_){ vb=[0,0,100,100]; } }
+  st.remove();
+  const markup = el.innerHTML; host.remove();
+  return {vb, markup, cores};
+}
+function svgDoVetor(el, comCores){
+  const vb=el.vb, h=el.w*vb[3]/vb[2]; let m=el.svg;
+  if(comCores!==false){ for(const o in (el.mapa||{})){ const c = cor(el.mapa[o], el.tinta||100); m = m.split(`fill="${o}"`).join(`fill="${c}"`).split(`stroke="${o}"`).join(`stroke="${c}"`); } }
+  return `<svg x="0" y="${-h}" width="${el.w}" height="${h}" viewBox="${vb.join(' ')}" preserveAspectRatio="none" overflow="visible"><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="transparent"/>${m}</svg>`;
+}
+
+/* ---------- retícula (halftone): grade de luminância + vetorização ---------- */
+const GRADES = {}, PATHS = new Map();
+const PONTO_MIN = 0.06;   // ponto mínimo imprimível (~6% da célula) — a confirmar com a clicheria
+const lpiMax = ()=> (GAB.regras && GAB.regras.lpi_max) || 30;
+function gradeLum(assetId){
+  if(GRADES[assetId]) return GRADES[assetId]==='carregando' ? null : GRADES[assetId];
+  const a=ASSETS[assetId]; if(!a) return null; GRADES[assetId]='carregando';
+  const img=new Image(); img.onload=()=>{ const W=Math.min(500,img.naturalWidth), H=Math.round(W*img.naturalHeight/img.naturalWidth);
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.drawImage(img,0,0,W,H);
+    const d=x.getImageData(0,0,W,H).data, L=new Float32Array(W*H); for(let i=0;i<W*H;i++) L[i]=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;
+    GRADES[assetId]={W,H,L}; render(); };
+  img.src=a.data; return null;
+}
+function amostra(g, u, v){ const x=Math.max(0,Math.min(g.W-1,u*(g.W-1))), y=Math.max(0,Math.min(g.H-1,v*(g.H-1))), i=Math.floor(x), j=Math.floor(y), fx=x-i, fy=y-j, i2=Math.min(g.W-1,i+1), j2=Math.min(g.H-1,j+1);
+  return (g.L[j*g.W+i]*(1-fx)+g.L[j*g.W+i2]*fx)*(1-fy)+(g.L[j2*g.W+i]*(1-fx)+g.L[j2*g.W+i2]*fx)*fy; }
+function tomDe(el, L){ let l=(L-0.5)*(1+(el.contraste||0))+0.5+(el.brilho||0)*0.5; l=Math.max(0,Math.min(1,l)); return el.inverter ? l : 1-l; }
+function pontosMeiotom(el, cb){
+  const g=gradeLum(el.asset); if(!g) return false;
+  const w=el.w, h=el.w*el.ar, esc=el.escala||1;
+  let cell=2.54/lpiMax()/esc;                       // passo fixo no mundo real: a escala muda quantos pontos cabem, não o tamanho deles
+  if((w*h)/(cell*cell) > 90000) cell=Math.sqrt(w*h/90000);
+  const a=(el.angulo||45)*Math.PI/180, ca=Math.cos(a), sa=Math.sin(a), N=Math.ceil(Math.hypot(w,h)/cell/2)+1, cx=w/2, cy=h/2;
+  const corte=Math.max(PONTO_MIN, el.corte??0.05), cheio=el.cheio??0.94;
+  for(let i=-N;i<=N;i++) for(let j=-N;j<=N;j++){
+    const x=cx+(i*ca-j*sa)*cell, y=cy+(i*sa+j*ca)*cell; if(x<0||y<0||x>w||y>h) continue;
+    let d=tomDe(el, amostra(g, x/w, y/h)); if(d<corte) continue; if(d>cheio) d=1;
+    cb(x,y,d,cell,ca,sa);
+  }
+  return true;
+}
+function meiotomSVG(el){
+  const h=el.w*el.ar, key=[el.asset,lpiMax(),el.escala||1,el.angulo,el.forma,el.brilho,el.contraste,el.inverter,el.corte,el.cheio,el.w,el.ar].join('|');
+  let d=PATHS.get(key);
+  if(d===undefined){ let p=[]; const f=v=>v.toFixed(3);
+    const ok = pontosMeiotom(el, (x,y,t,cell,ca,sa)=>{
+      if(el.forma==='linha'){ const hw=cell*0.55, ht=Math.max(0.004, t*cell/2)*(t>=1?1.15:1); // segmento de linha engrossada
+        const ux=ca*hw, uy=sa*hw, vx=-sa*ht, vy=ca*ht; p.push(`M${f(x-ux-vx)} ${f(-h+y-uy-vy)}L${f(x+ux-vx)} ${f(-h+y+uy-vy)}L${f(x+ux+vx)} ${f(-h+y+uy+vy)}L${f(x-ux+vx)} ${f(-h+y-uy+vy)}Z`); }
+      else { const r = t>=1 ? cell*0.75 : cell*Math.sqrt(t/Math.PI); p.push(`M${f(x-r)} ${f(-h+y)}a${f(r)} ${f(r)} 0 1 0 ${f(2*r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2*r)} 0`); }
+    });
+    if(!ok) return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="#ddd" opacity=".5"/>`;
+    d=p.join(''); if(PATHS.size>40) PATHS.clear(); PATHS.set(key,d);
+  }
+  return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="transparent"/><path d="${d}" fill="${cor(el.cor, 100)}"/>`;
+}
+
+/* ---------- banco de vetores (1 cor: preto = tinta, branco = papel) ---------- */
+const BANCO = {
+  trigo:{nome:'Trigo', vb:[0,0,100,100], svg:`<path d="M50 96 L50 22" stroke="#000000" stroke-width="5" stroke-linecap="round" fill="none"/>`+
+    [30,44,58,72].map(y=>`<ellipse cx="40" cy="${y}" rx="7" ry="14" transform="rotate(30 40 ${y})" fill="#000000" stroke="none"/><ellipse cx="60" cy="${y}" rx="7" ry="14" transform="rotate(-30 60 ${y})" fill="#000000" stroke="none"/>`).join('')+`<ellipse cx="50" cy="14" rx="7" ry="13" fill="#000000" stroke="none"/>`},
+  pao:{nome:'Pão francês', vb:[0,15,100,70], svg:`<path d="M6 58 C6 34 30 24 50 24 C72 24 94 34 94 58 C94 72 76 78 50 78 C24 78 6 72 6 58Z" fill="#000000" stroke="none"/>`+
+    [[30,46],[50,42],[70,46]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="11" ry="3.2" transform="rotate(-28 ${x} ${y})" fill="#ffffff" stroke="none"/>`).join('')},
+  croissant:{nome:'Croissant', vb:[0,15,100,70], svg:`<path d="M6 66 C16 30 84 30 94 66 C84 56 70 52 50 52 C30 52 16 56 6 66Z" fill="#000000" stroke="none"/>`+
+    [34,50,66].map(x=>`<path d="M${x} 33 Q${x+(x-50)*0.2} 44 ${x+(x-50)*0.15} 54" stroke="#ffffff" stroke-width="3" fill="none"/>`).join('')},
+  baguete:{nome:'Baguete', vb:[0,0,100,100], svg:`<g transform="rotate(-35 50 50)"><rect x="4" y="38" width="92" height="24" rx="12" fill="#000000" stroke="none"/>`+
+    [22,40,58,76].map(x=>`<ellipse cx="${x}" cy="50" rx="7" ry="2.4" transform="rotate(-30 ${x} 50)" fill="#ffffff" stroke="none"/>`).join('')+`</g>`},
+  xicara:{nome:'Café', vb:[0,0,100,100], svg:`<path d="M18 44 H74 V62 C74 78 62 86 46 86 C30 86 18 78 18 62Z" fill="#000000" stroke="none"/><path d="M74 50 C90 50 90 70 72 70" stroke="#000000" stroke-width="6" fill="none"/><ellipse cx="46" cy="90" rx="38" ry="5" fill="#000000" stroke="none"/>`+
+    [34,48,62].map(x=>`<path d="M${x} 36 C${x-6} 28 ${x+6} 22 ${x} 12" stroke="#000000" stroke-width="4" fill="none" stroke-linecap="round"/>`).join('')},
+  coracao:{nome:'Coração', vb:[0,5,100,90], svg:`<path d="M50 88 C20 66 6 50 6 32 C6 18 18 8 30 8 C40 8 46 14 50 22 C54 14 60 8 70 8 C82 8 94 18 94 32 C94 50 80 66 50 88Z" fill="#000000" stroke="none"/>`},
+  estrela:{nome:'Estrela', vb:[0,0,100,100], svg:`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?20:46, a=-Math.PI/2+i*Math.PI/5; return (50+r*Math.cos(a)).toFixed(1)+','+(52+r*Math.sin(a)).toFixed(1);}).join(' ')}" fill="#000000" stroke="none"/>`},
+  selo:{nome:'Selo', vb:[0,0,100,100], svg:`<polygon points="${Array.from({length:48},(_,i)=>{const r=i%2?44:49, a=i*Math.PI/24; return (50+r*Math.cos(a)).toFixed(1)+','+(50+r*Math.sin(a)).toFixed(1);}).join(' ')}" fill="#000000" stroke="none"/><circle cx="50" cy="50" r="36" fill="none" stroke="#ffffff" stroke-width="2.5"/>`},
+  faixa:{nome:'Faixa', vb:[0,20,100,60], svg:`<path d="M2 36 H16 V64 H2 L9 50Z M98 36 H84 V64 H98 L91 50Z" fill="#000000" stroke="none"/><rect x="12" y="28" width="76" height="30" fill="#000000" stroke="none"/><path d="M12 58 L18 66 V58Z M88 58 L82 66 V58Z" fill="#000000" stroke="none"/>`},
+};
+// pattern de padaria: ícones pequenos repetidos (fundo)
+(function(){ const W=350, H=830, ic=['pao','croissant','trigo','baguete','xicara'], cel=70; let s='';
+  for(let r=0;r*cel<H;r++) for(let c=0;c*cel<W;c++){ const k=ic[(r*2+c)%ic.length], b=BANCO[k], x=c*cel+(r%2?cel/2:0)-10, y=r*cel, rot=((r*7+c*13)%5-2)*12, sc=38/Math.max(b.vb[2],b.vb[3]);
+    s+=`<g transform="translate(${x+16} ${y+16}) rotate(${rot} 19 19) scale(${sc}) translate(${-b.vb[0]} ${-b.vb[1]})">${b.svg}</g>`; }
+  BANCO.pattern={nome:'Pattern padaria (fundo)', vb:[0,0,W,H], svg:s, fundo:true};
+})();
+
+/* ---------- inserir elementos ---------- */
+function corTintaPadrao(){ const ks=Object.keys(arte.paleta); return ks[0]||'papel'; }
+function insereVetor(dados, nomeBase, mapa, opts={}){
+  const pn=GAB.paineis.frente, larg = opts.fundo ? pn.w-2*M : Math.min(6, pn.w*0.4), h=larg*dados.vb[3]/dados.vb[2];
+  const c={id:novoId(nomeBase), painel:'frente', tipo:'vetor', vb:dados.vb, svg:dados.markup||dados.svg, mapa, w:+larg.toFixed(2),
+           x:+((pn.w-larg)/2).toFixed(2), y:+(opts.fundo ? M : Math.max(M,(pn.h-h)/2)).toFixed(2), asset:opts.asset};
+  if(opts.fundo){ c.fundo=true; c.tinta=100; arte.camadas.unshift(c); } else arte.camadas.push(c);
+  setSel(c.id); commit(); render(); return c;
+}
+function insereBanco(k){ const b=BANCO[k]; insereVetor({vb:b.vb, svg:b.svg}, k, {'#000000':corTintaPadrao(), '#ffffff':'papel'}, {fundo:b.fundo}); }
+
+/* ---------- cores usadas no projeto inteiro ---------- */
+function coresUsadas(excetoLayer){
+  const s=new Set(); const vis=el=>{ if(el===excetoLayer) return; ['cor','contorno'].forEach(k=>{ if(el[k]&&el[k]!=='papel') s.add(el[k]); }); if(el.mapa) Object.values(el.mapa).forEach(v=>{ if(v&&v!=='papel') s.add(v); }); (el.filhos||[]).forEach(vis); };
+  sincroniza(); Object.values(design.sacolas).forEach(b=>b.camadas.forEach(vis)); return s;
+}
+function limpaPaletaNaoUsada(excetoLayer){ const u=coresUsadas(excetoLayer); Object.keys(arte.paleta).forEach(k=>{ if(!u.has(k)) delete arte.paleta[k]; }); }
+function chaveNova(pantone){ const base=pantone.replace('PANTONE ','').replace(/\W+/g,'_').toLowerCase(); let k='p'+base, i=2; while(arte.paleta[k]) k='p'+base+'_'+(i++); return k; }
+function corParaPaleta(hex, livreParaNovas){
+  // usa uma cor da paleta parecida; senão cria uma nova Pantone (se couber)
+  const c=hex2rgb(hex); let melhor=null;
+  for(const k in arte.paleta){ const d=dist(c, hex2rgb(cmyk2hex(arte.paleta[k].cmyk))); if(!melhor||d<melhor.d) melhor={k,d}; }
+  if(melhor && (melhor.d<90 || !livreParaNovas())) return melhor.k;
+  const p=pantoneProximo(hex), k=chaveNova(p[0]); arte.paleta[k]={pantone:p[0], cmyk:p[2]}; return k;
+}
+// agrupa cores (aglomerativo, ponderado pela área) até n grupos; brancos viram papel
+function agrupaCores(cores, n){
+  let g=Object.entries(cores).filter(([h])=>luz(hex2rgb(h))<0.9).map(([h,w])=>({c:hex2rgb(h), w, m:[h]}));
+  while(g.length>n){ let best=null; for(let i=0;i<g.length;i++) for(let j=i+1;j<g.length;j++){ const d=dist(g[i].c,g[j].c); if(!best||d<best.d) best={i,j,d}; }
+    const A=g[best.i], B=g[best.j], W=A.w+B.w; A.c=A.c.map((v,k)=>(v*A.w+B.c[k]*B.w)/W); A.w=W; A.m=A.m.concat(B.m); g.splice(best.j,1); }
+  return g;
+}
+function mapaAutomatico(cores, layer){
+  limpaPaletaNaoUsada(layer);
+  const usadasFora = coresUsadas(layer), max=GAB.regras.max_cores;
+  const livres = Math.max(1, max - usadasFora.size);
+  const grupos = agrupaCores(cores, Math.min(livres + [...usadasFora].length, max));
+  const mapa={}; Object.keys(cores).forEach(h=>{ if(luz(hex2rgb(h))>=0.9) mapa[h]='papel'; });
+  const cabe = ()=>Object.keys(arte.paleta).length < max;
+  grupos.forEach(g=>{ const k=corParaPaleta(rgb2hex(...g.c), cabe); g.m.forEach(h=>mapa[h]=k); });
+  return mapa;
+}
+
+/* ---------- upload ---------- */
+async function recebeArquivo(f){
+  const ext=f.name.split('.').pop().toLowerCase(), base=f.name.replace(/\.[^.]+$/,'').replace(/\W+/g,'_').slice(0,16)||'arquivo';
+  if(ext==='svg'){
+    let dados; try{ dados=normalizaSVG(await f.text()); }catch(e){ toast('⚠️ '+(e.message||'SVG inválido')); return; }
+    const id=novoAsset('vet'); ASSETS[id]={tipo:'svg', nome:f.name, vb:dados.vb, svg:dados.markup, cores:dados.cores}; salvaAssets();
+    const nCores = Object.keys(dados.cores).filter(h=>luz(hex2rgb(h))<0.9).length;
+    const c = insereVetor(dados, base, {}, {asset:id});
+    const usadas=coresUsadas(c).size, max=GAB.regras.max_cores;
+    if(nCores + usadas > max){ editorVetor(c, `Este arquivo tem <b>${nCores} cor${nCores>1?'es':''}</b> e a sacola já usa ${usadas}. A impressão aceita no máximo <b>${max}</b> no total.`); }
+    else { c.mapa = mapaAutomatico(dados.cores, c); commit(); render(); toast(`✦ ${esc(f.name)} adicionado. Cores entraram em 🎨 Cores.`); }
+    renderElementos();
+  } else if(['png','jpg','jpeg','webp','gif'].includes(ext)){
+    const data = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(f); });
+    const img = await new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.src=data; });
+    const W=Math.min(900,img.naturalWidth), H=Math.round(W*img.naturalHeight/img.naturalWidth), cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    const x=cv.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.drawImage(img,0,0,W,H);
+    const id=novoAsset('img'); ASSETS[id]={tipo:'img', nome:f.name, data:cv.toDataURL('image/jpeg',0.86), ar:H/W}; salvaAssets();
+    insereImagem(id); renderElementos();
+  } else toast('Use SVG (vetor) ou PNG/JPG (imagem). PDF/AI: exporte como SVG.');
+}
+function insereImagem(assetId){
+  const a=ASSETS[assetId], pn=GAB.paineis.frente, w=Math.min(8, pn.w*0.5);
+  const c={id:novoId('foto'), painel:'frente', tipo:'meiotom', asset:assetId, ar:a.ar, w, x:+((pn.w-w)/2).toFixed(2), y:+((pn.h-w*a.ar)/2).toFixed(2),
+           cor:corTintaPadrao(), angulo:45, forma:'ponto', brilho:0, contraste:0.2, inverter:false, corte:0.05, cheio:0.94};
+  arte.camadas.push(c); setSel(c.id); commit(); render(); editorMeiotom(c);
+}
+
+/* ---------- painel Elementos ---------- */
+function miniVetor(vb, svg, mapa){ let m=svg; for(const o in (mapa||{})){ const c=mapa[o]==='papel'?'#fffaf2':'#3a2f27'; m=m.split(`fill="${o}"`).join(`fill="${c}"`).split(`stroke="${o}"`).join(`stroke="${c}"`); } return `<svg viewBox="${vb.join(' ')}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${m}</svg>`; }
+function renderElementos(){
+  const E=$('elementos'); if(!E) return;
+  const tiles = (lista)=>lista.map(([k,html,nome,tipo])=>`<button class="tile" data-k="${k}" data-t="${tipo}" title="${esc(nome)}"><span class="ti">${html}</span><span class="tn">${esc(nome)}</span></button>`).join('');
+  const banco = Object.entries(BANCO).map(([k,b])=>[k, miniVetor(b.vb,b.svg,{'#000000':1,'#ffffff':'papel'}), b.nome, 'banco']);
+  const vets = Object.entries(ASSETS).filter(([,a])=>a.tipo==='svg').map(([k,a])=>[k, `<svg viewBox="${a.vb.join(' ')}" width="100%" height="100%">${a.svg}</svg>`, a.nome, 'svg']);
+  const imgs = Object.entries(ASSETS).filter(([,a])=>a.tipo==='img').map(([k,a])=>[k, `<img src="${a.data}" alt="">`, a.nome, 'img']);
+  E.innerHTML = `<div class="upl"><button id="elUp" class="pri">⬆ Enviar arquivo</button><div class="hint">SVG (vetor) ou PNG/JPG (foto → retícula)</div></div>
+    <h3>Banco de elementos</h3><div class="tiles">${tiles(banco)}</div>
+    <h3>Meus vetores</h3><div class="tiles">${vets.length?tiles(vets):'<div class="empty">Nenhum ainda.</div>'}</div>
+    <h3>Minhas imagens</h3><div class="tiles">${imgs.length?tiles(imgs):'<div class="empty">Nenhuma ainda.</div>'}</div>
+    <div class="hint" style="padding:6px 14px 14px">Clique para pôr na sacola. Na arte, <b>duplo clique</b> num vetor ajusta as cores; numa foto abre a retícula.</div>`;
+  $('elUp').onclick=()=>$('file').click();
+  E.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{ const k=t.dataset.k, tp=t.dataset.t;
+    if(tp==='banco') insereBanco(k);
+    if(tp==='svg'){ const a=ASSETS[k]; const c=insereVetor({vb:a.vb, svg:a.svg}, k, {}, {asset:k}); c.mapa=mapaAutomatico(a.cores, c); commit(); render(); }
+    if(tp==='img') insereImagem(k); });
+}
+
+/* ---------- editor de cores do vetor ---------- */
+function editorVetor(c, aviso){
+  const orig = c.asset && ASSETS[c.asset] ? ASSETS[c.asset].cores : Object.fromEntries(Object.keys(c.mapa||{}).map(h=>[h,1]));
+  const antes = JSON.stringify({mapa:c.mapa, paleta:arte.paleta});
+  const max=GAB.regras.max_cores;
+  const opcoes = (sel)=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===sel?'selected':''} style="color:${cmyk2hex(arte.paleta[k].cmyk)}">${esc(arte.paleta[k].pantone)}</option>`),
+    `<option value="papel" ${sel==='papel'?'selected':''}>Papel (sem tinta)</option>`, `<option value="__nova">➕ Nova cor Pantone parecida</option>`].join('');
+  const desenha = ()=>{
+    const usadasFora=coresUsadas(c), daqui=new Set(Object.values(c.mapa||{}).filter(v=>v&&v!=='papel')), total=new Set([...usadasFora,...daqui]).size;
+    $('mbox').innerHTML = `<h3 style="margin:0 0 6px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">🎨 Cores do vetor</h3>
+      ${aviso?`<div class="aviso">${aviso}</div>`:''}
+      <div class="vedit"><div class="vprev">${svgDoVetor(c).replace(/x="0" y="[^"]+" width="[^"]+" height="[^"]+"/,'width="100%" height="100%"')}</div>
+      <div class="vcores">${Object.entries(orig).sort((a,b)=>b[1]-a[1]).map(([h])=>`<div class="vc"><i style="background:${h}"></i><span>→</span><select data-h="${h}">${opcoes((c.mapa||{})[h])}</select></div>`).join('')}</div></div>
+      <div class="vtot ${total>max?'err':''}">Cores de tinta na sacola: <b>${total}</b> de ${max} ${total>max?'— passa do limite':''}</div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap"><button id="vAuto" class="${total>max||!Object.keys(c.mapa||{}).length?'pri':''}">✨ Converter para ${max} cores</button>
+      <span><button id="vCan">Cancelar</button> <button id="vOk" class="pri" ${total>max?'disabled':''}>Aplicar</button></span></div>`;
+    $('mbox').querySelectorAll('select[data-h]').forEach(sl=>sl.onchange=()=>{ let v=sl.value; if(v==='__nova'){ const p=pantoneProximo(sl.dataset.h); v=chaveNova(p[0]); arte.paleta[v]={pantone:p[0], cmyk:p[2]}; }
+      c.mapa=Object.assign({}, c.mapa, {[sl.dataset.h]:v}); render(); desenha(); });
+    $('vAuto').onclick=()=>{ c.mapa=mapaAutomatico(orig, c); render(); desenha(); };
+    $('vCan').onclick=()=>{ const a=JSON.parse(antes); c.mapa=a.mapa; Object.keys(arte.paleta).forEach(k=>delete arte.paleta[k]); Object.assign(arte.paleta, a.paleta); $('modal').style.display='none'; render(); };
+    $('vOk').onclick=()=>{ limpaPaletaNaoUsada(); $('modal').style.display='none'; commit(); render(); };
+  };
+  desenha(); $('modal').style.display='flex';
+}
+
+/* ---------- editor de retícula ---------- */
+function editorMeiotom(c){
+  const antes=JSON.stringify(c), a=ASSETS[c.asset];
+  const campos=[['angulo','Ângulo (°)',0,90,1],['brilho','Brilho',-1,1,0.02],['contraste','Contraste',-0.8,2,0.02],['corte','Some pontos claros abaixo de',0,0.3,0.01]];
+  $('mbox').innerHTML = `<h3 style="margin:0 0 6px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">🔳 Retícula da imagem</h3>
+    <div class="hint" style="margin-bottom:8px">Fotos viram pontos de <b>uma cor só</b> — como a capivara do saco da Pastelaria. Pontos maiores = mais escuro.</div>
+    <div class="htedit"><div class="htprev"><canvas id="htc"></canvas><div class="hint">Prévia ${a?`· ${esc(a.nome)}`:''}</div></div>
+    <div class="htctl">
+      <div class="row"><label>Cor</label><select id="htCor">${Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===c.cor?'selected':''} style="color:${cmyk2hex(arte.paleta[k].cmyk)}">${esc(arte.paleta[k].pantone)}</option>`).join('')}</select></div>
+      <div class="row"><label>Forma</label><select id="htForma"><option value="ponto" ${c.forma!=='linha'?'selected':''}>● Pontos</option><option value="linha" ${c.forma==='linha'?'selected':''}>☰ Linhas</option></select></div>
+      ${campos.map(([k,l,mn,mx,st])=>`<div class="rng"><label>${l} <b id="v_${k}">${c[k]}</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${c[k]??0}"></div>`).join('')}
+      <label class="chk"><input type="checkbox" id="htInv" ${c.inverter?'checked':''}> Inverter (negativo)</label>
+      <div class="lpinfo">🔍 Resolução automática: <b>${lpiMax()} linhas/pol.</b> (o máximo da clicheria). Tamanho na sacola: <b>${(c.w*(c.escala||1)).toFixed(1)} cm</b> → <b>${Math.round(c.w*(c.escala||1)/2.54*lpiMax())} pontos</b> de largura.<br>Quer mais detalhe? <b>Aumente a imagem</b> na sacola.</div>
+    </div></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="htCan">Cancelar</button><button id="htOk" class="pri">Aplicar</button></div>`;
+  $('modal').style.display='flex';
+  const cv=$('htc'), W=320, H=Math.round(W*c.ar); cv.width=W*2; cv.height=H*2; cv.style.width=W+'px'; cv.style.height=H+'px';
+  const prev=()=>{ const x=cv.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.fillStyle=KRAFT; x.fillRect(0,0,W,H); x.fillStyle=cor(c.cor,100); x.strokeStyle='none';
+    const k=W/c.w, ok=pontosMeiotom(c,(px,py,t,cell,ca,sa)=>{ if(c.forma==='linha'){ x.save(); x.translate(px*k,py*k); x.rotate(Math.atan2(sa,ca)); const ht=Math.max(0.2,t*cell*k/2); x.fillRect(-cell*k*0.55,-ht,cell*k*1.1,ht*2); x.restore(); }
+      else { const r=(t>=1?cell*0.75:cell*Math.sqrt(t/Math.PI))*k; x.beginPath(); x.arc(px*k,py*k,r,0,7); x.fill(); } });
+    if(!ok) setTimeout(prev,150); };
+  let tm=null; const upd=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ prev(); render(); },60); };
+  $('mbox').querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>{ c[r.dataset.k]=parseFloat(r.value); $('v_'+r.dataset.k).textContent=r.value; upd(); });
+  $('htCor').onchange=e=>{ c.cor=e.target.value; upd(); }; $('htForma').onchange=e=>{ c.forma=e.target.value; upd(); }; $('htInv').onchange=e=>{ c.inverter=e.target.checked; upd(); };
+  $('htCan').onclick=()=>{ const o=JSON.parse(antes); Object.keys(c).forEach(k=>delete c[k]); Object.assign(c,o); $('modal').style.display='none'; render(); };
+  $('htOk').onclick=()=>{ $('modal').style.display='none'; commit(); render(); };
+  prev();
+}
+
+/* ---------- init ---------- */
+design = carregaDesign(); setGab(CATALOGO[design.atual]); apontaArte();
+hist=[snap()]; hpos=0; ultimoBag=JSON.stringify(arte.camadas);
+$('gabinfo').innerHTML = infoGab(); atualizaSacolas();
+$('prodbtn').onclick=e=>{ e.stopPropagation(); menuProdutos(); };
+document.addEventListener('click', e=>{ if(!e.target.closest('#prodwrap')) $('prodmenu').classList.remove('show'); });
+$('conferir').onclick=marcaConferida;
+msg('a', arte.camadas.length ? `Oi! 👋 Sua arte está como você deixou. Clique em qualquer parte para ajustar, ou escreva aqui o que quer mudar.` : `Oi! 👋 A sacola está em branco. Escreva aqui o que quer, por exemplo: "coloca o nome Padaria Bom Dia no meio e o telefone embaixo".\nPara ver um exemplo pronto: botão ❓ › Carregar exemplo.`);
+const CHIPS = ['Aumenta o selo 10%','Muda o slogan para "Feito com amor"','Deixa o nome vermelho','Sobe o nome 1 cm'];
+$('chips').innerHTML = CHIPS.map(c=>`<button>${esc(c)}</button>`).join('');
+$('chips').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{ $('prompt').value=CHIPS[i]; $('send').click(); });
+$('logtog').onclick=()=>{ const m=$('log').classList.toggle('min'); $('logtog').textContent = m?'Mostrar conversa':'Esconder conversa'; };
+$('prompt').addEventListener('input', e=>{ e.target.style.height='auto'; e.target.style.height=Math.min(110,e.target.scrollHeight)+'px'; });
+// gavetas (abas escondíveis, fechadas por padrão)
+function toggleDrawer(id, forcar){
+  const d=$(id), lado = d.classList.contains('left')?'left':'right', abrir = forcar!==undefined?forcar:!d.classList.contains('open');
+  document.querySelectorAll('.drawer.'+lado).forEach(x=>x.classList.remove('open'));
+  document.querySelectorAll('.tabs.'+lado+' .tab').forEach(x=>x.classList.remove('on'));
+  if(abrir){ d.classList.add('open'); document.querySelector(`.tab[data-d="${id}"]`).classList.add('on'); }
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>toggleDrawer(t.dataset.d));
+document.querySelectorAll('.fecha').forEach(b=>b.onclick=()=>toggleDrawer(b.closest('.drawer').id, false));
+// zoom
+function zoomBy(f){ const cx=view.x+view.w/2, cy=view.y+view.h/2; view.w*=f; view.h*=f; view.x=cx-view.w/2; view.y=cy-view.h/2; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); }
+$('zin').onclick=()=>zoomBy(1/1.25); $('zout').onclick=()=>zoomBy(1.25);
+// ajuda
+$('ajuda').onclick=()=>{
+  $('mbox').innerHTML = `<h3 style="margin:0 0 10px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Atalhos</h3>
+  <div style="line-height:1.9">👆 <b>Clique</b> seleciona · <b>arraste</b> move<br>⇧ <b>Shift + clique</b> ou <b>arrastar no vazio</b> seleciona vários<br>📁 <b>Ctrl+G</b> junta em pasta · <b>Ctrl+Shift+G</b> desfaz<br>🔤 <b>Duplo clique</b> num texto para editar<br>✋ <b>Segure Espaço</b> e arraste para mover a tela · roda do mouse = zoom<br>🧲 <b>N</b> liga/desliga o ímã · ↶ <b>Ctrl+Z</b> desfaz<br>⬅️➡️ <b>Setas</b> = ajuste fino</div>
+  <div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Entendi</button></div>`;
+  $('modal').style.display='flex';
+};
+// manter escala e centro quando o espaço do canvas muda
+let ultimoTam=null;
+new ResizeObserver(()=>{
+  const r=svg.getBoundingClientRect(); if(!r.width) return;
+  if(!ultimoTam){ ultimoTam=r; fit(); return; }
+  const k=view.w/ultimoTam.width, cx=view.x+view.w/2, cy=view.y+view.h/2;
+  view.w=r.width*k; view.h=r.height*k; view.x=cx-view.w/2; view.y=cy-view.h/2; ultimoTam=r;
+  svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); desenhaSel();
+}).observe($('stage'));
+$('export').onclick=pronto; $('ajuda').onclick=menuAjuda; renderElementos();
+$('voltaloja').onclick=()=>vaiLoja(true);
+$('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
+$('finalizar').onclick=()=>{ $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">🎉 Pedido enviado (simulação)</h3><div style="color:var(--mute);line-height:1.5">No site real: pagamento → as artes aprovadas viram PDF para a clicheria → produção.</div><div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`; $('modal').style.display='flex'; };
+if(location.hash==='#editor' && design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
+document.fonts && document.fonts.ready.then(()=>render());
+render();
+</script>
+</body>
+</html>
