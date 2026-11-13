@@ -1,0 +1,53 @@
+{
+  "cliente": "Padaria Trigo de Ouro (exemplo)",
+  "versao": 1,
+  "gabarito": "../gabaritos/5kg.json",
+  "paleta": {
+    "vermelho": {"pantone": "PANTONE 1805 C", "cmyk": [0, 91, 100, 23]},
+    "preto":    {"pantone": "PANTONE Black C", "cmyk": [0, 13, 49, 98]}
+  },
+  "camadas": [
+    {"id": "selo_circulo", "painel": "frente", "tipo": "elipse", "x": 8.75, "y": 26.8, "rx": 5.0, "ry": 5.0, "cor": "vermelho"},
+    {"id": "selo_anel", "painel": "frente", "tipo": "elipse", "x": 8.75, "y": 26.8, "rx": 4.4, "ry": 4.4, "contorno": "papel", "traco_mm": 0.8},
+    {"id": "trigo", "painel": "frente", "tipo": "grupo", "x": 8.75, "y": 26.6, "filhos": [
+      {"id": "trigo_haste", "tipo": "linha", "x1": 0, "y1": -3.0, "x2": 0, "y2": 2.6, "contorno": "papel", "traco_mm": 1.4, "ponta_redonda": true},
+      {"id": "g1e", "tipo": "elipse", "x": -0.45, "y": -1.1, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"},
+      {"id": "g1d", "tipo": "elipse", "x": 0.45,  "y": -1.1, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"},
+      {"id": "g2e", "tipo": "elipse", "x": -0.45, "y": -0.1, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"},
+      {"id": "g2d", "tipo": "elipse", "x": 0.45,  "y": -0.1, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"},
+      {"id": "g3e", "tipo": "elipse", "x": -0.45, "y": 0.9, "rx": 0.32, "ry": 0.75, "rotacao": 32, "cor": "papel"},
+      {"id": "g3d", "tipo": "elipse", "x": 0.45,  "y": 0.9, "rx": 0.32, "ry": 0.75, "rotacao": -32, "cor": "papel"},
+      {"id": "g4",  "tipo": "elipse", "x": 0, "y": 2.3, "rx": 0.32, "ry": 0.8, "cor": "papel"}
+    ]},
+    {"id": "desde", "painel": "frente", "tipo": "texto", "texto": "desde 1987", "fonte": "Chorus", "tamanho_pt": 30,
+     "alinhamento": "centro", "x": 8.75, "y": 33.6, "cor": "vermelho"},
+    {"id": "nome", "painel": "frente", "tipo": "texto", "texto": "TRIGO DE OURO", "fonte": "Bonum Bold", "tamanho_pt": 40,
+     "alinhamento": "centro", "x": 8.75, "y": 18.4, "cor": "preto"},
+    {"id": "subtitulo", "painel": "frente", "tipo": "texto", "texto": "PADARIA & CONFEITARIA", "fonte": "Heros Bold", "tamanho_pt": 13,
+     "espacamento": 220, "alinhamento": "centro", "x": 8.75, "y": 16.6, "cor": "vermelho"},
+    {"id": "divisor", "painel": "frente", "tipo": "linha", "x1": 4.5, "y1": 15.6, "x2": 13.0, "y2": 15.6, "contorno": "vermelho", "traco_mm": 0.6},
+    {"id": "slogan", "painel": "frente", "tipo": "texto", "texto": "Pão quentinho\ntoda manhã", "fonte": "Pagella Italic", "tamanho_pt": 24,
+     "entrelinha": 1.15, "alinhamento": "centro", "x": 8.75, "y": 12.4, "cor": "preto"},
+    {"id": "rodape_faixa", "painel": "frente", "tipo": "retangulo", "x": 0.6, "y": 1.0, "w": 16.3, "h": 4.0, "raio": 0.4, "cor": "vermelho"},
+    {"id": "rodape_contato", "painel": "frente", "tipo": "texto", "texto": "(41) 3333-0000  ·  @trigodeouro", "fonte": "Heros Bold", "tamanho_pt": 15,
+     "alinhamento": "centro", "x": 8.75, "y": 3.3, "cor": "papel"},
+    {"id": "rodape_endereco", "painel": "frente", "tipo": "texto", "texto": "Rua das Flores, 123 — Curitiba/PR", "fonte": "Heros", "tamanho_pt": 11,
+     "alinhamento": "centro", "x": 8.75, "y": 1.9, "cor": "papel"},
+
+    {"id": "sanfona_e_txt1", "painel": "sanfona_esq", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18,
+     "espacamento": 120, "alinhamento": "centro", "x": 2.4, "y": 21.75, "rotacao": 90, "cor": "vermelho"},
+    {"id": "sanfona_e_txt2", "painel": "sanfona_esq", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18,
+     "espacamento": 120, "alinhamento": "centro", "x": 6.55, "y": 21.75, "rotacao": 90, "cor": "vermelho"},
+    {"id": "sanfona_d_txt1", "painel": "sanfona_dir", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18,
+     "espacamento": 120, "alinhamento": "centro", "x": 2.4, "y": 21.75, "rotacao": 90, "cor": "vermelho"},
+    {"id": "sanfona_d_txt2", "painel": "sanfona_dir", "tipo": "texto", "texto": "TRIGO DE OURO  ·  PADARIA", "fonte": "Heros Cond Bold", "tamanho_pt": 18,
+     "espacamento": 120, "alinhamento": "centro", "x": 6.55, "y": 21.75, "rotacao": 90, "cor": "vermelho"},
+
+    {"id": "verso_obrigado", "painel": "verso", "tipo": "texto", "texto": "Obrigado\npela preferência!", "fonte": "Pagella Italic", "tamanho_pt": 28,
+     "entrelinha": 1.1, "alinhamento": "centro", "x": 5.25, "y": 26.0, "cor": "preto"},
+    {"id": "verso_siga", "painel": "verso", "tipo": "texto", "texto": "SIGA @TRIGODEOURO", "fonte": "Heros Bold", "tamanho_pt": 14,
+     "espacamento": 150, "alinhamento": "centro", "x": 5.25, "y": 21.6, "cor": "vermelho"},
+    {"id": "verso_reciclavel", "painel": "verso", "tipo": "texto", "texto": "Este papel é reciclável.\nDescarte corretamente.", "fonte": "Heros", "tamanho_pt": 8,
+     "alinhamento": "centro", "x": 5.25, "y": 2.4, "cor": "preto"}
+  ]
+}

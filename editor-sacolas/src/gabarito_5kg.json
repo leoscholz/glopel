@@ -1,0 +1,54 @@
+{
+  "nome": "Sacola kraft 5 kg",
+  "referencia": "5 Kg",
+  "fonte_gabarito": "Gabarito_5_Kg.pdf (OHDE Representações)",
+  "unidade": "cm",
+  "regras": {
+    "max_cores": 3,
+    "margem_seguranca_cm": 0.5,
+    "texto_min_pt": 6,
+    "linha_min_mm": 0.3
+  },
+  "serrilha": {"amplitude": 0.3, "passo": 0.6},
+  "contorno": [[0, -1.5], [18.3, -1.5], [18.3, -3.0], [35.8, -3.0], [35.8, -1.5], [54.6, -1.5],
+               [54.6, 43.5], [35.8, 43.5], [35.8, 41.5], [18.3, 41.5], [18.3, 43.5], [0, 43.5]],
+  "dobras": [
+    [[3.0, 0], [3.0, 43.5]],
+    [[10.0, 0], [10.0, 43.5]],
+    [[14.15, 0], [14.15, 43.5]],
+    [[18.3, 0], [18.3, 41.5]],
+    [[35.8, 0], [35.8, 41.5]],
+    [[39.95, 0], [39.95, 43.5]],
+    [[44.1, 0], [44.1, 43.5]],
+    [[0, 0], [54.6, 0]]
+  ],
+  "areas_cola": [
+    {"x": 0, "y": 0, "w": 3.0, "h": 43.5},
+    {"x": 0, "y": -3.0, "w": 54.6, "h": 3.0}
+  ],
+  "paineis": {
+    "frente": {
+      "w": 17.5, "h": 41.5,
+      "partes": [{"x": 18.3, "y": 0, "w": 17.5, "h": 41.5, "px": 0}],
+      "linhas_internas": []
+    },
+    "verso": {
+      "w": 17.5, "h": 43.5,
+      "partes": [
+        {"x": 44.1, "y": 0, "w": 10.5, "h": 43.5, "px": 0},
+        {"x": 3.0, "y": 0, "w": 7.0, "h": 43.5, "px": 10.5}
+      ],
+      "linhas_internas": [{"x": 10.5, "tipo": "emenda colada"}]
+    },
+    "sanfona_esq": {
+      "w": 8.3, "h": 43.5,
+      "partes": [{"x": 10.0, "y": 0, "w": 8.3, "h": 43.5, "px": 0}],
+      "linhas_internas": [{"x": 4.15, "tipo": "dobra da sanfona"}]
+    },
+    "sanfona_dir": {
+      "w": 8.3, "h": 43.5,
+      "partes": [{"x": 35.8, "y": 0, "w": 8.3, "h": 43.5, "px": 0}],
+      "linhas_internas": [{"x": 4.15, "tipo": "dobra da sanfona"}]
+    }
+  }
+}

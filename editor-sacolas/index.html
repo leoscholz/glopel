@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Embalagens Globo — Sacos de papel personalizados (demonstração)</title>
+<title>GloboEditor α 0.1 — Embalagens Globo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Arimo:wght@400;700&family=Archivo+Narrow:wght@700&family=EB+Garamond:ital,wght@1,400;1,500&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
 <style>
@@ -292,7 +292,7 @@ button{user-select:none;-webkit-user-select:none}
 <div id="app">
   <header id="top">
     <button id="voltaloja" title="Voltar para a loja / carrinho">← Loja</button>
-    <span class="brand">🥖 <b>Editor de Sacolas</b></span>
+    <span class="brand">🌐 <b>GloboEditor</b> <small style="color:var(--mute);font-weight:600">α 0.1</small></span>
     <div id="prodwrap"><button id="prodbtn" title="Trocar de sacola"></button><div id="prodmenu"></div></div>
     <span id="salvo" class="salvo ok">✓ Salvo</span>
     <span class="grow"></span>
@@ -1531,6 +1531,7 @@ function setGab(g){
 /* ---------- estado do projeto ---------- */
 // design = {cliente, paleta, atual, carrinho:[ids], ultima, sacolas:{id:{estado:'nenhum'|'auto'|'conferida', proprio:[ids], camadas:[]}}}
 const CHAVE_LS = 'glopel_editor_projeto_v2';
+const VERSAO = 'alpha 0.1';
 const PALETA_INICIAL = {preto:{pantone:'PANTONE Black C', cmyk:[0,13,49,98]}};
 function designVazio(){
   const d = {cliente:'Minha padaria', paleta:JSON.parse(JSON.stringify(PALETA_INICIAL)), atual:'f5_kraft', ultima:'f5_kraft', carrinho:[], qtd:{}, confirmadas:[], sacolas:{}};
