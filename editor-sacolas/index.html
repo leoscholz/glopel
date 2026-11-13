@@ -862,7 +862,7 @@ function props(){
   if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="number" step="0.1" value="${c.h}"></div></div>`;
   if(c.tipo==='vetor'||c.tipo==='meiotom'){
     h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div>`;
-    if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Papel (sem tinta)</option>`].join('');
+    if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Vazado (furo)</option>`].join('');
       const orig = Object.keys(c.mapa||{}).filter(h0=>(c.svg||'').includes(`="${h0}"`));
       h += orig.map((h0,i)=>`<div class="row"><label>${orig.length>1?'Cor '+(i+1):'Cor'}</label><select data-map="${h0}">${ops(c.mapa[h0])}</select></div>`).join('');
       h += `<button id="pNova" style="width:100%;margin:2px 0 4px">＋ Nova cor…</button>`; }
@@ -2011,10 +2011,17 @@ function normalizaSVG(texto){
   const markup = el.innerHTML; host.remove();
   return {vb, markup, cores};
 }
+let _vetMask=0;
 function svgDoVetor(el, comCores){
-  const vb=el.vb, h=el.w*vb[3]/vb[2]; let m=el.svg;
-  if(comCores!==false){ for(const o in (el.mapa||{})){ const c = cor(el.mapa[o], el.tinta||100); m = m.split(`fill="${o}"`).join(`fill="${c}"`).split(`stroke="${o}"`).join(`stroke="${c}"`); } }
-  return `<svg x="0" y="${-h}" width="${el.w}" height="${h}" viewBox="${vb.join(' ')}" preserveAspectRatio="none" overflow="visible"><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="transparent"/>${m}</svg>`;
+  // "papel" dentro de um vetor = FURO: some aquela parte do próprio desenho e aparece o que estiver atrás
+  const vb=el.vb, h=el.w*vb[3]/vb[2], troca=(m,o,c)=>m.split(`fill="${o}"`).join(`fill="${c}"`).split(`stroke="${o}"`).join(`stroke="${c}"`);
+  let m=el.svg, mk=el.svg, temFuro=false;
+  if(comCores!==false){ for(const o in (el.mapa||{})){ const k=el.mapa[o];
+    if(k==='papel'){ temFuro=true; m=troca(m,o,'none'); mk=troca(mk,o,'#000'); }
+    else { m=troca(m,o,cor(k, el.tinta||100)); mk=troca(mk,o,'#fff'); } } }
+  let defs='', attr='';
+  if(temFuro){ const id='vm'+(++_vetMask); defs=`<mask id="${id}" maskUnits="userSpaceOnUse" x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}"><rect x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}" fill="#000"/>${mk}</mask>`; attr=` mask="url(#${id})"`; }
+  return `<svg x="0" y="${-h}" width="${el.w}" height="${h}" viewBox="${vb.join(' ')}" preserveAspectRatio="none" overflow="visible"><defs>${defs}</defs><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="transparent"/><g${attr}>${m}</g></svg>`;
 }
 
 /* ---------- retícula (halftone): grade de luminância + vetorização ---------- */
