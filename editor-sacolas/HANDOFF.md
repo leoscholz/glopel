@@ -12,13 +12,13 @@ Objetivo de negócio: o cliente (padaria) monta a arte sozinho e a Glopel manda 
 | Código-fonte | `leoscholz/glopel` › `editor-sacolas/src/` |
 | Fonte única | `src/editor_template.html` (HTML+CSS+JS num arquivo) |
 | Build | `python3 src/build.py` → `../index.html` (GitHub) e `src/dist/artifact.html` (artifact) |
-| Facas OHDE (PDF 1:1) | `src/facas/*.pdf` · medidas extraídas com `src/facas/extrai_medidas.py` |
+| Facas OHDE (PDF 1:1) | `src/facas/*.pdf` (21) · originais em `~/Desktop/GABARITOS` no Mac · medidas com `src/facas/extrai_medidas.py` |
 | Motor de PDF p/ clicheria (v1, Python/reportlab) | `src/motor_pdf_render.py` — ainda NÃO lê vetor enviado nem retícula |
 
 Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.html`). Artifact = `publish_files` com `src/dist/artifact.html` como `index.html`, mode patch, base_version = versão viva (`get_artifact`).
 
 ## Estado (alpha 0.1)
-**Loja** — identidade Embalagens Globo (logo vetor redesenhado, azul `#1f5fae`/`#2f7fd0`); 6 facas × 2 papéis (kraft, branco monolúcido); carrinho lateral; Personalizar adiciona ao carrinho sozinho; Finalizar só com todas as artes aprovadas. Preço ilustrativo (função da área).
+**Loja** — identidade Embalagens Globo (logo vetor redesenhado, azul `#1f5fae`/`#2f7fd0`); **21 facas OHDE em 4 categorias** (Sacos de pão 0,5–15 kg · Lanches e porções · Envelopes · Porta-talher) × 2 papéis (kraft, branco monolúcido); facas sem sanfona (envelope, porta-talher) suportadas; carrinho lateral; Personalizar adiciona ao carrinho sozinho; Finalizar só com todas as artes aprovadas. Preço ilustrativo (função da área).
 
 **Editor**
 - Várias sacolas do carrinho; faixa de miniaturas com status ⚪ falta criar · 🟡 adaptada/conferir · 🟢 conferida · ✏️ mudança só nesta · ✅ aprovada.
@@ -39,6 +39,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Interface para leigo: linguagem simples, botões grandes, nada destrutivo sem desfazer.
 
 ## Pendências
+0. Facas com medida **aproximada** (aviso na aba Cores): 900 g (fundo em V), Batatinha 120/180, Hambúrguer (verso ajustado p/ fechar com a frente), Semente (cola nas 2 laterais). Envelopes: frente à direita do verso, como no PDF.
 1. Ficha técnica da clicheria: formato, nº máx. de cores, lineatura máx., ponto mínimo, traço/texto mínimos.
 2. Confirmar com a Glopel: cola no verso (1/2, 1 kg); verso do Hamburgão (5,2+8,2=13,4 vs frente 13,5); quais facas existem em papel branco.
 3. Dados reais da loja (pedido mínimo, atendimento, pagamento).

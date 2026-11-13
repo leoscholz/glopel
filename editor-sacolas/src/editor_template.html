@@ -109,6 +109,11 @@ body.vloja, body.vloja #loja{background:#f4f6f9}
 #selos{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 26px}
 #selos div{background:#fff;border:1px solid #e3e8ee;border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:34px 1fr;font-size:20px;align-items:center}
 #selos b{font-size:13.5px} #selos span{grid-column:2;font-size:12px;color:#6b7480}
+#cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+#loja #cats button{border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px}
+#loja #cats button.on{background:var(--azul);color:#fff;border-color:var(--azul)}
+#cats i{font-style:normal;font-size:11px;background:rgba(0,0,0,.08);border-radius:999px;padding:1px 7px;margin-left:4px}
+#loja #cats button.on i{background:rgba(255,255,255,.25)}
 .sech{display:flex;align-items:baseline;gap:12px;margin-bottom:12px} .sech h2{margin:0;font-size:21px} .sech span{color:#6b7480;font-size:13px}
 #loja .card{background:#fff;border:1px solid #e3e8ee;border-radius:16px;box-shadow:0 4px 16px rgba(20,40,80,.06);transition:transform .12s, box-shadow .12s}
 #loja .card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,40,80,.12)}
@@ -283,7 +288,8 @@ button{user-select:none;-webkit-user-select:none}
       <div class="hcta"><a href="#vitrine" class="hbtn">Ver tamanhos</a><span class="ilus">Loja de demonstração — preços ilustrativos.</span></div></div>
       <div class="hi" id="herosacos"></div></div>
     <div id="selos"><div>🎨<b>Editor online</b><span>Monte a arte sem designer</span></div><div>🖨️<b>Flexografia</b><span>Até 3 cores Pantone</span></div><div>🌱<b>Papel reciclável</b><span>Kraft natural ou branco</span></div><div>🚚<b>Entrega</b><span>Para todo o Brasil</span></div></div>
-    <div class="sech"><h2>Escolha o tamanho</h2><span>6 facas · 2 papéis</span></div>
+    <div id="cats"></div>
+    <div class="sech"><h2 id="sechT">Escolha o tamanho</h2><span id="sechN"></span></div>
     <div id="vitrine"></div>
   </div>
   <footer id="lfoot"><div class="fl"><b>Embalagens Globo</b><span>Sacos de papel para padarias, confeitarias e lanchonetes.</span></div>
@@ -406,7 +412,7 @@ const FONTES = {
   "Chorus":           {f:"'EB Garamond', Palatino, serif", w:500, s:"italic"},
   "Schola Bold":      {f:"'Libre Baskerville', Georgia, serif", w:700, s:"normal"}
 };
-let PAINEIS = Object.keys(GAB.paineis);
+let PAINEIS = Object.keys(GAB.paineis).filter(k=>!GAB.paineis[k].oculto);
 const SIGLA = {frente:"FR", verso:"VS", sanfona_esq:"SE", sanfona_dir:"SD"};
 let M = GAB.regras.margem_seguranca_cm;
 let ymin = Math.min(...GAB.contorno.map(p=>p[1])), ymax = Math.max(...GAB.contorno.map(p=>p[1]));
@@ -486,7 +492,7 @@ function render(){
   s += `<path d="${contornoD()}" fill="${PREV()?KRAFT:'#fff'}" stroke="none" filter="drop-shadow(0 0.15px 0.25px rgba(70,50,30,.25))"/>`;
   arte.camadas.forEach(c=>{
     if(c.visivel===false) return;
-    const pn = GAB.paineis[c.painel];
+    const pn = GAB.paineis[c.painel]; if(!pn || pn.oculto) return;
     pn.partes.forEach((p,i)=>{
       s += `<g clip-path="url(#c-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})" data-layer="${esc(c.id)}" data-part="${i}" style="cursor:${c.bloqueado?'not-allowed':'move'}">${elSVG(c,true)}</g></g>`;
     });
@@ -495,7 +501,7 @@ function render(){
   s += `<g pointer-events="none"><path d="${contornoD()}" fill="none" stroke="#e5007e" stroke-width="0.05"/>`;
   GAB.areas_cola.forEach(r=>{ s+=`<rect x="${r.x}" y="${-(r.y+r.h)}" width="${r.w}" height="${r.h}" fill="url(#hat)" clip-path="url(#ccont)"/>`; });
   GAB.dobras.forEach(([a,b])=>{ s+=`<line x1="${a[0]}" y1="${-a[1]}" x2="${b[0]}" y2="${-b[1]}" stroke="#e5007e" stroke-width="0.04" stroke-dasharray="0.3 0.2"/>`; });
-  PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach(p=>{
+  PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach(p=>{ if(!(p.w>0)) return;
     s+=`<rect x="${p.x+M}" y="${-(p.y+p.h-M)}" width="${p.w-2*M}" height="${p.h-2*M}" fill="none" stroke="#2563eb55" stroke-width="0.03" stroke-dasharray="0.15 0.15"/>`;
     s+=`<text x="${p.x+p.w/2}" y="${-(p.y+p.h)+1.0}" font-size="0.45" text-anchor="middle" fill="#e5007e" font-family="Inter" font-weight="600">${pn.toUpperCase().replace('_',' ')}</text>`;
   }));
@@ -1293,7 +1299,7 @@ async function texturasSaco(){
 function geometriaSaco(interno){
   // saco EM PÉ sobre a base achatada; Y = altura (y da folha), frente voltada para +Z
   const T=THREE, Wd=GAB.paineis.frente.w, half=GAB.paineis.sanfona_esq.w/2, L=ymax, Lf=GAB.paineis.frente.h;
-  const xsS=[]; const add=(a,b,n)=>{ for(let i=0;i<n;i++) xsS.push(a+(b-a)*i/n); };
+  const xsS=[]; const add=(a,b,n)=>{ if(b-a<1e-6) return; for(let i=0;i<n;i++) xsS.push(a+(b-a)*i/n); };
   const PF=GAB.paineis.frente.partes[0], PSD=GAB.paineis.sanfona_dir.partes[0], PV0=GAB.paineis.verso.partes[0], PV1=GAB.paineis.verso.partes[1], PSE=GAB.paineis.sanfona_esq.partes[0];
   const F0=PF.x, F1=PF.x+PF.w, S1=PSD.x+PSD.w, V0E=PV0.x+PV0.w, V1=PV1.x, V1E=PV1.x+PV1.w, SE1=PSE.x+PSE.w, VW0=PV0.w;
   add(F0,F1,46); add(F1,S1,24); add(PV0.x,V0E,28); xsS.push(V0E); add(V1,V1E,20); add(PSE.x,SE1,24); xsS.push(SE1);  // emenda: fim do verso 1 e início do verso 2 no mesmo ponto
@@ -1370,9 +1376,9 @@ function produtoIniciar(){
   const chao=new T.Mesh(new T.PlaneGeometry(400,400), new T.ShadowMaterial({opacity:.24})); chao.rotation.x=-Math.PI/2; chao.position.y=-0.02; chao.receiveShadow=true; scene.add(chao);
   const cc=document.createElement('canvas'); cc.width=cc.height=256; const cx=cc.getContext('2d'); const gr=cx.createRadialGradient(128,128,10,128,128,128); gr.addColorStop(0,'rgba(30,18,8,.55)'); gr.addColorStop(.6,'rgba(30,18,8,.18)'); gr.addColorStop(1,'rgba(30,18,8,0)'); cx.fillStyle=gr; cx.fillRect(0,0,256,256);
   const contato=new T.Mesh(new T.PlaneGeometry(1,1), new T.MeshBasicMaterial({map:new T.CanvasTexture(cc), transparent:true, depthWrite:false}));
-  contato.rotation.x=-Math.PI/2; contato.position.set(0, 0.01, 0); contato.scale.set(GAB.paineis.frente.w*1.5, GAB.paineis.sanfona_esq.w*1.6, 1); scene.add(contato);
+  contato.rotation.x=-Math.PI/2; contato.position.set(0, 0.01, 0); contato.scale.set(GAB.paineis.frente.w*1.5, Math.max(4,GAB.paineis.sanfona_esq.w*1.6), 1); scene.add(contato);
   P3_comida = adicionaComida(scene);
-  contatoAjusta = ()=>contato.scale.set(GAB.paineis.frente.w*1.5, GAB.paineis.sanfona_esq.w*1.6, 1);
+  contatoAjusta = ()=>contato.scale.set(GAB.paineis.frente.w*1.5, Math.max(4,GAB.paineis.sanfona_esq.w*1.6), 1);
   P3={T, r, scene, cam, key, theta:Math.PI/2-0.5, phi:1.2, rad:120, alvo:new T.Vector3(0, ymax*0.47, 0), girando:false, malhas:[], pronto:false, gen:0};
   // órbita
   const el=r.domElement; let d=null;
@@ -1431,8 +1437,8 @@ function arteMarkup(prefixo){
 function faceSVG(parte, n){ return `<svg viewBox="${parte.x} ${-(parte.y+parte.h)} ${parte.w} ${parte.h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${arteMarkup('mk'+n)}</svg>`; }
 function mockup(){
   const st=$('stage').getBoundingClientRect(), P=GAB.paineis, H=Math.max(P.verso.h, P.frente.h);
-  const S = Math.max(4, Math.min((st.height-150)/H, (st.width-80)/(P.frente.w+P.sanfona_esq.w*1.2)));
-  const W=P.frente.w*S, D=P.sanfona_esq.w*S, HH=H*S;
+  const S = Math.max(4, Math.min((st.height-150)/H, (st.width-80)/(P.frente.w+P.sanfona_esq.w*1.2+1)));
+  const W=P.frente.w*S, D=Math.max(0.4*S, P.sanfona_esq.w*S), HH=H*S;
   const box=$('mockbox'); box.style.width=W+'px'; box.style.height=HH+'px';
   box.style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   let n=0;
@@ -1508,29 +1514,53 @@ function geraGabarito(o){
   const xSe=r1(C+ve), xFr=r1(xSe+G), xSd=r1(xFr+o.w), xVd=r1(xSd+G), X=r1(xVd+vd);
   const colaNoVerso = ve===0;   // facas pequenas: a tira de cola compõe o verso (vd + cola = frente)
   const versoPartes = [{x:xVd,y:0,w:vd,h:H,px:0}, colaNoVerso ? {x:0,y:0,w:C,h:H,px:vd} : {x:C,y:0,w:ve,h:H,px:vd}];
+  const emenda = (vd>0 && (colaNoVerso?C:ve)>0) ? [{x:vd,tipo:'emenda colada'}] : [];
+  const sanf = x => G>0 ? {w:G,h:H,partes:[{x,y:0,w:G,h:H,px:0}],linhas_internas:[{x:r1(G/2),tipo:'dobra da sanfona'}]} : {w:0,h:H,oculto:true,partes:[{x,y:0,w:0,h:H,px:0}],linhas_internas:[]};
   return {
-    id:o.id, faca:o.faca, nome:o.nome, referencia:o.referencia, papel:o.papel||'kraft', unidade:'cm', fonte:o.fonte,
+    id:o.id, faca:o.faca, categoria:o.cat, aprox:o.aprox, nome:o.nome, referencia:o.referencia, papel:o.papel||'kraft', unidade:'cm', fonte:o.fonte,
     regras:{max_cores:3, margem_seguranca_cm:0.5, texto_min_pt:6, linha_min_mm:0.3, lpi_max: o.papel==='branco'?40:30},
     serrilha:{amplitude:0.3, passo:0.6},
     contorno:[[0,-o.abaL],[xFr,-o.abaL],[xFr,-o.abaF],[xSd,-o.abaF],[xSd,-o.abaL],[X,-o.abaL],[X,H],[xSd,H],[xSd,o.h],[xFr,o.h],[xFr,H],[0,H]],
     dobras:[[[C,0],[C,H]],[[xSe,0],[xSe,H]],[[r1(xSe+G/2),0],[r1(xSe+G/2),H]],[[xFr,0],[xFr,o.h]],[[xSd,0],[xSd,o.h]],[[r1(xSd+G/2),0],[r1(xSd+G/2),H]],[[xVd,0],[xVd,H]],[[0,0],[X,0]]],
-    areas_cola: colaNoVerso ? [{x:0,y:-o.abaF,w:X,h:o.abaF}] : [{x:0,y:0,w:C,h:H},{x:0,y:-o.abaF,w:X,h:o.abaF}],
+    areas_cola: (colaNoVerso||C===0) ? [{x:0,y:-o.abaF,w:X,h:o.abaF}] : [{x:0,y:0,w:C,h:H},{x:0,y:-o.abaF,w:X,h:o.abaF}],
     paineis:{
       frente:{w:o.w,h:o.h,partes:[{x:xFr,y:0,w:o.w,h:o.h,px:0}],linhas_internas:[]},
-      verso:{w:r1(vd+(colaNoVerso?C:ve)),h:H,partes:versoPartes,linhas_internas:[{x:vd,tipo:'emenda colada'}]},
-      sanfona_esq:{w:G,h:H,partes:[{x:xSe,y:0,w:G,h:H,px:0}],linhas_internas:[{x:r1(G/2),tipo:'dobra da sanfona'}]},
-      sanfona_dir:{w:G,h:H,partes:[{x:xSd,y:0,w:G,h:H,px:0}],linhas_internas:[{x:r1(G/2),tipo:'dobra da sanfona'}]}
+      verso:{w:r1(vd+(colaNoVerso?C:ve)),h:H,partes:versoPartes.filter(p=>p.w>0).length?versoPartes:versoPartes,linhas_internas:emenda},
+      sanfona_esq:sanf(xSe),
+      sanfona_dir:sanf(xSd)
     }
   };
 }
 // Facas reais (OHDE), medidas extraídas dos PDFs em escala 1:1
+const CATEGORIAS = [
+  ['pao','🥖 Sacos de pão'], ['lanche','🍔 Lanches e porções'], ['envelope','✉️ Envelopes'], ['talher','🍴 Porta-talher']
+];
 const FACAS = [
-  {faca:'f05', ref:'1/2 Kg',    nome:'Saco 1/2 kg',    w:10,   h:16,   H:19,   g:6.5,  cola:3,   ve:0,   vd:7,    abaL:1.5, abaF:3.2, fonte:'Gabarito_05_Kg.pdf', uso:'Pães pequenos, salgados'},
-  {faca:'f1',  ref:'1 Kg',      nome:'Saco 1 kg',      w:10,   h:25,   H:28,   g:5.5,  cola:3,   ve:0,   vd:7,    abaL:1.5, abaF:3.2, fonte:'Gabarito_1_Kg.pdf',  uso:'Pão francês (até ~10 un.)'},
-  {faca:'fham',ref:'Hamburgão', nome:'Saco Hamburgão', w:13.5, h:11.5, H:13.5, g:5.5,  cola:2.5, ve:5.2, vd:8.2,  abaL:1.5, abaF:3.0, fonte:'Gabarito_Hamburg_o.pdf', uso:'Lanches, hambúrguer'},
-  {faca:'f3',  ref:'3 Kg',      nome:'Saco 3 kg',      w:16,   h:35.2, H:37.5, g:5.9,  cola:3,   ve:6,   vd:10,   abaL:1.5, abaF:3.0, fonte:'Gabarito_3_Kg.pdf',  uso:'Pães médios, roscas'},
-  {faca:'f5',  ref:'5 Kg',      nome:'Saco 5 kg',      w:17.5, h:41.5, H:43.5, g:8.3,  cola:3,   ve:7,   vd:10.5, abaL:1.5, abaF:3.0, fonte:'Gabarito_5_Kg.pdf',  uso:'Pães grandes, baguetes'},
-  {faca:'f10', ref:'10 Kg',     nome:'Saco 10 kg',     w:20,   h:55.5, H:56.5, g:10.8, cola:3,   ve:7,   vd:13,   abaL:1.5, abaF:2.5, fonte:'Gabarito_10_Kg.pdf', uso:'Volumes grandes, encomendas'},
+  // Sacos de pão (sanfonados)
+  {faca:'f05', cat:'pao', ref:'0,5 Kg', nome:'Saco 1/2 kg', w:10, h:16, H:19, g:6.5, cola:3, ve:0, vd:7, abaL:1.5, abaF:3.2, fonte:'Gabarito 0,5 Kg.pdf', uso:'Pães pequenos, salgados'},
+  {faca:'f900',cat:'pao', ref:'900g',   nome:'Saco 900 g',  w:10, h:18, H:19.5, g:6, cola:1.6, ve:3, vd:7, abaL:1.5, abaF:3, fonte:'Gabarito 900g.pdf', uso:'Pão francês e de forma', aprox:'fundo desenhado em V no gabarito — medidas aproximadas'},
+  {faca:'f1',  cat:'pao', ref:'1 Kg',   nome:'Saco 1 kg',   w:10, h:25, H:28, g:5.5, cola:3, ve:0, vd:7, abaL:1.5, abaF:3.2, fonte:'Gabarito 1 Kg.pdf', uso:'Pão francês (até ~10 un.)'},
+  {faca:'f2',  cat:'pao', ref:'2 Kg',   nome:'Saco 2 kg',   w:14, h:28.5, H:30, g:4.5, cola:3, ve:4.5, vd:9.5, abaL:1.5, abaF:3, fonte:'Gabarito 2 Kg.pdf', uso:'Pão francês, roscas'},
+  {faca:'f3',  cat:'pao', ref:'3 Kg',   nome:'Saco 3 kg',   w:16, h:35.2, H:37.5, g:5.9, cola:3, ve:6, vd:10, abaL:1.5, abaF:3, fonte:'Gabarito 3 Kg.pdf', uso:'Pães médios, roscas'},
+  {faca:'f5',  cat:'pao', ref:'5 Kg',   nome:'Saco 5 kg',   w:17.5, h:41.5, H:43.5, g:8.3, cola:3, ve:7, vd:10.5, abaL:1.5, abaF:3, fonte:'Gabarito 5 Kg.pdf', uso:'Pães grandes, baguetes'},
+  {faca:'f75', cat:'pao', ref:'7,5 Kg', nome:'Saco 7,5 kg', w:20, h:50, H:52.5, g:9, cola:3, ve:8, vd:12, abaL:1.5, abaF:3, fonte:'Gabarito 7,5 Kg.pdf', uso:'Volumes grandes'},
+  {faca:'f10', cat:'pao', ref:'10 Kg',  nome:'Saco 10 kg',  w:20, h:55.5, H:56.5, g:10.8, cola:3, ve:7, vd:13, abaL:1.5, abaF:2.5, fonte:'Gabarito 10 Kg.pdf', uso:'Volumes grandes, encomendas'},
+  {faca:'f15', cat:'pao', ref:'15 Kg',  nome:'Saco 15 kg',  w:24, h:60.5, H:63, g:10.5, cola:3, ve:8.5, vd:15.5, abaL:1.5, abaF:3, fonte:'Gabarito 15 Kg.pdf', uso:'Atacado, encomendas grandes'},
+  // Lanches e porções
+  {faca:'fbat120',cat:'lanche', ref:'Batatinha 120g', nome:'Batatinha 120 g', w:10, h:9, H:10, g:4.5, cola:2, ve:3, vd:7, abaL:1.5, abaF:3, fonte:'Gabarito Batatinha 120g.pdf', uso:'Batata frita, porções', aprox:'verso medido 2+7 cm; usado 3+7 para fechar com a frente'},
+  {faca:'fbat180',cat:'lanche', ref:'Batatinha 180g', nome:'Batatinha 180 g', w:9.5, h:10.8, H:12, g:6.5, cola:2, ve:2.5, vd:7, abaL:1.5, abaF:3, fonte:'Gabarito Batatinha 180g.pdf', uso:'Batata frita, porções', aprox:'verso medido 2+7 cm; usado 2,5+7 para fechar com a frente'},
+  {faca:'fsem', cat:'lanche', ref:'Semente', nome:'Saco Semente', w:5.5, h:10.2, H:12.3, g:3.8, cola:2, ve:2, vd:3.5, abaL:1.5, abaF:3, fonte:'Gabarito Semente.pdf', uso:'Doces, sementes, miudezas', aprox:'cola nas duas laterais no gabarito — verso aproximado'},
+  {faca:'fhb',  cat:'lanche', ref:'Hamburguer', nome:'Saco Hambúrguer', w:10, h:12, H:14, g:5, cola:2.5, ve:3, vd:7, abaL:1.5, abaF:3, fonte:'Gabarito Hamburguer.pdf', uso:'Hambúrguer, sanduíche', aprox:'verso medido 2,5+7 cm; usado 3+7 para fechar com a frente'},
+  {faca:'fham', cat:'lanche', ref:'Hamburgão', nome:'Saco Hamburgão', w:13.5, h:11.5, H:13.5, g:5.5, cola:2.5, ve:5.3, vd:8.2, abaL:1.5, abaF:3, fonte:'Gabarito Hamburgão.pdf', uso:'Lanches grandes'},
+  {faca:'f1317',cat:'lanche', ref:'13,5×17,5', nome:'Saco 13,5 × 17,5', w:13.5, h:19, H:20.5, g:5.6, cola:1.7, ve:4.7, vd:8.8, abaL:1.5, abaF:3, fonte:'Gabarito 13,5x17,5cm.pdf', uso:'Lanches, salgados, doces'},
+  // Envelopes (sem sanfona)
+  {faca:'e1717', cat:'envelope', ref:'Envelope 17×17', nome:'Envelope 17 × 17', w:17, h:15.4, H:16.5, g:0, cola:0, ve:17, vd:0, abaL:1.6, abaF:2.6, fonte:'Gabarito Envelope 17x17cm.pdf', uso:'Pizza brotinho, salgados, esfihas'},
+  {faca:'e1721', cat:'envelope', ref:'Envelope 17×21', nome:'Envelope 17 × 21', w:17, h:19.4, H:20.5, g:0, cola:0, ve:17, vd:0, abaL:1.6, abaF:2.6, fonte:'Gabarito Envelope 17x21cm.pdf', uso:'Salgados, doces, tortas em fatia'},
+  {faca:'e1725', cat:'envelope', ref:'Envelope 17×25', nome:'Envelope 17 × 25', w:17, h:23.4, H:24.7, g:0, cola:0, ve:17, vd:0, abaL:1.6, abaF:2.6, fonte:'Gabarito Envelope 17x25cm.pdf', uso:'Baguetes curtas, wraps'},
+  {faca:'e2020', cat:'envelope', ref:'Envelope 20×20', nome:'Envelope 20 × 20', w:20, h:18.3, H:19.5, g:0, cola:0, ve:20, vd:0, abaL:1.8, abaF:2.9, fonte:'Gabarito Envelope 20x20cm.pdf', uso:'Pizza, salgados grandes'},
+  // Porta-talher (sem sanfona; frente mais alta)
+  {faca:'t65', cat:'talher', ref:'Porta Talher 6,5×27', nome:'Porta-talher 6,5 × 27', w:6.5, h:24, H:22.9, g:0, cola:2, ve:2.3, vd:4.2, abaL:1.4, abaF:2.5, fonte:'Gabarito Porta Talher 6,5x27cm.pdf', uso:'Talheres, guardanapo'},
+  {faca:'t85', cat:'talher', ref:'Porta Talher 8,5×27', nome:'Porta-talher 8,5 × 27', w:8.5, h:24, H:22.95, g:0, cola:2, ve:4.3, vd:4.2, abaL:1.4, abaF:2.7, fonte:'Gabarito Porta Talher 8,5x27cm.pdf', uso:'Talheres, guardanapo, canudo'},
 ];
 const PAPEIS = {kraft:'Kraft natural', branco:'Branco monolúcido'};
 const CATALOGO = {};
@@ -1538,7 +1568,7 @@ FACAS.forEach(f=>Object.keys(PAPEIS).forEach(pp=>{ const id=f.faca+'_'+pp;
   CATALOGO[id]=geraGabarito({...f, id, papel:pp, referencia:f.ref, nome:`${f.nome} · ${pp==='kraft'?'Kraft':'Branco'}`}); }));
 const COR_PAPEL = {kraft:'#c89a62', branco:'#f3f0ea'};
 function setGab(g){
-  GAB = g; PAINEIS = Object.keys(GAB.paineis); M = GAB.regras.margem_seguranca_cm;
+  GAB = g; PAINEIS = Object.keys(GAB.paineis).filter(k=>!GAB.paineis[k].oculto); M = GAB.regras.margem_seguranca_cm;
   ymin = Math.min(...GAB.contorno.map(p=>p[1])); ymax = Math.max(...GAB.contorno.map(p=>p[1]));
   xmin = Math.min(...GAB.contorno.map(p=>p[0])); xmax = Math.max(...GAB.contorno.map(p=>p[0]));
   KRAFT = COR_PAPEL[GAB.papel||'kraft'];
@@ -1566,7 +1596,7 @@ function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:des
 const CAMPOS_LAYOUT = new Set(['x','y','escala','rotacao','w','h','rx','ry','x1','y1','x2','y2','raio','tamanho_pt','painel','bloqueado','traco_mm']);
 function adaptaCamada(c, gOrig, gDest){
   const n = JSON.parse(JSON.stringify(c));
-  const po = gOrig.paineis[c.painel], pd = gDest.paineis[c.painel]; if(!po||!pd) return n;
+  const po = gOrig.paineis[c.painel], pd = gDest.paineis[c.painel]; if(!po||!pd||pd.oculto||!pd.w) return null; if(po.oculto||!po.w) return null;
   const sx = pd.w/po.w, sy = pd.h/po.h, s = Math.min(sx, sy);
   const ancY = (y)=>{ const r=y/po.h; return r>0.62 ? pd.h-(po.h-y)*s : r<0.38 ? y*s : y*sy; };   // topo/base ancorados, meio proporcional
   if(n.tipo==='linha'){ const ym=(n.y1+n.y2)/2, ny=ancY(ym); n.x1*=sx; n.x2*=sx; n.y1=ny+(n.y1-ym)*s; n.y2=ny+(n.y2-ym)*s; }
@@ -1598,7 +1628,7 @@ function geraAdaptada(idDest){
   const gO = CATALOGO[fonte], gD = CATALOGO[idDest];
   const gAtual = GAB; setGab(gO);   // para medir caixas na origem
   const prevArte = arte; arte = {cliente:design.cliente, paleta:design.paleta, camadas:design.sacolas[fonte].camadas}; render();
-  b.camadas = design.sacolas[fonte].camadas.map(c=>adaptaCamada(c, gO, gD));
+  b.camadas = design.sacolas[fonte].camadas.map(c=>adaptaCamada(c, gO, gD)).filter(Boolean);
   arte = prevArte; setGab(gAtual);
   b.estado='auto'; b.proprio=[];
 }
@@ -1662,7 +1692,7 @@ function aplicaNasOutras(){
     pend.forEach(id=>{
       const sL = src.find(c=>c.id===id), tL = t.camadas.find(c=>c.id===id);
       if(!sL){ t.camadas = t.camadas.filter(c=>c.id!==id); return; }                       // apagada aqui → apaga lá
-      if(!tL){ const n=adaptaCamada(sL,gO,gD); t.camadas.splice(Math.min(src.indexOf(sL), t.camadas.length),0,n); return; } // nova → entra adaptada (posição/tamanho finais)
+      if(!tL){ const n=adaptaCamada(sL,gO,gD); if(!n) return; t.camadas.splice(Math.min(src.indexOf(sL), t.camadas.length),0,n); return; } // nova → entra adaptada (posição/tamanho finais)
       for(const k in sL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id') tL[k]=JSON.parse(JSON.stringify(sL[k])); }
       for(const k in tL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id' && !(k in sL)) delete tL[k]; }
     });
@@ -1701,7 +1731,7 @@ function abreSacola(id, semGerar, semSync){
   else if(!semGerar && b.estado==='auto' && b.camadas.length) faixa(`🟡 <b>${esc(GAB.nome)}</b> foi adaptada sozinha a partir de outra sacola. Confira e ajuste se precisar.`, [['Está boa ✓', marcaConferida, true]], 12000);
 }
 function marcaConferida(){ design.sacolas[design.atual].estado='conferida'; design.ultima=design.atual; salvaHist(); atualizaSacolas(); }
-function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.7">(faca ${esc(GAB.fonte)})</span>`:''}<br>Frente ${GAB.paineis.frente.w} × ${GAB.paineis.frente.h} cm · sanfonas ${GAB.paineis.sanfona_esq.w} cm<br>Máx. ${GAB.regras.max_cores} cores · margem ${M} cm · texto ≥ ${GAB.regras.texto_min_pt} pt · traço ≥ ${GAB.regras.linha_min_mm} mm · retícula ${lpiMax()} lpi<br><span style="color:#e5007e">rosa</span> = gabarito · <span style="color:#2563eb">azul tracejado</span> = área útil`; }
+function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.7">(faca ${esc(GAB.fonte)})</span>`:''}<br>Frente ${GAB.paineis.frente.w} × ${GAB.paineis.frente.h} cm${GAB.paineis.sanfona_esq.w?` · sanfonas ${GAB.paineis.sanfona_esq.w} cm`:' · sem sanfona'}${GAB.aprox?`<br><span style="color:var(--warn)">⚠️ ${esc(GAB.aprox)}</span>`:''}<br>Máx. ${GAB.regras.max_cores} cores · margem ${M} cm · texto ≥ ${GAB.regras.texto_min_pt} pt · traço ≥ ${GAB.regras.linha_min_mm} mm · retícula ${lpiMax()} lpi<br><span style="color:#e5007e">rosa</span> = gabarito · <span style="color:#2563eb">azul tracejado</span> = área útil`; }
 
 /* ---------- status visível: faixa de miniaturas + menu ---------- */
 const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Conferir','#d9a400'], conferida:['🟢','Conferida','#3f8f5a']};
@@ -1779,7 +1809,7 @@ function carregaExemplo(){
   // o exemplo foi desenhado na faca de 5 kg: adapta para a sacola aberta
   const gO=CATALOGO.f5_kraft, gD=CATALOGO[destino], gA=GAB, aA=arte;
   setGab(gO); arte={cliente:ex.cliente, paleta:ex.paleta, camadas:ex.camadas}; render();
-  design.sacolas[destino].camadas = destino.startsWith('f5_') ? ex.camadas : ex.camadas.map(c=>adaptaCamada(c,gO,gD));
+  design.sacolas[destino].camadas = destino.startsWith('f5_') ? ex.camadas : ex.camadas.map(c=>adaptaCamada(c,gO,gD)).filter(Boolean);
   setGab(gA); arte=aA;
   design.sacolas[destino].estado = destino.startsWith('f5_') ? 'conferida' : 'auto'; design.ultima=destino;
   propagando=false; abreSacola(destino, false, true); propagando=true; salvaHist();
@@ -1799,11 +1829,11 @@ function recomeca(){
    ===================================================================== */
 const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
 const facaDe = id=>FACAS.find(f=>id.startsWith(f.faca+'_'));
-const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm · sanfona ${String(f.g).replace('.',',')} cm. ${f.uso}.`; }});
+const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm${f.g?` · sanfona ${String(f.g).replace('.',',')} cm`:''}. ${f.uso}.`; }});
 const brl = v => 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
 function sacolaIlustra(id, alt=150){
   const g=CATALOGO[id], w=g.paineis.frente.w, h=g.paineis.frente.h, s=g.paineis.sanfona_esq.w, cor=COR_PAPEL[g.papel];
-  const W=w+s*0.55, k=alt/h, dente=Array.from({length:Math.floor(w/1.1)},(_,i)=>`L${i*1.1+0.55} 0.7 L${i*1.1+1.1} 0`).join(' ');
+  const W=w+Math.max(s,0.6)*0.55, k=alt/h, dente=Array.from({length:Math.floor(w/1.1)},(_,i)=>`L${i*1.1+0.55} 0.7 L${i*1.1+1.1} 0`).join(' ');
   return `<svg width="${W*k}" height="${alt}" viewBox="-0.5 -0.5 ${W+1} ${h+1}">
     <path d="M${w} 0.6 L${W} 1.6 L${W} ${h-0.4} L${w} ${h} Z" fill="${cor}" filter="brightness(.82)"/>
     <path d="M${w+s*0.27} 1.1 L${w+s*0.27} ${h-0.2}" stroke="rgba(0,0,0,.18)" stroke-width="0.15"/>
@@ -1833,11 +1863,16 @@ function toast(t){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); c
 function renderLoja(){
   sincroniza();
   if($('herosacos') && !$('herosacos').innerHTML) $('herosacos').innerHTML = ['f05_kraft','f5_branco','f3_kraft'].map((id,i)=>`<div style="transform:rotate(${[-8,0,7][i]}deg) translateY(${[18,0,24][i]}px)">${sacolaIlustra(id,[130,200,170][i])}</div>`).join('');
-  design.papelSel = design.papelSel || {};
-  $('vitrine').innerHTML = FACAS.map(f=>{
+  design.papelSel = design.papelSel || {}; design.cat = design.cat || 'pao';
+  $('cats').innerHTML = CATEGORIAS.map(([k,n])=>`<button data-c="${k}" class="${k===design.cat?'on':''}">${n} <i>${FACAS.filter(f=>f.cat===k).length}</i></button>`).join('');
+  $('cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{ design.cat=b.dataset.c; agendaSalvar(); renderLoja(); });
+  const tituloCat = (CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1];
+  $('sechT').textContent = tituloCat.replace(/^\S+\s/,''); $('sechN').textContent = `${FACAS.filter(f=>f.cat===design.cat).length} modelos · kraft ou branco`;
+  const altMax = Math.max(...FACAS.filter(f=>f.cat===design.cat).map(f=>f.h));
+  $('vitrine').innerHTML = FACAS.filter(f=>f.cat===design.cat).map(f=>{
     const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
     return `<div class="card" data-id="${id}" data-faca="${f.faca}">
-      <div class="ilu">${sacolaIlustra(id, Math.max(62, g.paineis.frente.h*3.2))}</div>
+      <div class="ilu">${sacolaIlustra(id, Math.max(56, 170*g.paineis.frente.h/altMax))}</div>
       <div class="cb">
         <div class="cn">${esc(f.nome)}</div>
         <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
@@ -2246,7 +2281,7 @@ function colar(){
   const mesma = CLIP.gab===design.atual, gO=CATALOGO[CLIP.gab], gD=GAB; CLIP.vezes++;
   const novos=[];
   CLIP.camadas.forEach(c0=>{
-    let c = mesma ? JSON.parse(JSON.stringify(c0)) : adaptaCamada(c0, gO, gD);
+    let c = mesma ? JSON.parse(JSON.stringify(c0)) : adaptaCamada(c0, gO, gD); if(!c) return;
     if(!GAB.paineis[c.painel]) c.painel='frente';
     if(layer(c.id)){ c.id=novoId(c0.id.replace(/(_copia)?(_\d+)?$/,'')+'_copia'); }
     if(mesma && layer(c0.id)) mover(c, 0.5*CLIP.vezes, -0.5*CLIP.vezes);
