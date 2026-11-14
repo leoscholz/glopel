@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 13:30)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 20:30)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -22,7 +22,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 **Loja** — fotos reais dos produtos extraídas dos PDFs (branco = filtro CSS sobre a foto kraft); identidade Embalagens Globo (logo vetor redesenhado, azul `#1f5fae`/`#2f7fd0`); **21 facas OHDE em 4 categorias** (Sacos de pão 0,5–15 kg · Lanches e porções · Envelopes · Porta-talher) × 2 papéis (kraft, branco monolúcido); facas sem sanfona (envelope, porta-talher) suportadas; carrinho lateral; Personalizar adiciona ao carrinho sozinho; Finalizar só com todas as artes aprovadas. Preço ilustrativo (função da área).
 
 **Editor**
-- Várias sacolas do carrinho; faixa de miniaturas com status ⚪ falta criar · 🟡 adaptada/conferir · 🟢 conferida · ✏️ mudança só nesta · ✅ aprovada.
+- Várias sacolas do carrinho; faixa de miniaturas com status ⚪ falta criar · 🟡 falta aprovar · ✅ aprovada · ✏️ mudança só nesta.
 - Adaptação automática entre facas (topo/base ancorados, meio proporcional; nunca abaixo de texto/traço mínimo).
 - Mudanças ficam **só na sacola atual** por padrão; faixa "Aplicar nas outras sacolas" leva o estado FINAL (decisão do Leo — não reverter).
 - Salva sozinho (localStorage `glopel_editor_projeto_v2`, assets em `glopel_editor_assets_v1`); começa vazio; ❓ › Carregar exemplo / Recomeçar (desfazível).
@@ -70,8 +70,6 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
   - **Layout**: ≤1500 px botões do topo só com ícone; ≤1180 px topo numa linha com rolagem; **≤700 px (celular)** abas viram barra de baixo, painéis viram folha deslizante (58vh), ferramentas em faixa horizontal, zoom no canto superior.
 - **Backlog da rodada de testes (14-11)**: ver `TESTE-UX-2026-11-14.md` (bugs abertos, decisões do Leo, UX por impacto).
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
-- Barra do topo quebra linha perto de 1300 px quando aparecem Salvar/Entrar (build GitHub) — avaliar compactar.
-- Checagem acusa "PANTONE Black C sem uso" em sacola vazia (paleta padrão) — ruído para leigo.
 - Decisão aberta do Leo: barra do topo azul escura como a da loja?
 
 ## Pendências
