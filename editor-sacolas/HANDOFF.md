@@ -57,6 +57,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 
 ## Bugs / testes a fazer
 - **Corrigidos 14-11 (rodada de testadores):** Desfazer pelo botão quebrava o editor (onclick apontava para o `undo` antigo, que fazia `arte = design` → erros forEach/length e Pronto mudo) — agora `()=>undo()`; texto digitado salvo cortado (agora salva a cada tecla + `pagehide/beforeunload/visibilitychange` gravam na hora); vírgula decimal nos campos de Ajustes (`inputmode=decimal`, aceita `1,6`).
+- **Corrigidos 14-11 (2):** Abrir arte da nuvem vinha em branco (o `sincroniza()` gravava a `arte` antiga da tela por cima do design carregado — agora `setGab+apontaArte` logo após trocar `design`; mesmo bug no "Começar arte nova", que agora também pede confirmação); editor sempre abre na Prévia (Produto final travava ao reabrir); colar desloca 0,5 cm sempre que o item já existe no destino.
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Barra do topo quebra linha perto de 1300 px quando aparecem Salvar/Entrar (build GitHub) — avaliar compactar.
 - Checagem acusa "PANTONE Black C sem uso" em sacola vazia (paleta padrão) — ruído para leigo.

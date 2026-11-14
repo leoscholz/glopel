@@ -2241,6 +2241,7 @@ function fechaCarrinho(){ $('carrinho').classList.remove('show'); $('veu').class
 /* ---------- navegação entre loja e editor ---------- */
 function vaiEditor(id){
   fechaCarrinho();
+  if(modo==='produto' || modo==='mockup'){ modo='previa'; if($('modo')) $('modo').value='previa'; }
   if(location.hash!=='#editor') location.hash='#editor';
   mostraVista('editor');
   propagando=false; abreSacola(id, false, false); propagando=true;
@@ -2659,8 +2660,8 @@ function colar(){
   CLIP.camadas.forEach(c0=>{
     let c = mesma ? JSON.parse(JSON.stringify(c0)) : adaptaCamada(c0, gO, gD); if(!c) return;
     if(!GAB.paineis[c.painel]) c.painel='frente';
-    if(layer(c.id)){ c.id=novoId(c0.id.replace(/(_copia)?(_\d+)?$/,'')+'_copia'); }
-    if(mesma && layer(c0.id)) mover(c, 0.5*CLIP.vezes, -0.5*CLIP.vezes);
+    const existia=!!layer(c.id);
+    if(existia){ c.id=novoId(c0.id.replace(/(_copia)?(_\d+)?$/,'')+'_copia'); mover(c, 0.5*CLIP.vezes, -0.5*CLIP.vezes); }
     arred(c); arte.camadas.push(c); novos.push(c.id);
   });
   sels=novos; sel=novos[novos.length-1]; commit(); render();
@@ -2751,12 +2752,14 @@ async function minhasArtes(){
       <button data-a="abrir" class="pri">Abrir</button><button data-a="ren">✏️</button><button data-a="del" title="Apagar">🗑</button></div>`).join(''):'<div class="empty">Nenhuma arte salva ainda. No editor, use 💾 Salvar.</div>'}
     <div style="display:flex;justify-content:space-between;margin-top:12px"><button id="maNova">＋ Começar arte nova</button><button id="maX">Fechar</button></div>`);
   $('maX').onclick=fecha;
-  $('maNova').onclick=()=>{ fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Arte nova: escolha as sacolas.'); };
+  $('maNova').onclick=()=>{ if(design.carrinho.length && !confirm('Começar uma arte nova? A arte atual sai da tela (se não salvou na nuvem, ela se perde).')) return; fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); setGab(CATALOGO[design.atual]); apontaArte(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Arte nova: escolha as sacolas.'); };
   $('mbox').querySelectorAll('.pr button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.pr').dataset.id, a=data.find(x=>x.id===id);
     if(b.dataset.a==='abrir'){ const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ toast('⚠️ '+esc(error.message)); return; }
       Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
       design=row.dados.design; design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[];
       design.carrinho=(design.carrinho||[]).filter(i=>CATALOGO[i]); Object.keys(CATALOGO).forEach(i=>{ if(!design.sacolas[i]) design.sacolas[i]={estado:'nenhum',proprio:[],camadas:[]}; });
+      if(!CATALOGO[design.atual]) design.atual=design.carrinho[0]||'f5_kraft'; if(editando){ const t=editando.ta; editando=null; t.remove(); }
+      setGab(CATALOGO[design.atual]); apontaArte();   // senão o sincroniza() seguinte grava a arte antiga da tela por cima da que veio da nuvem
       ARTE_ID=id; ARTE_NOME=row.nome; lembraArte(); fecha(); novaHistoria(); renderElementos(); atualizaConta();
       if(design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
       toast(`📂 <b>${esc(row.nome)}</b> aberta.`); }
