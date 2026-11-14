@@ -34,6 +34,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Cores: aba 🎨 Cores com **＋ Adicionar cor** (grade de Pantones de padaria + código livre), clicar numa cor troca em toda a arte/sacolas, remover se sem uso; limite de 3 explicado. Ajustes de vetor/texto/forma têm seletor de cor + "＋ Nova cor…".
 - **Arrastar entre painéis** (14-11): ao soltar, o centro do elemento decide o painel (Frente ↔ Verso ↔ sanfona); coordenadas convertidas via partes (`painelSob()`/`reatribuiPainel()`); ímã desliga enquanto troca de painel. Antes o elemento ficava preso ao painel de origem e sumia (clip).
 - **Elemento novo nasce no painel mais visível** (decisão do Leo, 14-11): `alvoNovo()` escolhe o painel com maior fração visível na vista (empate → Frente) e centraliza no meio da parte visível; vale para Texto, Forma, banco/SVG e foto.
+- **Hover** (14-11): cursor seta normal sobre elementos (move só durante o arrasto, classe `#stage.movendo`; travado = not-allowed; mão = grab) e etiqueta `#hovnome` com o nome da camada ao lado da seta (`nomeHover()`; some no arrasto, na mão, no mockup/produto).
 - **Ctrl+C / Ctrl+V** de camadas, inclusive entre sacolas (cola já adaptado ao tamanho de destino).
 - Marca d'água "EMBALAGENS GLOBO"; checagem de clicheria ao vivo.
 - **Visual do editor = azul Globo** (13-11): variáveis `--acc #2f7fd0 / --acc-d #1f5fae`, fundos cinza-azulados; globo do logo na barra (cópia do SVG da loja com ids `ggE/gsE/gcE`). Linhas da faca seguem magenta (convenção de clicheria).

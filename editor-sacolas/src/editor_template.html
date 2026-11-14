@@ -210,6 +210,10 @@ button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-de
 #stage svg{width:100%;height:100%;display:block;touch-action:none}
 #stage.hand, #stage.hand svg{cursor:grab}
 #stage.hand.grabbing, #stage.hand.grabbing svg{cursor:grabbing}
+#stage [data-layer]{cursor:default} #stage [data-layer].trav{cursor:not-allowed}
+#stage.hand [data-layer]{cursor:grab} #stage.hand.grabbing [data-layer]{cursor:grabbing}
+#stage.movendo, #stage.movendo *{cursor:move!important}
+#hovnome{position:fixed;z-index:50;pointer-events:none;display:none;padding:3px 8px;border-radius:7px;background:rgba(20,40,70,.88);color:#fff;font:600 12px/1.3 Inter,system-ui,sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .float{position:absolute;display:flex;gap:6px;padding:7px;background:rgba(247,249,252,.92);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 22px rgba(25,45,80,.14);backdrop-filter:blur(6px)}
 #tools{left:12px;top:50%;transform:translateY(-50%);max-height:calc(100% - 24px);max-width:calc(100% - 24px);overflow:auto;z-index:3}
 #tools.vert{flex-direction:column}
@@ -371,6 +375,7 @@ button{user-select:none;-webkit-user-select:none}
     </aside>
     <section id="center">
       <div id="sacbar"><div id="sacolas"></div><button id="conferir" class="pri" title="Marcar esta sacola como conferida">Está boa ✓</button></div>
+      <div id="hovnome"></div>
       <div id="stage">
         <div id="faixa"></div>
         <div id="marca"></div>
@@ -527,7 +532,7 @@ function render(){
     if(c.visivel===false) return;
     const pn = GAB.paineis[c.painel]; if(!pn || pn.oculto) return;
     pn.partes.forEach((p,i)=>{
-      s += `<g clip-path="url(#c-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})" data-layer="${esc(c.id)}" data-part="${i}" style="cursor:${c.bloqueado?'not-allowed':'move'}">${elSVG(c,true)}</g></g>`;
+      s += `<g clip-path="url(#c-${c.painel}-${i})"><g transform="translate(${p.x-p.px},${-p.y})" data-layer="${esc(c.id)}" data-part="${i}"${c.bloqueado?' class="trav"':''}>${elSVG(c,true)}</g></g>`;
     });
   });
   // gabarito
@@ -761,6 +766,7 @@ svg.addEventListener('pointerdown', e=>{
   else {
     const cs = selLayers().filter(x=>!x.bloqueado);
     drag = {k:'mov', cs, sx:p.x, sy:-p.y, snap:cs.map(x=>JSON.stringify(x))};
+    $('stage').classList.add('movendo'); $('hovnome').style.display='none';
     drag.c0 = cs.map(x=>{ const b=bboxPainel(x); return b?[(b.x0+b.x1)/2,(b.y0+b.y1)/2]:null; });
     if(mesmoPainel(cs)){ drag.box = uniaoPainel(cs); drag.alvos = alvosSnap(cs[0].painel, cs); drag.painel = cs[0].painel; }
   }
@@ -772,7 +778,19 @@ svg.addEventListener('dblclick', e=>{
   else if(c && c.tipo==='grupo'){ abertos.add(c.id); render(); }
 });
 function focaTexto(){ const c = sel && layer(sel); if(c && c.tipo==='texto') editaTexto(c, true); }
+// hover: mostra o nome da camada que o clique vai selecionar
+function nomeHover(e){
+  const hv=$('hovnome'); if(drag || tool==='mao' || espaco || modo==='mockup' || modo==='produto'){ hv.style.display='none'; return; }
+  const g=e.target.closest && e.target.closest('[data-layer]'), c=g && layer(g.dataset.layer);
+  if(!c){ hv.style.display='none'; return; }
+  hv.textContent=(c.bloqueado?'🔒 ':'')+(c.nome||c.id); hv.style.display='block';
+  const r=hv.getBoundingClientRect(); let x=e.clientX+16, y=e.clientY+14;
+  if(x+r.width>innerWidth-6) x=e.clientX-r.width-10; if(y+r.height>innerHeight-6) y=e.clientY-r.height-8;
+  hv.style.left=x+'px'; hv.style.top=y+'px';
+}
+svg.addEventListener('pointerleave', ()=>{ $('hovnome').style.display='none'; });
 svg.addEventListener('pointermove', e=>{
+  nomeHover(e);
   if(!drag) return;
   if(drag.k==='pan'){ const r=svg.getBoundingClientRect(), k=view.w/r.width; view.x=drag.v.x-(e.clientX-drag.sx)*k; view.y=drag.v.y-(e.clientY-drag.sy)*k; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); return; }
   const p = toSVG(e.clientX, e.clientY);
@@ -795,7 +813,7 @@ svg.addEventListener('pointermove', e=>{
   render();
 });
 svg.addEventListener('pointerup', ()=>{
-  $('stage').classList.remove('grabbing');
+  $('stage').classList.remove('grabbing','movendo');
   if(!drag) return;
   if(drag.k==='marq'){
     if(drag.x1!==undefined){
