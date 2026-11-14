@@ -33,6 +33,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Pedir ao Claude: modelo `claude-fable-5-2` (cai para tier complex), devolve JSON `{resposta, ops[]}` com ops editar/mover/escalar/criar/apagar/ordem/agrupar/desagrupar/centralizar/cor; desfazer por pedido.
 - Cores: aba 🎨 Cores com **＋ Adicionar cor** (grade de Pantones de padaria + código livre), clicar numa cor troca em toda a arte/sacolas, remover se sem uso; limite de 3 explicado. Ajustes de vetor/texto/forma têm seletor de cor + "＋ Nova cor…".
 - **Arrastar entre painéis** (14-11): ao soltar, o centro do elemento decide o painel (Frente ↔ Verso ↔ sanfona); coordenadas convertidas via partes (`painelSob()`/`reatribuiPainel()`); ímã desliga enquanto troca de painel. Antes o elemento ficava preso ao painel de origem e sumia (clip).
+- **Elemento novo nasce no painel mais visível** (decisão do Leo, 14-11): `alvoNovo()` escolhe o painel com maior fração visível na vista (empate → Frente) e centraliza no meio da parte visível; vale para Texto, Forma, banco/SVG e foto.
 - **Ctrl+C / Ctrl+V** de camadas, inclusive entre sacolas (cola já adaptado ao tamanho de destino).
 - Marca d'água "EMBALAGENS GLOBO"; checagem de clicheria ao vivo.
 - **Visual do editor = azul Globo** (13-11): variáveis `--acc #2f7fd0 / --acc-d #1f5fae`, fundos cinza-azulados; globo do logo na barra (cópia do SVG da loja com ids `ggE/gsE/gcE`). Linhas da faca seguem magenta (convenção de clicheria).

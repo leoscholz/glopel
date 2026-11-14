@@ -987,8 +987,8 @@ function fit(){ const r=svg.getBoundingClientRect(); if(!r.width) return; const 
 $('fit').onclick=fit;
 function novoId(base){ let i=1; while(layer(base+'_'+i)) i++; return base+'_'+i; }
 const corPadrao = ()=>Object.keys(arte.paleta)[0];
-const addTexto=()=>{ const c={id:novoId('texto'),painel:'frente',tipo:'texto',texto:'Novo texto',fonte:'Heros Bold',tamanho_pt:20,alinhamento:'centro',x:8.75,y:8,cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
-$('add-ret').onclick=()=>{ const c={id:novoId('forma'),painel:'frente',tipo:'retangulo',x:5.75,y:6,w:6,h:3,raio:0.3,cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
+const addTexto=()=>{ const A=alvoNovo(); const c={id:novoId('texto'),painel:A.k,tipo:'texto',texto:'Novo texto',fonte:'Heros Bold',tamanho_pt:20,alinhamento:'centro',x:A.cx(0),y:A.cy(0),cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
+$('add-ret').onclick=()=>{ const A=alvoNovo(), w=Math.min(6,A.w*0.6), h=w/2; const c={id:novoId('forma'),painel:A.k,tipo:'retangulo',x:A.cx(w/2)-w/2,y:A.cy(h/2)-h/2,w,h,raio:0.3,cor:corPadrao()}; arte.camadas.push(c); setSel(c.id); commit(); render(); };
 document.addEventListener('keyup', e=>{ if(e.code==='Space'){ espaco=false; $('stage').classList.toggle('hand', tool==='mao'); } });
 document.addEventListener('keydown', e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
@@ -2372,11 +2372,24 @@ const BANCO = {
 })();
 
 /* ---------- inserir elementos ---------- */
+// painel mais visível na tela (maior área dentro da vista); elemento novo nasce no meio da parte visível dele
+function alvoNovo(){   // fração visível decide; empate (tudo visível) fica na Frente
+  const vx0=view.x, vx1=view.x+view.w, vy0=-(view.y+view.h), vy1=-view.y; let best=null;
+  ['frente',...PAINEIS.filter(k=>k!=='frente')].forEach(k=>{ let vis=0, tot=0, mp=null;
+    GAB.paineis[k].partes.forEach(pt=>{ if(!(pt.w>0)) return; tot+=pt.w*pt.h;
+      const x0=Math.max(vx0,pt.x), x1=Math.min(vx1,pt.x+pt.w), y0=Math.max(vy0,pt.y), y1=Math.min(vy1,pt.y+pt.h), a=Math.max(0,x1-x0)*Math.max(0,y1-y0);
+      vis+=a; if(a>0 && (!mp || a>mp.a)) mp={a, lx:(x0+x1)/2-pt.x+pt.px, ly:(y0+y1)/2-pt.y}; });
+    if(!mp || !tot) return; const fr=vis/tot;
+    if(!best || fr>best.fr+0.02) best={k, fr, lx:mp.lx, ly:mp.ly}; });
+  if(!best){ const f=GAB.paineis.frente; best={k:'frente', lx:f.w/2, ly:f.h/2}; }
+  const pn=GAB.paineis[best.k], cl=(v,meio,lim)=>+Math.min(Math.max(v, M+meio), Math.max(M+meio, lim-M-meio)).toFixed(2);
+  return {k:best.k, w:pn.w, h:pn.h, cx:meio=>cl(best.lx,meio,pn.w), cy:meio=>cl(best.ly,meio,pn.h)};
+}
 function corTintaPadrao(){ const ks=Object.keys(arte.paleta); return ks[0]||'papel'; }
 function insereVetor(dados, nomeBase, mapa, opts={}){
-  const pn=GAB.paineis.frente, larg = opts.fundo ? pn.w-2*M : Math.min(6, pn.w*0.4), h=larg*dados.vb[3]/dados.vb[2];
-  const c={id:novoId(nomeBase), painel:'frente', tipo:'vetor', vb:dados.vb, svg:dados.markup||dados.svg, mapa, w:+larg.toFixed(2),
-           x:+((pn.w-larg)/2).toFixed(2), y:+(opts.fundo ? M : Math.max(M,(pn.h-h)/2)).toFixed(2), asset:opts.asset};
+  const A=alvoNovo(), pn=GAB.paineis[A.k], larg = opts.fundo ? pn.w-2*M : Math.min(6, pn.w*0.4), h=larg*dados.vb[3]/dados.vb[2];
+  const c={id:novoId(nomeBase), painel:A.k, tipo:'vetor', vb:dados.vb, svg:dados.markup||dados.svg, mapa, w:+larg.toFixed(2),
+           x:+(opts.fundo ? M : A.cx(larg/2)-larg/2).toFixed(2), y:+(opts.fundo ? M : Math.max(M,A.cy(h/2)-h/2)).toFixed(2), asset:opts.asset};
   if(opts.fundo){ c.fundo=true; c.tinta=100; arte.camadas.unshift(c); } else arte.camadas.push(c);
   setSel(c.id); commit(); render(); return c;
 }
@@ -2436,8 +2449,8 @@ async function recebeArquivo(f){
   } else toast('Use SVG (vetor) ou PNG/JPG (imagem). PDF/AI: exporte como SVG.');
 }
 function insereImagem(assetId){
-  const a=ASSETS[assetId], pn=GAB.paineis.frente, w=Math.min(8, pn.w*0.5);
-  const c={id:novoId('foto'), painel:'frente', tipo:'meiotom', asset:assetId, ar:a.ar, w, x:+((pn.w-w)/2).toFixed(2), y:+((pn.h-w*a.ar)/2).toFixed(2),
+  const a=ASSETS[assetId], A=alvoNovo(), pn=GAB.paineis[A.k], w=Math.min(8, pn.w*0.5);
+  const c={id:novoId('foto'), painel:A.k, tipo:'meiotom', asset:assetId, ar:a.ar, w, x:+(A.cx(w/2)-w/2).toFixed(2), y:+(A.cy(w*a.ar/2)-w*a.ar/2).toFixed(2),
            cor:corTintaPadrao(), angulo:45, forma:'ponto', brilho:0, contraste:0.2, inverter:false, corte:0.05, cheio:0.94};
   arte.camadas.push(c); setSel(c.id); commit(); render(); editorMeiotom(c);
 }
