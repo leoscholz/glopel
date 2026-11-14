@@ -68,6 +68,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
   - Nomes amigáveis (`nomeAmigavel()`): camadas, hover, checagem, faixa; chips Frente/Verso/Lateral; mensagens da checagem em linguagem leiga; clicar no aviso seleciona o item.
   - Mockup CSS: interior do saco branco claro. Faixa "adaptada sozinha" só quando a sacola acabou de ser gerada. "Sem uso" não aparece em sacola vazia. Chat desativado escondido no build do GitHub.
   - **Layout**: ≤1500 px botões do topo só com ícone; ≤1180 px topo numa linha com rolagem; **≤700 px (celular)** abas viram barra de baixo, painéis viram folha deslizante (58vh), ferramentas em faixa horizontal, zoom no canto superior.
+- **Produto final (14-11 noite):** montagem ~3× mais rápida — texturas de comida sob demanda (getters em `TXCOM`) com Worley em grade (9,3 s → 1,3 s para as 7); textura do saco limitada a ~2,2 Mpx, 3 rasterizações em paralelo e máscaras/ruído kraft em cache por faca (`CACHE_MASCARA`). Envelope/sem sanfona: amassado zera nas bordas e só empurra "para fora" (frente não cruza o verso). Grade de 1 cm no chão (linha forte a cada 10 cm) + legenda `#prodgrade`. Botão laranja **📸 Ver produto final** na barra das sacolas (`#verProduto`, vira "✏️ Voltar a editar").
 - **Backlog da rodada de testes (14-11)**: ver `TESTE-UX-2026-11-14.md` (bugs abertos, decisões do Leo, UX por impacto).
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Decisão aberta do Leo: barra do topo azul escura como a da loja?

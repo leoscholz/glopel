@@ -177,7 +177,7 @@ button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-de
 #voltaloja{padding:7px 11px}
 #center{display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:0}
 #sacbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);overflow-x:auto}
-#sacolas{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px} #conferir{flex-shrink:0}
+#sacolas{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px} #conferir,#verProduto{flex-shrink:0}
 #sacbar{overflow:hidden}
 .sac{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 8px;text-align:left;font-weight:500;white-space:nowrap}
 .sac .t{display:flex;flex-direction:column;line-height:1.25}
@@ -231,6 +231,10 @@ button{user-select:none;-webkit-user-select:none}
 #stage.prodmode #tools,#stage.prodmode #zoom{display:none}
 #prodcanvas{position:absolute;inset:0;cursor:grab}
 #prodcanvas canvas{display:block}
+#prodgrade{position:absolute;left:12px;top:12px;background:rgba(247,249,252,.88);padding:6px 10px;border-radius:10px;font-size:12.5px;color:var(--ink);box-shadow:var(--sh);pointer-events:none;z-index:3}
+#verProduto{background:linear-gradient(135deg,#ffb347,#ff7a59);color:#fff;border:none;font-weight:700;padding:8px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(255,122,89,.45);white-space:nowrap}
+#verProduto:hover{filter:brightness(1.05)}
+#verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
 #prodmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(247,249,252,.9);padding:10px 16px;border-radius:12px;font-weight:600;color:var(--mute)}
 #prodctl{left:50%;bottom:14px;transform:translateX(-50%)}
 #prodctl button{padding:6px 12px}
@@ -294,7 +298,8 @@ button{user-select:none;-webkit-user-select:none}
   #zoom{top:8px!important;bottom:auto!important;right:8px!important;left:auto!important;padding:4px}
   #zoom button{padding:5px 9px}
   #sacbar{padding:6px 8px;gap:6px}
-  #sacbar #conferir{font-size:12.5px;padding:7px 10px;white-space:nowrap}
+  #sacbar #conferir,#sacbar #verProduto{font-size:12px;padding:7px 9px;white-space:nowrap}
+  #prodgrade{font-size:11px;top:54px}
   #faixa{left:8px;right:8px;transform:none;bottom:84px;flex-wrap:wrap;font-size:12.5px}
   #toast{bottom:70px;max-width:calc(100% - 24px)}
   #hovnome{display:none!important}
@@ -401,7 +406,7 @@ button{user-select:none;-webkit-user-select:none}
       <div id="elementos"></div>
     </aside>
     <section id="center">
-      <div id="sacbar"><div id="sacolas"></div><button id="conferir" class="pri" title="Aprovar a arte desta sacola para impressão">✅ Aprovar esta arte</button></div>
+      <div id="sacbar"><div id="sacolas"></div><button id="verProduto" title="Ver a sacola pronta em 3D, com comida de verdade">📸 Ver produto final</button><button id="conferir" class="pri" title="Aprovar a arte desta sacola para impressão">✅ Aprovar esta arte</button></div>
       <div id="hovnome"></div>
       <div id="stage">
         <div id="faixa"></div>
@@ -411,7 +416,7 @@ button{user-select:none;-webkit-user-select:none}
         <div id="mock"><div id="mockscene"><div id="mockbox"></div><div id="mockshadow"></div></div>
           <div id="mockctl" class="float"><button data-r="0">Frente</button><button data-r="-90">Lado</button><button data-r="180">Costas</button><button id="mockspin">🔄 Girar</button></div>
           <div id="mockhint">Arraste para girar a sacola</div></div>
-        <div id="prod"><div id="prodcanvas"></div><div id="prodmsg">Montando o produto…</div>
+        <div id="prod"><div id="prodcanvas"></div><div id="prodmsg">Montando o produto…</div><div id="prodgrade">▦ Cada quadradinho do chão = <b>1 cm</b> · linha forte a cada 10 cm</div>
           <div id="prodctl" class="float"><button data-v="0">Frente</button><button data-v="1">3/4</button><button data-v="2">Costas</button><button data-v="3">De cima</button><button id="prodspin">🔄 Girar</button></div>
           <div id="mockhint2">Arraste para girar · roda do mouse = zoom</div></div>
         <div id="tools" class="float vert">
@@ -587,6 +592,7 @@ function render(){
   { const cl=$('chapalabel'); if(modo.startsWith('sep:') && arte.paleta[modo.slice(4)]){ const p=arte.paleta[modo.slice(4)]; cl.style.display='block'; cl.style.color=cmyk2hex(p.cmyk); cl.textContent='Chapa: '+p.pantone; } else cl.style.display='none'; }
   const mk = modo==='mockup'; $('stage').classList.toggle('mockmode', mk); if(mk) mockup();
   const pr = modo==='produto'; $('stage').classList.toggle('prodmode', pr); if(pr) produto();
+  { const vb=$('verProduto'); if(vb){ vb.classList.toggle('voltar', pr); vb.innerHTML = pr ? '✏️ Voltar a editar' : '📸 Ver produto final'; } }
   svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
   desenhaSel(); listaCamadas(); paleta(); props(); valida();
 }
@@ -1289,38 +1295,41 @@ function texComida(){
   };
   const a=ruidoTile('a'), b=ruidoTile('b'), c=ruidoTile('c');
   // bolhas/rachaduras: células (worley simplificado ladrilhável)
-  const celulas=(seed,n)=>{ const R=rngSeed(seed), pts=[]; for(let i=0;i<n;i++) pts.push([R(),R(),R()]);
-    return (u,v)=>{ let d1=9,d2=9,id=0; for(const p of pts){ for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){
-      const dx=u-(p[0]+ox), dy=v-(p[1]+oy), d=dx*dx+dy*dy; if(d<d1){ d2=d1; d1=d; id=p[2]; } else if(d<d2) d2=d; } }
+  const celulas=(seed,n)=>{ const R=rngSeed(seed), G=Math.max(1,Math.round(Math.sqrt(n))), grade=[];   // 1 ponto por célula da grade: busca só nos 3x3 vizinhos
+    for(let j=0;j<G;j++) for(let i=0;i<G;i++) grade.push([(i+R())/G,(j+R())/G,R()]);
+    return (u,v)=>{ let d1=9,d2=9,id=0; const ci=Math.floor(u*G), cj=Math.floor(v*G);
+      for(let oj=-2;oj<=2;oj++) for(let oi=-2;oi<=2;oi++){ const ii=ci+oi, jj=cj+oj, wi=((ii%G)+G)%G, wj=((jj%G)+G)%G, p=grade[wj*G+wi];
+        const px=p[0]+(ii-wi)/G, py=p[1]+(jj-wj)/G, dx=u-px, dy=v-py, d=dx*dx+dy*dy; if(d<d1){ d2=d1; d1=d; id=p[2]; } else if(d<d2) d2=d; }
       return [Math.sqrt(d1), Math.sqrt(d2), id]; }; };
   const cel=celulas('crosta',260), mig=celulas('migalha',700), cova=celulas('casca',120);
-  TXCOM = {
+  const F = {
     // crosta de pão: manchas de tostado, bolhinhas e rachaduras finas
-    crosta: gera('crosta',(u,v)=>{ const n=a(u,v,6,5), f=b(u,v,24,3), [d1,d2]=cel(u,v), crack=Math.exp(-Math.pow((d2-d1)/0.004,2));
+    crosta: ()=>gera('crosta',(u,v)=>{ const n=a(u,v,6,5), f=b(u,v,24,3), [d1,d2]=cel(u,v), crack=Math.exp(-Math.pow((d2-d1)/0.004,2));
       const bolha=Math.max(0,1-d1/0.018);
       const lum=0.86+0.16*n-0.025*crack+0.05*bolha+0.05*(f-0.5);
       return [lum, 0.5+0.35*(n-0.5)+0.18*bolha-0.08*crack+0.2*(f-0.5), 0.6-0.2*bolha+0.05*crack+0.12*(f-0.5)]; }),
     // empanado (coxinha): migalhas irregulares
-    empanado: gera('empanado',(u,v)=>{ const [d1,d2,id]=mig(u,v), borda=d2-d1, g=c(u,v,32,3);
+    empanado: ()=>gera('empanado',(u,v)=>{ const [d1,d2,id]=mig(u,v), borda=d2-d1, g=c(u,v,32,3);
       const grao=Math.min(1,borda/0.012), lum=0.70+0.28*id*grao+0.08*(g-0.5);
       return [lum, 0.15+0.75*grao*(0.6+0.4*id)+0.1*g, 0.65-0.2*grao]; }),
     // massa macia (pão de hambúrguer, borda da esfiha): poros finos
-    massa: gera('massa',(u,v)=>{ const n=a(u,v,4,4), f=c(u,v,64,2);
+    massa: ()=>gera('massa',(u,v)=>{ const n=a(u,v,4,4), f=c(u,v,64,2);
       return [0.86+0.14*n-0.04*(f>0.62?1:0), 0.5+0.2*n+0.25*(f-0.5), 0.6+0.15*(f-0.5)]; }),
     // carne grelhada
-    carne: gera('carne',(u,v)=>{ const n=a(u,v,10,5), f=b(u,v,48,3), [d1]=cel(u,v);
+    carne: ()=>gera('carne',(u,v)=>{ const n=a(u,v,10,5), f=b(u,v,48,3), [d1]=cel(u,v);
       return [0.55+0.45*n*f+0.1*(d1>0.05?1:0), 0.3+0.6*f*n, 0.55+0.3*(1-f)]; }),
     // recheio de esfiha: carne moída vermelha com cebola e salsinha
-    recheio: gera('recheio',(u,v)=>{ const [d1,d2,id]=mig(u,v), n=a(u,v,8,4), grao=Math.min(1,(d2-d1)/0.01);
+    recheio: ()=>gera('recheio',(u,v)=>{ const [d1,d2,id]=mig(u,v), n=a(u,v,8,4), grao=Math.min(1,(d2-d1)/0.01);
       if(id>0.93) return [0.95,0.6*grao+0.3,0.4, 1.0,0.97,0.88];          // cebola
       if(id>0.88) return [0.7,0.5*grao+0.3,0.5, 0.35,0.75,0.25];          // salsinha
       return [0.55+0.4*n*grao, 0.2+0.7*grao*n, 0.45, 0.85,0.40,0.28]; }),
     // casca de amendoim: tramas
-    casca: gera('casca',(u,v)=>{ const n=a(u,v,8,4), [d1,d2]=cova(u,v), aresta=Math.exp(-Math.pow((d2-d1)/0.012,2));
+    casca: ()=>gera('casca',(u,v)=>{ const n=a(u,v,8,4), [d1,d2]=cova(u,v), aresta=Math.exp(-Math.pow((d2-d1)/0.012,2));
       return [0.80+0.14*aresta+0.08*(n-0.5), 0.35+0.5*aresta+0.15*n, 0.85]; }),
     // guardanapo de papel
-    papel: gera('papel',(u,v)=>{ const f=c(u,v,64,4), r=Math.abs(Math.sin(v*Math.PI*60)); return [0.95+0.05*f, 0.5+0.3*(f-0.5)+0.15*r, 0.9]; }),
+    papel: ()=>gera('papel',(u,v)=>{ const f=c(u,v,64,4), r=Math.abs(Math.sin(v*Math.PI*60)); return [0.95+0.05*f, 0.5+0.3*(f-0.5)+0.15*r, 0.9]; }),
   };
+  TXCOM={}; Object.keys(F).forEach(k=>Object.defineProperty(TXCOM,k,{get(){ return this['_'+k] || (this['_'+k]=F[k]()); }}));   // gera só a textura que a comida usa
   return TXCOM;
 }
 function matComida(tx, o={}){
@@ -1620,20 +1629,27 @@ function ambienteCanvas(){
   return b;
 }
 
+const CACHE_MASCARA = {};
 async function texturasSaco(){
-  const PX=34, W=Math.round((xmax-xmin)*PX), H=Math.round((ymax-ymin)*PX);
-  // tinta flexo é translúcida: base kraft + tintas em "multiplicar"
-  const arteC = await svgCanvas(marcaSheet({px:PX, papel:KRAFT, semCamadas:true}), W, H);
+  // resolução limitada (~2,2 Mpx) e rasterizações em paralelo; máscaras que só dependem da faca ficam em cache
+  const ar=(xmax-xmin)*(ymax-ymin), PX=Math.min(34, Math.sqrt(2.2e6/ar)), W=Math.round((xmax-xmin)*PX), H=Math.round((ymax-ymin)*PX);
+  const svBase = marcaSheet({px:PX, papel:KRAFT, semCamadas:true});
   corOverride = k => k==='papel' ? '#ffffff' : (arte.paleta[k]?cmyk2hex(arte.paleta[k].cmyk):'#ffffff');
-  const tintaC = await svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#ffffff'}), W, H);
-  corOverride = null;
-  { const ax=arteC.getContext('2d'); ax.globalCompositeOperation='multiply'; ax.globalAlpha=0.95; ax.drawImage(tintaC,0,0); ax.globalAlpha=1; ax.globalCompositeOperation='destination-in'; ax.drawImage(await svgCanvas(marcaSheet({px:PX, papel:'#000', semCamadas:true}), W, H),0,0); ax.globalCompositeOperation='source-over'; }
+  const svTinta = marcaSheet({px:PX, papel:'#ffffff', fundo:'#ffffff'});
   corOverride = k => k==='papel' ? '#e8e8e8' : '#6f6f6f';
-  const rugC = await svgCanvas(marcaSheet({px:PX, papel:'#e8e8e8', fundo:'#e8e8e8'}), W, H);
+  const svRug = marcaSheet({px:PX, papel:'#e8e8e8', fundo:'#e8e8e8'});
   corOverride = null;
-  const alphaC = await svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#000000', semCamadas:true}), W, H);
+  const chave = GAB.nome+'|'+W+'x'+H;
+  let M = CACHE_MASCARA[chave];
+  const pBase = svgCanvas(svBase, W, H), pTinta = svgCanvas(svTinta, W, H), pRug = svgCanvas(svRug, W, H);
+  if(!M){ const [preto, alfa] = await Promise.all([svgCanvas(marcaSheet({px:PX, papel:'#000', semCamadas:true}), W, H), svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#000000', semCamadas:true}), W, H)]);
+    M = CACHE_MASCARA[chave] = {preto, alfa}; }
+  const [arteC, tintaC, rugC] = await Promise.all([pBase, pTinta, pRug]);
+  // tinta flexo é translúcida: base kraft + tintas em "multiplicar"
+  { const ax=arteC.getContext('2d'); ax.globalCompositeOperation='multiply'; ax.globalAlpha=0.95; ax.drawImage(tintaC,0,0); ax.globalAlpha=1; ax.globalCompositeOperation='destination-in'; ax.drawImage(M.preto,0,0); ax.globalCompositeOperation='source-over'; }
+  const alphaC = M.alfa;
   // kraft de verdade: multiplica fibras/manchas sobre a arte
-  const nz = kraftNoise(W,H), cx=arteC.getContext('2d');
+  const nz = M.nz || (M.nz = kraftNoise(W,H)), cx=arteC.getContext('2d');
   cx.globalCompositeOperation='multiply'; cx.drawImage(nz,0,0); cx.globalCompositeOperation='source-over';
   // bump = fibras + vincos
   const bump=document.createElement('canvas'); bump.width=W; bump.height=H; const bx=bump.getContext('2d');
@@ -1678,8 +1694,11 @@ function geometriaSaco(interno){
       // amassado leve, maior no meio da altura, quase nada junto da base dobrada
       const amp=0.20*Math.min(1,sy/5);
       const n1=(fbm(sx*0.24, sy*0.2)-0.5)*2*amp, n2=(fbm(sx*0.2+40, sy*0.23+9)-0.5)*2*amp;
-      if(tipo==='g') x += (x>0?1:-1)*n1*0.8; else z += (z>0?1:-1)*n1;
-      x += n2*0.25;
+      // perto das bordas laterais frente e verso quase se tocam (envelope/sem sanfona): o amassado some ali, senão as faces se cruzam
+      const borda = tipo==='g' ? 1 : Math.min(1, Math.max(0, (Wd/2-Math.abs(x))/(half>0.3?0.6:2.2)));
+      if(tipo==='g') x += (x>0?1:-1)*n1*0.8; else z += (tipo==='f'?1:-1)*Math.abs(n1)*borda;   // amassado só "para fora": frente nunca atravessa o verso
+      x += n2*0.25*borda;
+      if(half<=0.3 && tipo!=='g') z += (tipo==='f'?1:-1)*0.06*(1-borda);   // sem sanfona: folguinha entre frente e verso na borda
       pos.push(x, sy+(fbm(sx*0.13+70, sy*0.1)-0.5)*0.15, z);
       const ux = sx>=V0E-1e-6 ? V0E-0.04 : (Math.abs(sx-V1)<1e-6 ? V1+0.04 : sx);   // não amostra fora do contorno na emenda
       uv.push((ux-xmin)/(xmax-xmin), (sy-ymin)/(ymax-ymin));
@@ -1722,6 +1741,15 @@ function produtoIniciar(){
   const fill=new T.DirectionalLight(0xdfe8ff, 0.35); fill.position.set(40,25,-30); scene.add(fill);
   // chão: só sombra (o "piso" é o ambiente) + sombra de contato
   const chao=new T.Mesh(new T.PlaneGeometry(400,400), new T.ShadowMaterial({opacity:.24})); chao.rotation.x=-Math.PI/2; chao.position.y=-0.02; chao.receiveShadow=true; scene.add(chao);
+  { // grade de 1 cm (linha forte a cada 10 cm), some suavemente nas bordas
+    const TAM=120, PXCM=10, gc=document.createElement('canvas'); gc.width=gc.height=TAM*PXCM; const gx=gc.getContext('2d');
+    for(let i=0;i<=TAM;i++){ const forte=i%10===0, p=i*PXCM+0.5; gx.strokeStyle=forte?'rgba(40,60,90,.32)':'rgba(40,60,90,.13)'; gx.lineWidth=forte?1.6:0.8;
+      gx.beginPath(); gx.moveTo(p,0); gx.lineTo(p,gc.height); gx.stroke(); gx.beginPath(); gx.moveTo(0,p); gx.lineTo(gc.width,p); gx.stroke(); }
+    gx.globalCompositeOperation='destination-in'; const rg=gx.createRadialGradient(gc.width/2,gc.height/2,gc.width*0.18,gc.width/2,gc.height/2,gc.width*0.5);
+    rg.addColorStop(0,'rgba(0,0,0,1)'); rg.addColorStop(1,'rgba(0,0,0,0)'); gx.fillStyle=rg; gx.fillRect(0,0,gc.width,gc.height);
+    const gt=new T.CanvasTexture(gc); gt.anisotropy=8;
+    const grade=new T.Mesh(new T.PlaneGeometry(TAM,TAM), new T.MeshBasicMaterial({map:gt, transparent:true, depthWrite:false}));
+    grade.rotation.x=-Math.PI/2; grade.position.y=0.004; grade.renderOrder=-1; scene.add(grade); }
   const cc=document.createElement('canvas'); cc.width=cc.height=256; const cx=cc.getContext('2d'); const gr=cx.createRadialGradient(128,128,10,128,128,128); gr.addColorStop(0,'rgba(30,18,8,.55)'); gr.addColorStop(.6,'rgba(30,18,8,.18)'); gr.addColorStop(1,'rgba(30,18,8,0)'); cx.fillStyle=gr; cx.fillRect(0,0,256,256);
   const contato=new T.Mesh(new T.PlaneGeometry(1,1), new T.MeshBasicMaterial({map:new T.CanvasTexture(cc), transparent:true, depthWrite:false}));
   contato.rotation.x=-Math.PI/2; contato.position.set(0, 0.01, 0); contato.scale.set(GAB.paineis.frente.w*1.5, Math.max(4,GAB.paineis.sanfona_esq.w*1.6), 1); scene.add(contato);
@@ -3072,6 +3100,7 @@ $('gabinfo').innerHTML = infoGab(); atualizaSacolas();
 $('prodbtn').onclick=e=>{ e.stopPropagation(); menuProdutos(); };
 document.addEventListener('click', e=>{ if(!e.target.closest('#prodwrap')) $('prodmenu').classList.remove('show'); });
 $('conferir').onclick=marcaConferida;
+$('verProduto').onclick=()=>{ const m=$('modo'); m.value = modo==='produto' ? 'previa' : 'produto'; m.dispatchEvent(new Event('change')); };
 msg('a', arte.camadas.length ? `Oi! 👋 Sua arte está como você deixou. Clique em qualquer parte para ajustar, ou escreva aqui o que quer mudar.` : `Oi! 👋 A sacola está em branco. Escreva aqui o que quer, por exemplo: "coloca o nome Padaria Bom Dia no meio e o telefone embaixo".\nPara ver um exemplo pronto: botão ❓ › Carregar exemplo.`);
 const CHIPS = ['Aumenta o selo 10%','Muda o slogan para "Feito com amor"','Deixa o nome vermelho','Sobe o nome 1 cm'];
 $('chips').innerHTML = CHIPS.map(c=>`<button>${esc(c)}</button>`).join('');
