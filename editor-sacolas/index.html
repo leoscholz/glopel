@@ -1175,60 +1175,294 @@ $('export').onclick=()=>{
   $('cp').onclick=async()=>{ try{ await navigator.clipboard.writeText(json); $('cp').textContent='Copiado ✓'; }catch(_){ $('cp').textContent='Bloqueado — selecione o texto'; } };
 };
 
-/* ---------- comida 3D de referência (escala real, em cm) ---------- */
-function texCrosta(base, escuro, n){
-  const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
-  x.fillStyle=base; x.fillRect(0,0,256,256);
-  for(let i=0;i<n;i++){ const r=2+Math.random()*10; x.fillStyle=`rgba(${escuro},${0.05+Math.random()*0.12})`; x.beginPath(); x.arc(Math.random()*256,Math.random()*256,r,0,7); x.fill(); }
-  for(let i=0;i<900;i++){ x.fillStyle=`rgba(255,240,210,${Math.random()*0.10})`; x.fillRect(Math.random()*256,Math.random()*256,1.5,1.5); }
-  const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+/* ---------- comida 3D de referência (escala real, em cm) ----------
+   Cada categoria de faca ganha os alimentos que costumam ir nela.
+   Texturas procedurais (ruído fbm, ladrilhável) + vertex colors para o tostado;
+   posicionamento por círculos de colisão: nada atravessa o saco nem outro alimento. */
+function rngSeed(s){ let a=0; for(const ch of String(s)) a=(a*31+ch.charCodeAt(0))|0;
+  return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+// ruído de valor 2D ladrilhável (período P em cada oitava)
+function ruidoTile(seed){
+  const R=rngSeed(seed), N=256, perm=new Uint8Array(512), val=new Float32Array(N);
+  for(let i=0;i<N;i++){ perm[i]=i; val[i]=R(); }
+  for(let i=N-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [perm[i],perm[j]]=[perm[j],perm[i]]; }
+  for(let i=0;i<N;i++) perm[i+N]=perm[i];
+  const h=(x,y)=>val[perm[(perm[x&255]+y)&511]&255], sm=t=>t*t*(3-2*t);
+  const n=(x,y,P)=>{ const xi=Math.floor(x), yi=Math.floor(y), fx=sm(x-xi), fy=sm(y-yi);
+    const x0=((xi%P)+P)%P, y0=((yi%P)+P)%P, x1=(x0+1)%P, y1=(y0+1)%P;
+    const a=h(x0,y0), b=h(x1,y0), c=h(x0,y1), d=h(x1,y1); return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy; };
+  return (u,v,P0,oct)=>{ let s=0, amp=0.5, tot=0, P=P0; for(let o=0;o<oct;o++){ s+=amp*n(u*P,v*P,P); tot+=amp; amp*=0.5; P*=2; } return s/tot; };
 }
-function paoFrances(){
-  const T=THREE, g=new T.SphereGeometry(1, 64, 40), p=g.attributes.position, v=new T.Vector3();
-  const L=7.5, R=2.9, H=2.6;   // ~15 × 6 × 5 cm
-  for(let i=0;i<p.count;i++){
-    v.fromBufferAttribute(p,i); let x=v.x, y=v.y, z=v.z;
-    const ponta = 1-Math.pow(Math.abs(x),2.2)*0.35;                 // pontas mais finas
-    y = y<0 ? y*0.35 : y;                                            // base achatada
-    let px=x*L, py=Math.max(0,y)*H*ponta + Math.min(0,y)*H, pz=z*R*ponta;
-    // pestana: corte longitudinal no topo (sulco + borda levantada)
-    if(y>0.2){ const sul=Math.exp(-Math.pow(z/0.12,2))*Math.max(0,1-Math.abs(x)*1.1);
-      const borda=Math.exp(-Math.pow((z-0.2)/0.12,2))*Math.max(0,1-Math.abs(x)*1.2);
-      py += -0.55*sul + 0.35*borda; }
-    p.setXYZ(i, px, py, pz);
-  }
-  g.computeVertexNormals();
-  const m=new T.MeshStandardMaterial({map:texCrosta('#b8682a','90,40,5',320), roughness:0.55, metalness:0, color:0xffffff});
-  const pao=new T.Mesh(g,m); pao.castShadow=true; pao.receiveShadow=true; return pao;
+// ruído 3D barato para variar forma/cor por vértice
+function ruido3(seed){ const f=ruidoTile(seed); return (x,y,z)=>(f(x*0.13+z*0.07, y*0.13-z*0.05, 8, 3)+f(z*0.11+0.5, x*0.09+y*0.06, 8, 3))*0.5; }
+
+let TXCOM = null;   // texturas de comida (criadas uma vez)
+function texComida(){
+  if(TXCOM) return TXCOM;
+  const T=THREE, S=512;
+  const gera=(nome, fn)=>{   // fn(u,v) -> [lum(0-1, cor multiplicada pelo vertex color), relevo(0-1), rugosidade(0-1), r?,g?,b?]
+    const cm=document.createElement('canvas'), cb=document.createElement('canvas'), cr=document.createElement('canvas');
+    [cm,cb,cr].forEach(c=>{ c.width=c.height=S; });
+    const im=cm.getContext('2d').createImageData(S,S), ib=cb.getContext('2d').createImageData(S,S), ir=cr.getContext('2d').createImageData(S,S);
+    for(let j=0;j<S;j++) for(let i=0;i<S;i++){ const k=(j*S+i)*4, o=fn(i/S, j/S);
+      const r=o[3]!==undefined?o[3]:1, g=o[4]!==undefined?o[4]:1, b=o[5]!==undefined?o[5]:1;
+      im.data[k]=255*Math.min(1,o[0]*r); im.data[k+1]=255*Math.min(1,o[0]*g); im.data[k+2]=255*Math.min(1,o[0]*b); im.data[k+3]=255;
+      ib.data[k]=ib.data[k+1]=ib.data[k+2]=255*Math.max(0,Math.min(1,o[1])); ib.data[k+3]=255;
+      ir.data[k]=ir.data[k+1]=ir.data[k+2]=255*Math.max(0,Math.min(1,o[2])); ir.data[k+3]=255; }
+    cm.getContext('2d').putImageData(im,0,0); cb.getContext('2d').putImageData(ib,0,0); cr.getContext('2d').putImageData(ir,0,0);
+    const mk=(c,srgb)=>{ const t=new T.CanvasTexture(c); t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=8; if(srgb) t.encoding=T.sRGBEncoding; return t; };
+    return {map:mk(cm,true), bump:mk(cb), rough:mk(cr), nome};
+  };
+  const a=ruidoTile('a'), b=ruidoTile('b'), c=ruidoTile('c');
+  // bolhas/rachaduras: células (worley simplificado ladrilhável)
+  const celulas=(seed,n)=>{ const R=rngSeed(seed), pts=[]; for(let i=0;i<n;i++) pts.push([R(),R(),R()]);
+    return (u,v)=>{ let d1=9,d2=9,id=0; for(const p of pts){ for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){
+      const dx=u-(p[0]+ox), dy=v-(p[1]+oy), d=dx*dx+dy*dy; if(d<d1){ d2=d1; d1=d; id=p[2]; } else if(d<d2) d2=d; } }
+      return [Math.sqrt(d1), Math.sqrt(d2), id]; }; };
+  const cel=celulas('crosta',260), mig=celulas('migalha',700), cova=celulas('casca',120);
+  TXCOM = {
+    // crosta de pão: manchas de tostado, bolhinhas e rachaduras finas
+    crosta: gera('crosta',(u,v)=>{ const n=a(u,v,6,5), f=b(u,v,24,3), [d1,d2]=cel(u,v), crack=Math.exp(-Math.pow((d2-d1)/0.004,2));
+      const bolha=Math.max(0,1-d1/0.018);
+      const lum=0.86+0.16*n-0.025*crack+0.05*bolha+0.05*(f-0.5);
+      return [lum, 0.5+0.35*(n-0.5)+0.18*bolha-0.08*crack+0.2*(f-0.5), 0.6-0.2*bolha+0.05*crack+0.12*(f-0.5)]; }),
+    // empanado (coxinha): migalhas irregulares
+    empanado: gera('empanado',(u,v)=>{ const [d1,d2,id]=mig(u,v), borda=d2-d1, g=c(u,v,32,3);
+      const grao=Math.min(1,borda/0.012), lum=0.70+0.28*id*grao+0.08*(g-0.5);
+      return [lum, 0.15+0.75*grao*(0.6+0.4*id)+0.1*g, 0.65-0.2*grao]; }),
+    // massa macia (pão de hambúrguer, borda da esfiha): poros finos
+    massa: gera('massa',(u,v)=>{ const n=a(u,v,4,4), f=c(u,v,64,2);
+      return [0.86+0.14*n-0.04*(f>0.62?1:0), 0.5+0.2*n+0.25*(f-0.5), 0.6+0.15*(f-0.5)]; }),
+    // carne grelhada
+    carne: gera('carne',(u,v)=>{ const n=a(u,v,10,5), f=b(u,v,48,3), [d1]=cel(u,v);
+      return [0.55+0.45*n*f+0.1*(d1>0.05?1:0), 0.3+0.6*f*n, 0.55+0.3*(1-f)]; }),
+    // recheio de esfiha: carne moída vermelha com cebola e salsinha
+    recheio: gera('recheio',(u,v)=>{ const [d1,d2,id]=mig(u,v), n=a(u,v,8,4), grao=Math.min(1,(d2-d1)/0.01);
+      if(id>0.93) return [0.95,0.6*grao+0.3,0.4, 1.0,0.97,0.88];          // cebola
+      if(id>0.88) return [0.7,0.5*grao+0.3,0.5, 0.35,0.75,0.25];          // salsinha
+      return [0.55+0.4*n*grao, 0.2+0.7*grao*n, 0.45, 0.85,0.40,0.28]; }),
+    // casca de amendoim: tramas
+    casca: gera('casca',(u,v)=>{ const n=a(u,v,8,4), [d1,d2]=cova(u,v), aresta=Math.exp(-Math.pow((d2-d1)/0.012,2));
+      return [0.80+0.14*aresta+0.08*(n-0.5), 0.35+0.5*aresta+0.15*n, 0.85]; }),
+    // guardanapo de papel
+    papel: gera('papel',(u,v)=>{ const f=c(u,v,64,4), r=Math.abs(Math.sin(v*Math.PI*60)); return [0.95+0.05*f, 0.5+0.3*(f-0.5)+0.15*r, 0.9]; }),
+  };
+  return TXCOM;
 }
-function batatas(){
-  const T=THREE, grp=new T.Group();
-  const mat=new T.MeshStandardMaterial({map:texCrosta('#e5ae45','160,90,15',90), roughness:0.45, metalness:0});
-  // cestinha de papel vermelho e branco
-  const cv=document.createElement('canvas'); cv.width=256; cv.height=64; const x=cv.getContext('2d');
-  for(let i=0;i<8;i++){ x.fillStyle=i%2?'#f6f1ea':'#c8352b'; x.fillRect(i*32,0,32,64); }
-  const tx=new T.CanvasTexture(cv); tx.encoding=T.sRGBEncoding;
-  const cesto=new T.Mesh(new T.CylinderGeometry(4.2,3.2,5.5,40,1,true), new T.MeshStandardMaterial({map:tx, side:T.DoubleSide, roughness:0.8}));
-  cesto.position.y=2.75; cesto.castShadow=true; cesto.receiveShadow=true; grp.add(cesto);
-  const fundo=new T.Mesh(new T.CircleGeometry(3.2,32), new T.MeshStandardMaterial({color:0xf3eee6, roughness:0.9})); fundo.rotation.x=-Math.PI/2; fundo.position.y=0.05; grp.add(fundo);
-  for(let i=0;i<34;i++){
-    const len=6+Math.random()*4, b=new T.Mesh(new T.BoxGeometry(0.75,len,0.75), mat);
-    const a=Math.random()*Math.PI*2, r=Math.random()*2.6;
-    b.position.set(Math.cos(a)*r, 2.4+len/2-1.5+Math.random()*1.2, Math.sin(a)*r);
-    b.rotation.set((Math.random()-.5)*0.6, Math.random()*Math.PI, (Math.random()-.5)*0.6);
-    b.castShadow=true; grp.add(b);
-  }
-  // umas soltas na mesa
-  for(let i=0;i<3;i++){ const b=new T.Mesh(new T.BoxGeometry(0.75,0.75,6+Math.random()*3), mat);
-    b.position.set(5+i*1.3, 0.38, -1+i*1.6); b.rotation.y=0.6+i*0.5; b.castShadow=true; b.receiveShadow=true; grp.add(b); }
+function matComida(tx, o={}){
+  const T=THREE, M=o.fisico?T.MeshPhysicalMaterial:T.MeshStandardMaterial;
+  const m=new M({map:tx.map, bumpMap:tx.bump, bumpScale:o.bump??0.04, roughnessMap:tx.rough, roughness:o.rough??1, metalness:0, vertexColors:true, envMapIntensity:o.env??0.7});
+  if(o.fisico){ m.clearcoat=o.clearcoat??0.2; m.clearcoatRoughness=o.ccr??0.55; }
+  return m;
+}
+const lin=c=>[Math.pow(c[0],2.2),Math.pow(c[1],2.2),Math.pow(c[2],2.2)];   // vertex colors são lineares
+const mix3=(a,b,t)=>[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+const smooth=(e0,e1,x)=>{ const t=Math.max(0,Math.min(1,(x-e0)/(e1-e0))); return t*t*(3-2*t); };
+// esfera deformada: fn(x,y,z unitários) -> {p:[x,y,z], c:[r,g,b]}
+function esferaDeformada(fn, segW, segH, eixoX){
+  const T=THREE, g=new T.SphereGeometry(1, segW, segH); if(eixoX) g.rotateZ(-Math.PI/2);
+  const p=g.attributes.position, cor=[];
+  for(let i=0;i<p.count;i++){ const o=fn(p.getX(i),p.getY(i),p.getZ(i)); p.setXYZ(i,o.p[0],o.p[1],o.p[2]); cor.push(...lin(o.c)); }
+  g.setAttribute('color', new T.Float32BufferAttribute(cor,3)); g.computeVertexNormals(); return g;
+}
+function rep(m,rx,ry){ ['map','bumpMap','roughnessMap'].forEach(k=>{ if(m[k]){ m[k]=m[k].clone(); m[k].needsUpdate=true; m[k].repeat.set(rx,ry); } }); return m; }
+function malha(g,m){ const x=new THREE.Mesh(g,m); x.castShadow=true; x.receiveShadow=true; return x; }
+
+/* pão alongado (francês, baguete): cortes = segmentos [x0,z0,x1,z1] em cm sobre o topo */
+function paoAlongado(o, rnd){
+  const L=o.L/2, R=o.R, H=o.H, ru=ruido3('pao'+rnd()), base=0.22;
+  const CORPO=[0.80,0.55,0.30], TOPO=[0.69,0.42,0.19], FUNDO=[0.86,0.68,0.45], MIOLO=[0.95,0.85,0.64], LABIO=[0.55,0.28,0.09];
+  const g=esferaDeformada((x,y,z)=>{
+    const rho=Math.sqrt(y*y+z*z), k=rho>1e-5?Math.pow(rho,o.ponta??0.72)/rho:0;
+    let yy=y*k, zz=z*k;
+    let px=x*L, py=(yy>0?yy*H:yy*H*base), pz=zz*R;
+    const nn=ru(px,py,pz); py+= (nn-0.5)*0.25*Math.max(0,yy); pz*=1+(nn-0.5)*0.05;
+    let c=mix3(CORPO,TOPO,smooth(0.3,1,yy)); if(yy<0) c=mix3(CORPO,FUNDO,smooth(0,-0.6,yy));
+    const topo=smooth(0.15,0.55,yy);
+    if(topo>0) for(const s of o.cortes){
+      const dx=s[2]-s[0], dz=s[3]-s[1], len=Math.hypot(dx,dz), ux=dx/len, uz=dz/len;
+      const rx=px-s[0], rz=pz-s[1], t=(rx*ux+rz*uz)/len, dp=(-rx*uz+rz*ux)/(o.wc??0.9);
+      if(t<-0.1||t>1.1) continue;
+      const f=Math.pow(Math.max(0,Math.sin(Math.PI*Math.max(0,Math.min(1,t)))),0.6)*topo;
+      const sulco=Math.exp(-Math.pow(dp+0.15,2)*3.2), labio=Math.exp(-Math.pow((dp-0.85)/0.45,2));
+      py += f*(-o.prof*sulco + o.lab*labio);
+      c=mix3(c,MIOLO,f*smooth(0.15,0.7,sulco)*(dp<0.6?1:0.3));
+      c=mix3(c,LABIO,f*labio*0.55);
+    }
+    const j=0.92+0.16*nn; return {p:[px,py+H*base,pz], c:[c[0]*j,c[1]*j,c[2]*j]};
+  }, 96, 48, true);
+  const t=texComida().crosta, m=rep(matComida(t,{fisico:true, clearcoat:0.12, ccr:0.6, bump:0.05}), 2, Math.max(1,Math.round(o.L/8)));
+  return malha(g,m);
+}
+function paoFrances(rnd){ return paoAlongado({L:14.5, R:3.0, H:2.9, prof:0.9, lab:0.65, wc:1.0, cortes:[[-5.2,-0.55,5.2,0.55]]}, rnd); }
+function baguete(rnd, L=34){ const n=Math.max(3,Math.round(L/6.5)), cortes=[];
+  for(let i=0;i<n;i++){ const cx=-L/2*0.78+(i+0.5)*(L*0.78/n); cortes.push([cx-2.6,-0.9,cx+2.6,0.9]); }
+  return paoAlongado({L, R:3.0, H:2.7, ponta:0.6, prof:0.5, lab:0.35, wc:0.7, cortes}, rnd); }
+
+function coxinha(rnd){
+  const ru=ruido3('cox'+rnd()), R=2.6, BASE=[0.86,0.52,0.18], ESC=[0.66,0.34,0.10];
+  const g=esferaDeformada((x,y,z)=>{
+    let s=y<0?1:Math.pow(1-y,0.75)*(1+0.35*y);            // estreita até a ponta
+    let py=y<0?Math.max(y,-0.72)*R*0.95:y*R*1.75;            // base achatada, ponta alta
+    const nn=ru(x*R,py,z*R), w=1+(nn-0.5)*0.08;
+    const c=mix3(BASE,ESC,0.35*smooth(0.2,1,y)+0.25*nn), j=0.9+0.2*nn;
+    return {p:[x*R*s*w, py+0.72*R*0.95, z*R*s*w], c:[c[0]*j,c[1]*j,c[2]*j]};
+  }, 64, 48);
+  const t=texComida().empanado, m=rep(matComida(t,{bump:0.09, env:0.5}),3,2);
+  return malha(g,m);
+}
+function esfiha(rnd){
+  const T=THREE, grp=new T.Group(), R=5.2, ru=ruido3('esf'+rnd());
+  const perf=[[0,0],[R-0.3,0],[R,0.35],[R+0.1,0.8],[R-0.25,1.25],[R-0.8,1.15],[R-1.0,0.75],[0,0.75]].map(p=>new T.Vector2(p[0],p[1]));
+  const g=new T.LatheGeometry(perf,72), p=g.attributes.position, cor=[];
+  for(let i=0;i<p.count;i++){ const x=p.getX(i), y=p.getY(i), z=p.getZ(i), r=Math.hypot(x,z), a=Math.atan2(z,x);
+    const ond=1+0.035*Math.sin(a*5+rnd()*0.01)+(ru(x,y,z)-0.5)*0.06; p.setX(i,x*ond); p.setZ(i,z*ond);
+    const c=mix3([0.90,0.66,0.36],[0.72,0.42,0.16],smooth(R-1.2,R,r)*smooth(0.6,1.25,y)); cor.push(...lin(c)); }
+  g.setAttribute('color', new T.Float32BufferAttribute(cor,3)); g.computeVertexNormals();
+  const tm=texComida().massa; grp.add(malha(g, matComida(tm,{bump:0.03, fisico:true, clearcoat:0.1})));
+  // recheio
+  const rg=new T.CircleGeometry(R-0.95, 64, 0, Math.PI*2); rg.rotateX(-Math.PI/2);
+  const rp=rg.attributes.position, rc=[];
+  for(let i=0;i<rp.count;i++){ const x=rp.getX(i), z=rp.getZ(i), r=Math.hypot(x,z); rp.setY(i, 0.80+0.22*(ru(x*3,0,z*3))*smooth(R-0.95,R-1.6,r)); rc.push(1,1,1); }
+  rg.setAttribute('color', new T.Float32BufferAttribute(rc,3)); rg.computeVertexNormals();
+  const tr=texComida().recheio, mr=rep(matComida(tr,{bump:0.06, rough:0.9}),1.4,1.4);
+  grp.add(malha(rg, mr));
   return grp;
 }
+function hamburguer(rnd){
+  const T=THREE, grp=new T.Group(), ru=ruido3('hb'+rnd());
+  const pao=(topo)=>esferaDeformada((x,y,z)=>{
+      const nn=ru(x*5,y*5,z*5), rad=5.1*(1+(nn-0.5)*0.03), h=topo?3.0:1.5;
+      const py=topo?(y>0?Math.pow(y,0.85)*h:0):h*(1-smooth(0,0.5,-y));
+      const c=topo?mix3([0.86,0.56,0.24],[0.64,0.33,0.10],smooth(0.1,0.9,y)):(y>-0.1?[0.95,0.84,0.62]:[0.86,0.60,0.30]), j=0.92+0.16*nn;
+      return {p:[x*rad, py, z*rad], c:[c[0]*j,c[1]*j,c[2]*j]}; }, 64, 40);
+  const tm=texComida().massa, mp=matComida(tm,{bump:0.03, fisico:true, clearcoat:0.25, ccr:0.4});
+  const base=malha(pao(false), mp); grp.add(base);
+  // carne
+  const gc=new T.CylinderGeometry(5.3,5.3,1.3,64,3); const pc=gc.attributes.position, cc=[];
+  for(let i=0;i<pc.count;i++){ const x=pc.getX(i), y=pc.getY(i), z=pc.getZ(i), a=Math.atan2(z,x), nn=ru(x*4,y*4,z*4), k=1+(nn-0.5)*0.08+0.02*Math.sin(a*7);
+    pc.setX(i,x*k); pc.setZ(i,z*k); pc.setY(i,y*(1+(nn-0.5)*0.2)); cc.push(...lin([0.42,0.24,0.14])); }
+  gc.setAttribute('color', new T.Float32BufferAttribute(cc,3)); gc.computeVertexNormals();
+  const tcar=texComida().carne, carne=malha(gc, matComida(tcar,{bump:0.08, rough:0.95})); carne.position.y=1.5+0.65; grp.add(carne);
+  // queijo (cantos caídos)
+  const gq=new T.BoxGeometry(9.4,0.18,9.4,24,1,24); const pq=gq.attributes.position, cq=[];
+  for(let i=0;i<pq.count;i++){ const x=pq.getX(i), z=pq.getZ(i), r=Math.hypot(x,z); pq.setY(i, pq.getY(i)-Math.pow(Math.max(0,r-5.0),1.6)*0.45); cq.push(...lin([0.98,0.62,0.10])); }
+  gq.setAttribute('color', new T.Float32BufferAttribute(cq,3)); gq.computeVertexNormals();
+  const queijo=malha(gq, new T.MeshPhysicalMaterial({vertexColors:true, roughness:0.45, clearcoat:0.3, clearcoatRoughness:0.35, sheen:0})); queijo.position.y=2.95; queijo.rotation.y=0.5; grp.add(queijo);
+  // alface franzida
+  const ga=new T.RingGeometry(0.5,5.9,96,6); ga.rotateX(-Math.PI/2); const pa=ga.attributes.position, ca=[];
+  for(let i=0;i<pa.count;i++){ const x=pa.getX(i), z=pa.getZ(i), r=Math.hypot(x,z), a=Math.atan2(z,x), f=smooth(4.6,5.9,r);
+    pa.setY(i, f*(0.35*Math.sin(a*11+ru(x,0,z)*6)-0.15)); const c=mix3([0.22,0.42,0.09],[0.48,0.66,0.20],f); ca.push(...lin(c)); }
+  ga.setAttribute('color', new T.Float32BufferAttribute(ca,3)); ga.computeVertexNormals();
+  const alface=malha(ga, new T.MeshStandardMaterial({vertexColors:true, roughness:0.55, side:T.DoubleSide})); alface.position.y=3.15; grp.add(alface);
+  // pão de cima + gergelim
+  const topo=malha(pao(true), mp); topo.position.y=3.35; grp.add(topo);
+  const R=rngSeed('gerg'+rnd()), n=70, ges=new T.InstancedMesh(new T.SphereGeometry(1,10,6), new T.MeshStandardMaterial({color:0xf2e2b8, roughness:0.5}), n);
+  const mtx=new T.Matrix4(), q=new T.Quaternion(), e=new T.Euler();
+  for(let i=0;i<n;i++){ const u=R()*Math.PI*2, v=Math.acos(1-R()*0.85); // calota de cima
+    const x=Math.sin(v)*Math.cos(u), z=Math.sin(v)*Math.sin(u), y=Math.cos(v), py=3.35+Math.pow(y,0.85)*3.0;
+    e.set(Math.atan2(z, y)*0.9, R()*6.3, -Math.atan2(x, y)*0.9); q.setFromEuler(e);
+    mtx.compose(new T.Vector3(x*5.1, py+0.02, z*5.1), q, new T.Vector3(0.22,0.07,0.12)); ges.setMatrixAt(i,mtx); }
+  ges.castShadow=true; grp.add(ges);
+  return grp;
+}
+function batataFrita(rnd, len){
+  const ru=ruido3('bt'+rnd()), tom=0.9+rnd()*0.15, s=0.42+rnd()*0.08, curva=(rnd()-0.5)*0.5;
+  const g=esferaDeformada((x,y,z)=>{
+    const sg=v=>Math.sign(v)*Math.pow(Math.abs(v),0.28);                // quase caixa, cantos arredondados
+    const px=sg(x)*s, py=sg(y)*s, pz=sg(z)*len/2, nn=ru(px*6,py*6,pz*2);
+    const ponta=smooth(len*0.38,len*0.5,Math.abs(pz)), c=mix3([0.95*tom,0.72*tom,0.32*tom],[0.72,0.45,0.15],ponta*0.7+(nn-0.5)*0.4);
+    return {p:[px+curva*Math.pow(pz/(len/2),2), py+s, pz], c};
+  }, 24, 24);
+  const t=texComida().massa, m=matComida(t,{bump:0.02, fisico:true, clearcoat:0.35, ccr:0.35});
+  return malha(g,m);
+}
+function amendoim(rnd){
+  const ru=ruido3('am'+rnd()), L=1.6+rnd()*0.4, R=0.62;
+  const g=esferaDeformada((x,y,z)=>{
+    const cint=(1-0.30*Math.exp(-Math.pow(x/0.16,2)))*(1+0.06*Math.cos(x*Math.PI*2)), nn=ru(x*8,y*8,z*8), k=cint*(1+(nn-0.5)*0.1);
+    const c=mix3([0.78,0.60,0.38],[0.62,0.45,0.26],nn); return {p:[x*L, y*R*k+R*0.92, z*R*k], c};
+  }, 40, 24, true);
+  const t=texComida().casca, m=matComida(t,{bump:0.06, rough:0.95}); return malha(g,m);
+}
+function talheres(rnd){
+  const T=THREE, grp=new T.Group();
+  // guardanapo dobrado
+  const gg=new T.BoxGeometry(12,0.35,12,20,1,20), pg=gg.attributes.position, ru=ruido3('gd');
+  for(let i=0;i<pg.count;i++){ const x=pg.getX(i), z=pg.getZ(i); pg.setY(i, pg.getY(i)+(ru(x,0,z)-0.5)*0.25+0.17); }
+  gg.computeVertexNormals();
+  const tp=texComida().papel, gd=malha(gg, new T.MeshStandardMaterial({map:tp.map, bumpMap:tp.bump, bumpScale:0.04, roughness:0.95, color:0xffffff})); gd.rotation.y=0.12; grp.add(gd);
+  const inox=new T.MeshStandardMaterial({color:0xa9adb5, metalness:1, roughness:0.32, envMapIntensity:1.0});
+  const ext=(sh,esp)=>{ const g=new T.ExtrudeGeometry(sh,{depth:esp, bevelEnabled:true, bevelThickness:0.05, bevelSize:0.05, bevelSegments:2, curveSegments:16}); g.rotateX(Math.PI/2); return g; };
+  // faca
+  const fk=new T.Shape(); fk.moveTo(-0.45,-9.5); fk.lineTo(0.45,-9.5); fk.quadraticCurveTo(0.55,-2.5,0.4,-0.5); fk.lineTo(0.55,0); fk.lineTo(0.75,8.5); fk.quadraticCurveTo(0.2,10.6,-0.55,10.2); fk.lineTo(-0.4,0); fk.quadraticCurveTo(-0.6,-2.5,-0.45,-9.5);
+  const faca=malha(ext(fk,0.18),inox); faca.position.set(2.1,0.55,0); faca.rotation.y=0.05; grp.add(faca);
+  // garfo
+  const gs=new T.Shape(); gs.moveTo(-0.5,-9.5); gs.lineTo(0.5,-9.5); gs.quadraticCurveTo(0.45,-2,0.32,1.5); gs.quadraticCurveTo(1.1,3,1.05,5.2);
+  for(let i=0;i<4;i++){ const x1=1.05-i*0.7; gs.lineTo(x1,9.6); gs.lineTo(x1-0.32,9.6); gs.lineTo(x1-0.36,5.6); if(i<3) gs.lineTo(x1-0.38,5.6); }
+  gs.lineTo(-1.05,9.6); gs.lineTo(-1.05,5.2); gs.quadraticCurveTo(-1.1,3,-0.32,1.5); gs.quadraticCurveTo(-0.45,-2,-0.5,-9.5);
+  const garfo=malha(ext(gs,0.16),inox); garfo.position.set(-1.6,0.55,0); garfo.rotation.y=-0.04; grp.add(garfo);
+  return grp;
+}
+
+/* posicionamento sem colisão: cada item tem círculos (cx,cz,r) em coordenadas locais */
+function posiciona(itens, W, D, seed){
+  const rnd=rngSeed(seed), postos=[], folga=1.2, hw=W/2+1.5, hd=Math.max(D,1)/2+1.5;
+  const circ=(it,x,z,ry)=>it.circ.map(([cx,cz,r])=>[x+cx*Math.cos(ry)+cz*Math.sin(ry), z-cx*Math.sin(ry)+cz*Math.cos(ry), r]);
+  const livre=(cs)=>cs.every(([x,z,r])=>{ const dx=Math.max(0,Math.abs(x)-hw), dz=Math.max(0,Math.abs(z)-hd); if(Math.hypot(dx,dz)<r) return false;
+    return postos.every(p=>p.every(([x2,z2,r2])=>Math.hypot(x-x2,z-z2)>=r+r2+folga)); });
+  itens.forEach(it=>{
+    const pref=it.lado==='esq'?[Math.PI-0.15,Math.PI+0.35,Math.PI-0.6,Math.PI+0.8,0.1,-0.3]:[0.15,-0.35,0.6,-0.8,Math.PI-0.1,Math.PI+0.3];
+    let ok=null;
+    for(let d=0; d<60 && !ok; d+=0.5) for(const a of pref){ const ry=it.ry+(rnd()-0.5)*0.15;
+      const x=Math.cos(a)*(hw+d)+(it.dx||0), z=Math.sin(a)*(hd+d)+(it.dz||0), cs=circ(it,x,z,ry); if(livre(cs)){ ok={x,z,ry,cs}; break; } }
+    if(!ok) return;
+    it.obj.position.x=ok.x; it.obj.position.z=ok.z; it.obj.rotation.y=ok.ry; postos.push(ok.cs);
+  });
+}
+function cardapio(){ // o que vai ao lado de cada faca
+  const f=GAB.faca||'', cat=GAB.categoria||'pao';
+  if(cat==='pao'){ const grande=['f3','f5','f75','f10','f15'].includes(f);
+    return grande?['baguete','frances','frances']:['frances','frances']; }
+  if(cat==='lanche'){ if(f.startsWith('fbat')) return ['batatas'];
+    if(f==='fhb'||f==='fham') return ['hamburguer'];
+    if(f==='fsem') return ['amendoins'];
+    return ['coxinha','coxinha','coxinha']; }
+  if(cat==='envelope') return f==='e1725'?['baguete_curta','coxinha']:['esfiha','esfiha','coxinha'];
+  if(cat==='talher') return ['talheres'];
+  return [];
+}
 function adicionaComida(scene){
-  const W=GAB.paineis.frente.w, D=GAB.paineis.sanfona_esq.w;
-  const p1=paoFrances(); p1.position.set(W/2+8, 2.6*0.35, -1); p1.rotation.y=-1.1; scene.add(p1);
-  const p2=paoFrances(); p2.position.set(W/2+13, 2.6*0.35, 6); p2.rotation.y=-0.4; p2.scale.setScalar(0.92); scene.add(p2);
-  const bt=batatas(); bt.position.set(-W/2-9, 0, 2); bt.rotation.y=0.4; scene.add(bt);
-  return [p1,p2,bt];
+  const W=GAB.paineis.frente.w, D=GAB.paineis.sanfona_esq.w||0.6, rnd=rngSeed(GAB.faca||'x'), itens=[], objs=[];
+  let lado=0; const proxLado=()=>(lado++%2)?'esq':'dir';
+  const add=(obj,circ,ry,l)=>{ itens.push({obj,circ,ry,lado:l||proxLado()}); objs.push(obj); scene.add(obj); };
+  const longo=(L,R)=>{ const n=Math.max(2,Math.ceil(L/(R*1.6))), c=[]; for(let i=0;i<n;i++) c.push([-L/2+R+(i*(L-2*R)/(n-1)),0,R]); return c; };
+  cardapio().forEach(k=>{
+    if(k==='frances') add(paoFrances(rnd), longo(14.5,3.0), 1.25+rnd()*0.5);
+    else if(k==='baguete') add(baguete(rnd,34), longo(34,3.0), 1.45, 'dir');
+    else if(k==='baguete_curta') add(baguete(rnd,22), longo(22,3.0), 1.4);
+    else if(k==='coxinha') add(coxinha(rnd), [[0,0,2.7]], rnd()*6);
+    else if(k==='esfiha') add(esfiha(rnd), [[0,0,5.4]], rnd()*6);
+    else if(k==='hamburguer') add(hamburguer(rnd), [[0,0,5.9]], 0.3, 'dir');
+    else if(k==='talheres') add(talheres(rnd), [[0,-3.5,6.2],[0,3.5,6.2]], 0.25, 'dir');
+    else if(k==='amendoins'){ for(let i=0;i<6;i++) add(amendoim(rnd), [[-0.75,0,0.6],[0.75,0,0.6]], rnd()*6, 'dir'); }
+    else if(k==='batatas'){ // montinho: camada no chão sem cruzar + camada de cima apoiada
+      const grp=new THREE.Group();
+      const segDist=(A,B)=>{ let m=9; for(let i=0;i<=8;i++){ const t=i/8, px=A[0]+(A[2]-A[0])*t, pz=A[1]+(A[3]-A[1])*t;
+        for(let j=0;j<=8;j++){ const u=j/8; m=Math.min(m,Math.hypot(px-(B[0]+(B[2]-B[0])*u), pz-(B[1]+(B[3]-B[1])*u))); } } return m; };
+      [[8,0],[5,0.95],[3,1.9]].forEach(([n,y],cam)=>{ const segs=[];
+        for(let i=0,tent=0;i<n&&tent<300;tent++){ const len=6+rnd()*3.5, ang=rnd()*Math.PI, r=rnd()*(3-cam), a0=rnd()*6.3;
+          const cx=Math.cos(a0)*r, cz=Math.sin(a0)*r, hx=Math.sin(ang)*len/2, hz=Math.cos(ang)*len/2, sg=[cx-hx,cz-hz,cx+hx,cz+hz];
+          if(segs.some(o=>segDist(o,sg)<1.0)) continue;
+          segs.push(sg); const bt=batataFrita(rnd,len); bt.rotation.y=ang; bt.position.set(cx,y,cz); grp.add(bt); i++; } });
+      add(grp, [[0,0,7.6]], 0, 'dir');
+    }
+  });
+  posiciona(itens, W, D, 'pos'+(GAB.faca||''));
+  return objs;
+}
+function removeComida(scene, objs){
+  (objs||[]).forEach(o=>{ scene.remove(o); o.traverse(m=>{ if(m.isMesh){ m.geometry.dispose(); [].concat(m.material).forEach(mt=>mt.dispose()); } }); });
 }
 
 let P3_comida=null, contatoAjusta=null;
@@ -1444,7 +1678,7 @@ function produto(){
 }
 async function produtoAtualiza(){
   const T=P3.T, gen=++P3.gen; P3.alvo.set(0, ymax*0.47, 0);
-  if(P3_comida){ P3_comida.forEach(o=>P3.scene.remove(o)); P3_comida=adicionaComida(P3.scene); }
+  if(P3_comida){ removeComida(P3.scene,P3_comida); P3_comida=adicionaComida(P3.scene); }
   contatoAjusta && contatoAjusta();
   const tx = await texturasSaco(); if(gen!==P3.gen) return;
   const mk=(c,srgb)=>{ const t=new T.CanvasTexture(c); t.anisotropy=8; if(srgb) t.encoding=T.sRGBEncoding; return t; };
