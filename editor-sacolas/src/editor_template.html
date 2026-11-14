@@ -33,6 +33,8 @@ select{cursor:pointer}
 #top #modo{width:auto;background:linear-gradient(#ffffff,#eef2f7);box-shadow:var(--sh);border-radius:10px}
 #top .grow{flex:1}
 #main{display:grid;grid-template-columns:auto auto 1fr auto auto;min-height:0}
+#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check{grid-column:4} #main>.tabs.right{grid-column:5}
+#main>*{grid-row:1}
 .tabs{display:flex;flex-direction:column;gap:8px;padding:12px 6px;background:var(--surf2);border-right:1px solid var(--line)}
 .tabs.right{border-right:none;border-left:1px solid var(--line)}
 .tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;width:52px;font-size:18px}
