@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 20:30)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 22:00)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -70,7 +70,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
   - **Layout**: ≤1500 px botões do topo só com ícone; ≤1180 px topo numa linha com rolagem; **≤700 px (celular)** abas viram barra de baixo, painéis viram folha deslizante (58vh), ferramentas em faixa horizontal, zoom no canto superior.
 - **Produto final (14-11 noite):** montagem ~3× mais rápida — texturas de comida sob demanda (getters em `TXCOM`) com Worley em grade (9,3 s → 1,3 s para as 7); textura do saco limitada a ~2,2 Mpx, 3 rasterizações em paralelo e máscaras/ruído kraft em cache por faca (`CACHE_MASCARA`). Envelope/sem sanfona: amassado zera nas bordas e só empurra "para fora" (frente não cruza o verso). Grade de 1 cm no chão (linha forte a cada 10 cm) + legenda `#prodgrade`. Botão laranja **📸 Ver produto final** na barra das sacolas (`#verProduto`, vira "✏️ Voltar a editar").
 - **Ajustes simplificado (14-11 noite):** parte de cima para leigo — "Fica no" (Frente/Verso/Lateral), texto grande + "Quebrar em 2 linhas/Juntar" + alinhamento em ícones + Letra, Tamanho A−/A+ (±10% pelo centro, mostra altura das letras em mm ou medida em cm), Posição (Meio largura respeitando emenda, Meio altura, Girar 90°), Cor em bolinhas da paleta + papel + Nova cor, Ordem (cima/baixo), Duplicar/Apagar. Campos técnicos (Nome, X/Y, Escala, Rotação, Corpo pt, Entrelinha, Largura, Contorno) em `<details class="avanc">` "⚙️ Mais opções" (estado lembrado em `AJ_AVANC`). Ajustes abre sozinho ao clicar num item (só > 700 px e se nenhuma gaveta direita estiver aberta).
-- **Backlog da rodada de testes (14-11)**: ver `TESTE-UX-2026-11-14.md` (bugs abertos, decisões do Leo, UX por impacto).
+- **Rodadas de teste 1 e 2 (14-11)**: ver `TESTE-UX-2026-11-14.md` (comparativo, tudo que foi corrigido, o que segue aberto). Destaques técnicos da rodada 2: `SYNC_OFF` (renders de medição não podem `sincroniza()`), aplicar-nas-outras relativo (`b.layoutAntes`), `NUVEM_SNAP`/`seloSalvo()`/`confirmaPerda()`, `commit` chama `atualizaSacolas()`, `toggleDrawer` preserva a posição da arte na tela, build checa JS com `node --check`.
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Decisão aberta do Leo: barra do topo azul escura como a da loja?
 

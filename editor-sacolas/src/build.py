@@ -27,6 +27,8 @@ open(os.path.join(AQUI, '..', 'index.html'), 'w', encoding='utf-8').write(gh)
 for f in ['dist/artifact.html', '../index.html']:
     s = open(os.path.join(AQUI, f), encoding='utf-8').read()
     js = s.split('<script>')[1].split('</script>')[0]
-    r = subprocess.run(['node', '-e', 'new Function(require("fs").readFileSync(0,"utf8"))'], input=js, text=True, capture_output=True)
+    import tempfile
+    with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as tf: tf.write(js)
+    r = subprocess.run(['node', '--check', tf.name], text=True, capture_output=True)
     print(('OK   ' if r.returncode == 0 else 'ERRO ') + f + ('' if r.returncode == 0 else '\n' + r.stderr[-800:]))
     if r.returncode: sys.exit(1)

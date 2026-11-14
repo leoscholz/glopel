@@ -176,8 +176,8 @@ button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-de
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #voltaloja{padding:7px 11px}
 #center{display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:0}
-#sacbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);overflow-x:auto}
-#sacolas{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px} #conferir,#verProduto{flex-shrink:0}
+#sacbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--line);overflow-x:auto}
+#sacolas{display:flex;gap:8px;flex:1 1 260px;min-width:0;overflow-x:auto;padding:2px} #conferir,#verProduto{flex-shrink:0}
 #sacbar{overflow:hidden}
 .sac{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 8px;text-align:left;font-weight:500;white-space:nowrap}
 .sac .t{display:flex;flex-direction:column;line-height:1.25}
@@ -231,7 +231,7 @@ button{user-select:none;-webkit-user-select:none}
 #stage.prodmode #tools,#stage.prodmode #zoom{display:none}
 #prodcanvas{position:absolute;inset:0;cursor:grab}
 #prodcanvas canvas{display:block}
-#prodgrade{position:absolute;left:12px;top:12px;background:rgba(247,249,252,.88);padding:6px 10px;border-radius:10px;font-size:12.5px;color:var(--ink);box-shadow:var(--sh);pointer-events:none;z-index:3}
+#prodgrade{position:absolute;left:12px;bottom:64px;background:rgba(247,249,252,.88);padding:6px 10px;border-radius:10px;font-size:12.5px;color:var(--ink);box-shadow:var(--sh);pointer-events:none;z-index:3}
 #verProduto{background:linear-gradient(135deg,#ffb347,#ff7a59);color:#fff;border:none;font-weight:700;padding:8px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(255,122,89,.45);white-space:nowrap}
 #verProduto:hover{filter:brightness(1.05)}
 #verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
@@ -283,6 +283,8 @@ button{user-select:none;-webkit-user-select:none}
   #top{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px;gap:6px;scrollbar-width:none}
   #top::-webkit-scrollbar{display:none}
   #top .brand{display:none}
+  #top #voltaloja{order:-2} #top #export{order:-1}
+  #top{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
   #top button,#top select{padding:6px 9px;font-size:12.5px;flex-shrink:0}
   #main{grid-template-columns:1fr}
   #main>#center{grid-column:1;padding-bottom:56px}
@@ -299,7 +301,7 @@ button{user-select:none;-webkit-user-select:none}
   #zoom button{padding:5px 9px}
   #sacbar{padding:6px 8px;gap:6px}
   #sacbar #conferir,#sacbar #verProduto{font-size:12px;padding:7px 9px;white-space:nowrap}
-  #prodgrade{font-size:11px;top:54px}
+  #prodgrade{font-size:11px;bottom:auto;top:54px}
   #faixa{left:8px;right:8px;transform:none;bottom:84px;flex-wrap:wrap;font-size:12.5px}
   #toast{bottom:70px;max-width:calc(100% - 24px)}
   #hovnome{display:none!important}
@@ -315,11 +317,11 @@ button{user-select:none;-webkit-user-select:none}
 .aj-bts button{flex:1;padding:8px 6px;font-size:13px;white-space:nowrap}
 .aj-bts button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .aj-bts.grande button{padding:11px 6px;font-size:15px;font-weight:700}
-.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.swb{width:34px;height:34px;border-radius:50%;padding:0;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
-.swb.on{box-shadow:0 0 0 3px var(--acc)}
-.swb.papel{background:repeating-linear-gradient(45deg,#d8b98f 0 4px,#ead6b8 4px 8px)}
-.swn{padding:7px 10px;font-size:12.5px}
+.ajsw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ajbol{width:34px;height:34px;border-radius:50%;padding:0;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.ajbol.on{box-shadow:0 0 0 3px var(--acc)}
+.ajbol.papel{background:repeating-linear-gradient(45deg,#d8b98f 0 4px,#ead6b8 4px 8px)}
+.ajnova{padding:7px 10px;font-size:12.5px}
 details.avanc{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
 details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4px 0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
@@ -507,7 +509,15 @@ function nomeAmigavel(c){ if(!c) return ''; if(c.nome) return c.nome;
   if(c.tipo==='vetor'){ const b=String(c.id).replace(/(_copia)?(_\d+)*$/,'').replace(/_/g,' '); return (BANCO[b.replace(/ /g,'_')]?BANCO[b.replace(/ /g,'_')].nome:'Desenho: '+b); }
   if(c.tipo==='meiotom') return 'Foto' + (ASSETS[c.asset]&&ASSETS[c.asset].nome?': '+corta(ASSETS[c.asset].nome):'');
   return ({retangulo:'Retângulo', elipse:'Círculo', linha:'Linha', grupo:`Pasta (${(c.filhos||[]).length})`})[c.tipo] || c.id; }
-const nomeDeId = id => { const c=layer(id); return c?nomeAmigavel(c):(id==='paleta'?'Cores':id); };
+const nomeDeId = id => { const c=layer(id); return c?nomeAmigavel(c):(String(id).startsWith('paleta')?'Cores':id); };
+// nome da cor em português a partir do tom (para quem não sabe o que é PANTONE)
+function nomeCor(p){ const hx=cmyk2hex(p.cmyk), [r,g,b]=hex2rgb(hx).map(v=>v/255), mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, d=mx-mn;
+  let nome; if(l<0.13) nome='Preto'; else if(d<0.08) nome = l>0.85?'Branco':'Cinza';
+  else { let h = mx===r ? ((g-b)/d)%6 : mx===g ? (b-r)/d+2 : (r-g)/d+4; h=(h*60+360)%360; const esc_=l<0.38, cl=l>0.72;
+    if(h<15||h>=345) nome = esc_?'Vinho':cl?'Rosa':'Vermelho'; else if(h<40) nome = esc_?'Marrom':cl?'Pêssego':'Laranja'; else if(h<52) nome = esc_?'Marrom':'Dourado';
+    else if(h<70) nome='Amarelo'; else if(h<160) nome = esc_?'Verde escuro':cl?'Verde claro':'Verde'; else if(h<200) nome = cl?'Verde-água':'Turquesa';
+    else if(h<255) nome = esc_?'Azul-marinho':cl?'Azul claro':'Azul'; else if(h<290) nome='Roxo'; else nome = cl?'Rosa':'Magenta'; }
+  return `${nome} (${p.pantone.replace('PANTONE ','')})`; }
 let M = GAB.regras.margem_seguranca_cm;
 let ymin = Math.min(...GAB.contorno.map(p=>p[1])), ymax = Math.max(...GAB.contorno.map(p=>p[1]));
 let xmin = Math.min(...GAB.contorno.map(p=>p[0])), xmax = Math.max(...GAB.contorno.map(p=>p[0]));
@@ -602,7 +612,7 @@ function render(){
   { const tira=GAB.areas_cola.find(a=>a.y>=0), c1=GAB.areas_cola.find(a=>a.y<0);
     if(tira){ const lx=tira.x+tira.w/2, ly=-(tira.y+tira.h/2); s += `<text x="${lx}" y="${ly}" font-size="0.4" fill="#e5007e" font-family="Inter" transform="rotate(-90 ${lx} ${ly})" text-anchor="middle">ÁREA DE COLA</text>`; }
     s += `<text x="${c1.x+c1.w/2}" y="${-(c1.y+c1.h*0.35)}" font-size="0.4" fill="#e5007e" font-family="Inter" text-anchor="middle">ÁREA DE COLA</text></g>`; }
-  s += `<g id="selbox"></g>`;
+  s += `<g id="probs"></g><g id="selbox"></g>`;
   svg.innerHTML = s;
   { const cl=$('chapalabel'); if(modo.startsWith('sep:') && arte.paleta[modo.slice(4)]){ const p=arte.paleta[modo.slice(4)]; cl.style.display='block'; cl.style.color=cmyk2hex(p.cmyk); cl.textContent='Chapa: '+p.pantone; } else cl.style.display='none'; }
   const mk = modo==='mockup'; $('stage').classList.toggle('mockmode', mk); if(mk) mockup();
@@ -649,7 +659,7 @@ function desenhaSel(){
     if(u){
       const X0=u.x0+off, X1=u.x1+off, Y0=u.y0+p.y, Y1=u.y1+p.y;
       if(ls.length>1) h += `<rect x="${X0}" y="${-Y1}" width="${X1-X0}" height="${Y1-Y0}" fill="none" stroke="#2563eb" stroke-width="0.05" stroke-dasharray="0.2 0.12" pointer-events="none"/>`;
-      [[X0,Y0],[X1,Y0],[X0,Y1],[X1,Y1]].forEach(([x,y])=>{ if(x>=p.x-0.01 && x<=p.x+p.w+0.01) h += `<rect class="handle" data-handle="1" x="${x-0.18}" y="${-y-0.18}" width="0.36" height="0.36"/>`; });
+      [[X0,Y0],[X1,Y0],[X0,Y1],[X1,Y1]].forEach(([x,y])=>{ if(x>=p.x-0.01 && x<=p.x+p.w+0.01) { const r=svg.getBoundingClientRect(), px=view.w/(r.width||1), hs=Math.max(0.36, (matchMedia('(pointer:coarse)').matches?22:12)*px); h += `<rect class="handle" data-handle="1" x="${x-hs/2}" y="${-y-hs/2}" width="${hs}" height="${hs}" style="stroke-width:${Math.max(0.04,1.5*px)}"/>`; } });
     }
   }
   guias.forEach(gd=>{ h += `<line x1="${gd.x1}" y1="${-gd.y1}" x2="${gd.x2}" y2="${-gd.y2}" stroke="#ff2d87" stroke-width="${gd.forte?0.05:0.03}" pointer-events="none"/>`; });
@@ -801,7 +811,8 @@ svg.addEventListener('pointerdown', e=>{
     if(ls.length && mesmoPainel(ls)){
       const pt = GAB.paineis[ls[0].painel].partes[0], u = uniaoPainel(ls), off = pt.x-pt.px;
       if(u && p.x>=u.x0+off && p.x<=u.x1+off && -p.y>=u.y0+pt.y && -p.y<=u.y1+pt.y){
-        drag = {k:'mov', cs:ls, sx:p.x, sy:-p.y, snap:ls.map(x=>JSON.stringify(x)), box:u, alvos:alvosSnap(ls[0].painel, ls), painel:ls[0].painel};
+        drag = {k:'mov', cs:ls, sx:p.x, sy:-p.y, snap:ls.map(x=>JSON.stringify(x)), box:u, alvos:alvosSnap(ls[0].painel, ls), painel:ls[0].painel, c0:ls.map(x=>{ const b=bboxPainel(x); return b?[(b.x0+b.x1)/2,(b.y0+b.y1)/2]:null; })};
+        $('stage').classList.add('movendo');
         svg.setPointerCapture(e.pointerId); return;
       }
     }
@@ -818,7 +829,6 @@ svg.addEventListener('pointerdown', e=>{
   if(duplo && c.tipo==='meiotom'){ e.preventDefault(); editorMeiotom(c); return; }
   if(e.shiftKey || e.metaKey || e.ctrlKey){ toggleSel(c.id); render(); return; }
   if(!sels.includes(c.id)) setSel(c.id); else sel = c.id;
-  if(innerWidth>700 && !document.querySelector('.drawer.right.open')) toggleDrawer('d-ajustes', true);   // abre Ajustes sozinho ao clicar num item
   if(c.bloqueado){ render(); return; }
   if(tool==='escalar'){ drag = iniciaEscala(p); }
   else {
@@ -859,10 +869,10 @@ svg.addEventListener('pointermove', e=>{
   }
   if(drag.k==='mov'){
     let dx = p.x-drag.sx, dy = -p.y-drag.sy; guias = [];
-    const trocaPainel = drag.cs.some((c,i)=>drag.c0[i] && painelSob(JSON.parse(drag.snap[i]).painel, drag.c0[i][0]+dx, drag.c0[i][1]+dy));
+    const trocaPainel = drag.cs.some((c,i)=>drag.c0 && drag.c0[i] && painelSob(JSON.parse(drag.snap[i]).painel, drag.c0[i][0]+dx, drag.c0[i][1]+dy));
     if(drag.box && !e.altKey && !trocaPainel){ const r = resolveSnap(drag.box, dx, dy, drag.alvos, drag.painel); dx=r.dx; dy=r.dy; guias=r.G; }
     drag.cs.forEach((c,i)=>{ Object.keys(c).forEach(k=>delete c[k]); Object.assign(c, JSON.parse(drag.snap[i])); mover(c, dx, dy);
-      if(drag.c0[i]) reatribuiPainel(c, drag.c0[i][0]+dx, drag.c0[i][1]+dy); });
+      if(drag.c0 && drag.c0[i]) reatribuiPainel(c, drag.c0[i][0]+dx, drag.c0[i][1]+dy); });
   }
   if(drag.k==='esc'){
     const d = Math.hypot(p.x-(drag.cx+drag.off), -p.y-(drag.cy+drag.oy)); if(drag.d0<0.05) return;
@@ -887,7 +897,9 @@ svg.addEventListener('pointerup', ()=>{
   }
   guias = [];
   if(drag.cs){ drag.cs.forEach(arred); commit(); }
+  const abreAj = drag.k==='mov' && sels.length===1 && innerWidth>700 && !document.querySelector('.drawer.right.open');
   drag=null; render();
+  if(abreAj) toggleDrawer('d-ajustes', true);   // abre Ajustes ao soltar, sem a arte pular
 });
 svg.addEventListener('wheel', e=>{
   e.preventDefault(); const p=toSVG(e.clientX,e.clientY), f = e.deltaY>0?1.12:1/1.12;
@@ -940,7 +952,7 @@ function paleta(){
   const k = Object.keys(arte.paleta), max = GAB.regras.max_cores;
   $('ncores').textContent = `${k.length}/${max}`;
   const usadas = design ? coresUsadas() : new Set();
-  $('pal').innerHTML = k.map(n=>`<button class="sw swb" data-k="${n}" title="Clique para trocar esta cor"><i style="background:${cmyk2hex(arte.paleta[n].cmyk)}"></i><div><b style="color:${cmyk2hex(arte.paleta[n].cmyk)}">${esc(arte.paleta[n].pantone)}</b><div style="color:var(--mute);font-size:11px">${usadas.has(n)?'em uso · clique para trocar':'sem uso · clique para trocar ou remover'}</div></div></button>`).join('') +
+  $('pal').innerHTML = k.map(n=>`<button class="sw swb" data-k="${n}" title="Clique para trocar esta cor"><i style="background:${cmyk2hex(arte.paleta[n].cmyk)}"></i><div><b style="color:${cmyk2hex(arte.paleta[n].cmyk)}">${esc(nomeCor(arte.paleta[n]))}</b><div style="color:var(--mute);font-size:11px">${usadas.has(n)?'em uso · clique para trocar':'sem uso · clique para trocar ou remover'}</div></div></button>`).join('') +
     `<div class="sw"><i style="background:${KRAFT}"></i><div><b>Papel (sem tinta)</b><div style="color:var(--mute);font-size:11px">mostra o papel — não conta como cor</div></div></div>` +
     `<div style="padding:6px 14px 4px"><button id="addCor" class="${k.length<max?'pri':''}" style="width:100%">＋ Adicionar cor ${k.length<max?`(${max-k.length} livre${max-k.length>1?'s':''})`:'(limite atingido)'}</button></div>`;
   $('pal').querySelectorAll('.swb').forEach(b=>b.onclick=()=>editarCor(b.dataset.k));
@@ -966,13 +978,14 @@ function props(){
   }
   const c = sel && layer(sel);
   if(!c){ P.innerHTML = `<div class="empty">👆 Clique em qualquer parte da arte para ajustar aqui: posição, tamanho, cor, texto…</div>`; return; }
+  if(c.bloqueado){ P.innerHTML = `<div class="aj-tit">🔒 <b>${esc(nomeAmigavel(c))}</b></div><div class="hint" style="margin:6px 0 10px">Este item está <b>travado</b>: não dá para mover nem mudar.</div><button id="destrava" class="pri" style="width:100%">🔓 Destravar</button>`; $('destrava').onclick=()=>{ c.bloqueado=false; commit(); render(); }; return; }
   const cores = ['', ...Object.keys(arte.paleta), 'papel'];
   const opt = v => cores.map(k=>`<option value="${k}" ${k===(v||'')?'selected':''}>${k?esc(k==='papel'?'papel (sem tinta)':arte.paleta[k].pantone):'— nenhuma —'}</option>`).join('');
   // ---- parte simples (leigo) ----
   const NOMEP={frente:'Frente', verso:'Verso', sanfona_esq:'Lateral esquerda', sanfona_dir:'Lateral direita'};
   const ehTxt=c.tipo==='texto', b0=bboxPainel(c);
   const medida = ehTxt ? `letras com ~${Math.max(1,Math.round((c.tamanho_pt||12)*(c.escala||1)*PT_CM*10*0.72))} mm de altura` : (b0?`~${((b0.x1-b0.x0)).toFixed(1).replace('.',',')} × ${((b0.y1-b0.y0)).toFixed(1).replace('.',',')} cm`:'');
-  const swatches = (c.tipo!=='vetor' && c.tipo!=='meiotom' && c.tipo!=='grupo') ? `<div class="sw">${Object.keys(arte.paleta).map(k=>`<button class="swb${c.cor===k?' on':''}" data-cor="${k}" title="${esc(arte.paleta[k].pantone)}" style="background:${cmyk2hex(arte.paleta[k].cmyk)}"></button>`).join('')}<button class="swb papel${c.cor==='papel'?' on':''}" data-cor="papel" title="Sem tinta (cor do papel)"></button><button class="swn" data-cor="__nova">＋ Nova cor</button></div>` : '';
+  const swatches = (c.tipo!=='vetor' && c.tipo!=='meiotom' && c.tipo!=='grupo') ? `<div class="ajsw">${Object.keys(arte.paleta).map(k=>`<button class="ajbol${c.cor===k?' on':''}" data-cor="${k}" title="${esc(arte.paleta[k].pantone)}" style="background:${cmyk2hex(arte.paleta[k].cmyk)}"></button>`).join('')}<button class="ajbol papel${c.cor==='papel'?' on':''}" data-cor="papel" title="Sem tinta (cor do papel)"></button><button class="ajnova" data-cor="__nova">＋ Nova cor</button></div>` : '';
   let simples = `<div class="aj-tit">${ICO[c.tipo]||'•'} <b>${esc(nomeAmigavel(c))}</b></div>
     <div class="row"><label>Fica no</label><select data-k="painel">${PAINEIS.map(p=>`<option value="${p}" ${p===c.painel?'selected':''}>${NOMEP[p]||p}</option>`).join('')}</select></div>`;
   if(ehTxt) simples += `<div class="aj-sec">O que está escrito</div><textarea data-k="texto" rows="2" class="aj-txt">${esc(c.texto)}</textarea>
@@ -996,9 +1009,9 @@ function props(){
   if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.h}"></div></div>`;
   if(c.tipo==='vetor'||c.tipo==='meiotom'){
     h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div><!--vet-->`;
-    if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Vazado (furo)</option>`].join('');
+    if(c.tipo==='vetor'){ const bol=(h0,v)=>`<div class="ajsw">${Object.keys(arte.paleta).map(k=>`<button class="ajbol${k===v?' on':''}" data-mapk="${h0}" data-mapv="${k}" title="${esc(nomeCor(arte.paleta[k]))}" style="background:${cmyk2hex(arte.paleta[k].cmyk)}"></button>`).join('')}<button class="ajbol papel${v==='papel'?' on':''}" data-mapk="${h0}" data-mapv="papel" title="Sem tinta (aparece o papel)"></button></div>`;
       const orig = Object.keys(c.mapa||{}).filter(h0=>(c.svg||'').includes(`="${h0}"`));
-      h += orig.map((h0,i)=>`<div class="row"><label>${orig.length>1?'Cor '+(i+1):'Cor'}</label><select data-map="${h0}">${ops(c.mapa[h0])}</select></div>`).join('');
+      h += orig.map((h0,i)=>`<div style="margin:6px 0"><div style="font-size:12px;color:var(--mute);margin-bottom:4px">${orig.length>1?'Parte '+(i+1)+' do desenho':'Cor do desenho'}</div>${bol(h0,c.mapa[h0])}</div>`).join('');
       h += `<button id="pNova" style="width:100%;margin:2px 0 4px">＋ Nova cor…</button>`; }
     h += c.tipo==='vetor' ? `<button id="pEd" style="width:100%;margin:6px 0">🎨 Mais opções de cor</button>` : `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🔳 Ajustar retícula</button>`;
     simples += `<div class="aj-sec">${c.tipo==='vetor'?'Cores do desenho':'Foto'}</div>` + h.slice(h.indexOf('<!--vet-->')>=0?h.indexOf('<!--vet-->'):h.length); h = h.slice(0, h.indexOf('<!--vet-->')>=0?h.indexOf('<!--vet-->'):h.length);
@@ -1040,7 +1053,7 @@ function props(){
   });
   if($('ungrp')) $('ungrp').onclick = desagrupar;
   if($('pEd')) $('pEd').onclick = ()=> c.tipo==='vetor' ? editorVetor(c) : editorMeiotom(c);
-  P.querySelectorAll('select[data-map]').forEach(sl=>sl.onchange=()=>{ c.mapa=Object.assign({},c.mapa,{[sl.dataset.map]:sl.value}); commit(); render(); });
+  P.querySelectorAll('[data-mapk]').forEach(bt=>bt.onclick=()=>{ c.mapa=Object.assign({},c.mapa,{[bt.dataset.mapk]:bt.dataset.mapv}); commit(); render(); });
   if($('pNova')) $('pNova').onclick=adicionarCor;
   $('del').onclick = ()=>{ arte.camadas = arte.camadas.filter(x=>x!==c); setSel(null); commit(); render(); };
   $('dup').onclick = ()=>{ const n=JSON.parse(JSON.stringify(c)); n.id = c.id+'_copia'; mover(n,0.5,-0.5); arte.camadas.push(n); setSel(n.id); commit(); render(); };
@@ -1056,28 +1069,43 @@ function coletaEl(el, raiz, out, usadas){
   if(el.tipo==='vetor'){ const orig = el.asset && ASSETS[el.asset] ? Object.keys(ASSETS[el.asset].cores) : Object.keys(el.mapa||{});
     const sem = orig.filter(h=>!(el.mapa||{})[h]); if(sem.length) out.push(['err',raiz,`${sem.length} cor(es) do vetor sem Pantone — duplo clique para ajustar`]);
     Object.values(el.mapa||{}).forEach(v=>{ if(v&&v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,`cor '${v}' fora da paleta`]); } }); }
-  if(el.tipo==='meiotom') out.push(['warn',raiz,`foto em retícula: ${lpiMax()} linhas/pol., ${Math.round(el.w*(el.escala||1)/2.54*lpiMax())} pontos de largura — confirmar lineatura com a clicheria`]);
   (el.filhos||[]).forEach(f=>coletaEl(f, raiz, out, usadas));
 }
 function valida(){
   const out=[], usadas=new Set();
   arte.camadas.forEach(c=>{
     coletaEl(c, c.id, out, usadas);
-    if(c.visivel===false || c.fundo) return;
+    if(c.visivel===false){ out.push(['warn', c.id, 'está escondido (👁) e não vai ser impresso — mostre ou apague']); return; }
+    if(c.fundo) return;
     const pn = GAB.paineis[c.painel], b = bboxPainel(c); if(!b) return;
-    const fora = b.x1<0 || b.y1<0 || b.x0>pn.w || b.y0>pn.h;
-    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`está saindo de ${NOME_PAINEL[c.painel]||c.painel} — puxe para dentro`:`muito perto da borda (deixe ${M*10} mm de folga)`]);
+    const fora = b.x0<-0.02 || b.y0<-0.02 || b.x1>pn.w+0.02 || b.y1>pn.h+0.02;   // passou da borda: vai sair cortado
+    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`está saindo de ${NOME_PAINEL[c.painel]||c.painel} e vai sair cortado — diminua ou puxe para dentro`:`muito perto da borda (deixe ${M*10} mm de folga)`]);
     (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `passa por cima da ${li.tipo} (lá o papel dobra ou é colado)`]); });
   });
+  { // texto em cima de texto ou de linha: quase sempre é erro (nome que cresceu por cima do telefone, linha riscando o nome)
+    const vis = arte.camadas.filter(c=>c.visivel!==false && !c.fundo && (c.tipo==='texto'||c.tipo==='linha')).map(c=>({c, b:bboxPainel(c)})).filter(x=>x.b);
+    const enc = (a,b)=>Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0) > 0.08 && Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0) > 0.08;
+    for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){ const A=vis[i], B=vis[j]; if(A.c.painel!==B.c.painel) continue;
+      if(A.c.tipo==='linha' && B.c.tipo==='linha') continue; if(!enc(A.b,B.b)) continue;
+      const [t,o] = A.c.tipo==='texto' ? [A,B] : [B,A]; out.push(['warn', t.c.id, `está por cima de ${nomeAmigavel(o.c)} — afaste um do outro`]); }
+  }
   const n = Object.keys(arte.paleta).length;
   if(n>GAB.regras.max_cores) out.push(['err','paleta',`${n} cores (máx. ${GAB.regras.max_cores})`]);
-  if(arte.camadas.length) Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta',`${arte.paleta[k].pantone} sem uso`]));   // sacola vazia: sem ruído
+  if(arte.camadas.length) Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta:'+k,`${nomeCor(arte.paleta[k])} não está sendo usada — clique aqui para tirar da lista`]));   // sacola vazia: sem ruído
   const V = $('val'); V.onclick = e=>{ const d=e.target.closest('.v[data-id]'); const c=d&&layer(d.dataset.id); if(c){ setSel(c.id); render(); } };
   V.innerHTML = out.length ? out.map(([t,id,m])=>`<div class="v ${t}" data-id="${esc(id)}">${t==='err'?'⛔':'⚠️'} <b>${esc(nomeDeId(id))}</b> — ${esc(m)}</div>`).join('')
     : `<div class="v ok">✅ Pronta: ${n} cor(es), tudo dentro da área útil, sem texto/traço abaixo do mínimo.</div>`;
   const nE = out.filter(x=>x[0]==='err').length, nW = out.length-nE, bk = $('b-ck');
   bk.className = 'badge show'; bk.style.background = nE?'var(--err)':nW?'var(--warn)':'var(--ok)'; bk.textContent = out.length?out.length:'✓';
-  V.querySelectorAll('[data-id]').forEach(d=>d.onclick=()=>{ if(layer(d.dataset.id)){ setSel(d.dataset.id); render(); } });
+  V.querySelectorAll('[data-id]').forEach(d=>d.onclick=()=>{ const id=d.dataset.id;
+    if(id.startsWith('paleta:')){ const k=id.slice(7); if(arte.paleta[k] && !coresEmUso().has(k)){ delete arte.paleta[k]; commit(); render(); toast('Cor tirada da lista.'); } return; }
+    if(layer(id)){ setSel(id); render(); } });
+  // contorno vermelho/laranja no desenho em volta do que tem problema
+  const pg=$('probs'); if(pg){ let h=''; const ja=new Set();
+    out.forEach(([t,id])=>{ const c=layer(id); if(!c || ja.has(id)) return; ja.add(id); const pn=GAB.paineis[c.painel];
+      pn.partes.forEach((pt,i)=>{ const b=bboxSheet(id,i); if(!b) return; const x0=Math.max(b.x0,pt.x-1), x1=Math.min(b.x1,pt.x+pt.w+1); if(x1<=x0) return;
+        h+=`<rect x="${x0-0.12}" y="${-b.y1-0.12}" width="${x1-x0+0.24}" height="${b.y1-b.y0+0.24}" rx="0.15" fill="${t==='err'?'rgba(217,48,37,.10)':'rgba(242,153,0,.12)'}" stroke="${t==='err'?'#d93025':'#f29900'}" stroke-width="0.14" stroke-dasharray="0.35 0.2" pointer-events="none"/>`; }); });
+    pg.innerHTML = PREV() ? h : ''; }
   return out;
 }
 
@@ -1088,7 +1116,10 @@ function setSnap(v){ snapOn=v; $('snap').classList.toggle('on', v); $('snap').in
 $('snap').onclick=()=>setSnap(!snapOn);
 $('undo').onclick=()=>undo(); $('redo').onclick=()=>redo();   // chama sempre a versão atual (undo/redo são redefinidos para o histórico do projeto)
 $('modo').onchange=e=>{ modo=e.target.value; render(); };
-function fit(){ const r=svg.getBoundingClientRect(); if(!r.width) return; const PADL=96, PAD=24;
+function fit(){ const r=svg.getBoundingClientRect(); if(!r.width) return;
+  if(innerWidth<=700 && GAB.paineis.frente){ const f=GAB.paineis.frente.partes[0], PADB=70, P=12, k=Math.max((f.w+1)/(r.width-2*P), (f.h+1)/(r.height-P-PADB));
+    view={w:r.width*k, h:r.height*k}; view.x=f.x-0.5-P*k-((r.width-2*P)*k-(f.w+1))/2; view.y=-(f.y+f.h+0.5)-P*k-((r.height-P-PADB)*k-(f.h+1))/2; render(); return; }
+  const PADL=96, PAD=24;
   const W=(xmax-xmin)+2, H=(ymax-ymin)+2; const k=Math.max(W/(r.width-PADL-PAD), H/(r.height-2*PAD));
   view={w:r.width*k, h:r.height*k}; view.x = xmin-1 - PADL*k - ((r.width-PADL-PAD)*k-W)/2; view.y = -(ymax+1) - PAD*k - ((r.height-2*PAD)*k-H)/2; render(); }
 $('fit').onclick=fit;
@@ -2008,7 +2039,8 @@ function carregaDesign(){
   try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return migraAprovacao(d); } } }catch(_){}
   return designVazio();
 }
-function sincroniza(){ if(!design) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
+let SYNC_OFF=0;   // >0 enquanto a tela mostra uma arte emprestada (medição): sincroniza() não pode gravar isso em nenhuma sacola
+function sincroniza(){ if(!design || SYNC_OFF) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
 function migraAprovacao(d){ if(!d || d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
 function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:design.paleta, camadas:b.camadas}; }
 
@@ -2047,7 +2079,7 @@ function geraAdaptada(idDest){
   if(!fonte){ b.camadas=[]; b.estado='auto'; return; }
   const gO = CATALOGO[fonte], gD = CATALOGO[idDest];
   const gAtual = GAB; setGab(gO);   // para medir caixas na origem
-  const prevArte = arte; arte = {cliente:design.cliente, paleta:design.paleta, camadas:design.sacolas[fonte].camadas}; render();
+  const prevArte = arte; arte = {cliente:design.cliente, paleta:design.paleta, camadas:design.sacolas[fonte].camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
   b.camadas = design.sacolas[fonte].camadas.map(c=>adaptaCamada(c, gO, gD)).filter(Boolean);
   arte = prevArte; setGab(gAtual);
   b.estado='auto'; b.proprio=[];
@@ -2100,16 +2132,17 @@ function aposEdicao(){
   if(!outrasCriadas().length) return;            // sem outras sacolas criadas: nada a sincronizar
   b.proprio = [...new Set([...(b.proprio||[]), ...ids])];
   b.layout = [...new Set([...(b.layout||[]), ...lay])];
+  b.layoutAntes = b.layoutAntes || {}; lay.forEach(id=>{ if(!b.layoutAntes[id]) b.layoutAntes[id]=JSON.parse(JSON.stringify(A.get(id))); });
   mostraPendentes();
 }
 function mostraPendentes(){
   const b = design.sacolas[design.atual], pend = b.proprio||[], outras = outrasCriadas();
   if(!pend.length || !outras.length){ $('faixa').classList.remove('show'); return; }
-  const nomes = pend.map(i=>`<b>${esc(nomeDeId(i))}</b>`).slice(0,3).join(', ')+(pend.length>3?` +${pend.length-3}`:'');
-  faixa(`✏️ Mudança só nesta sacola: ${nomes}.`, [['Aplicar nas outras sacolas', aplicaNasOutras, true]], 0);
+  const nomes = pend.map(i=>`<b>${esc(layer(i)?nomeAmigavel(layer(i)):'um item apagado')}</b>`).slice(0,3).join(', ')+(pend.length>3?` +${pend.length-3}`:'');
+  faixa(`✏️ Você mudou ${nomes} só nesta sacola. Levar para as outras ${outras.length}? <span style="color:var(--mute)">(elas voltam a 🟡 para conferir)</span>`, [['Levar para as outras', aplicaNasOutras, true]], 0);
 }
 function aplicaNasOutras(){
-  sincroniza();
+  sincroniza(); const antesApl = hpos;
   const b = design.sacolas[design.atual], pend = b.proprio||[], outras = outrasCriadas(), gO = GAB, src = b.camadas;
   outras.forEach(bid=>{
     const t = design.sacolas[bid], gD = CATALOGO[bid];
@@ -2117,16 +2150,24 @@ function aplicaNasOutras(){
       const sL = src.find(c=>c.id===id), tL = t.camadas.find(c=>c.id===id);
       if(!sL){ t.camadas = t.camadas.filter(c=>c.id!==id); return; }                       // apagada aqui → apaga lá
       if(!tL){ const n=adaptaCamada(sL,gO,gD); if(!n) return; t.camadas.splice(Math.min(src.indexOf(sL), t.camadas.length),0,n); return; } // nova → entra adaptada (posição/tamanho finais)
-      if((b.layout||[]).includes(id)){ const n=adaptaCamada(sL,gO,gD); if(n){ const i=t.camadas.indexOf(tL); t.camadas[i]=n; return; } }   // tamanho/posição mudou: leva adaptado
+      if((b.layout||[]).includes(id)){ const o=(b.layoutAntes||{})[id];
+        if(o && o.painel===sL.painel && tL.painel===sL.painel){   // leva a MUDANÇA, não a medida: cada tamanho de sacola mantém sua proporção
+          const po=gO.paineis[sL.painel], pd=gD.paineis[sL.painel], fx=pd.w/po.w, fy=pd.h/po.h;
+          ['tamanho_pt','escala','w','h','rx','ry','traco_mm','raio'].forEach(k=>{ if(typeof sL[k]==='number' && typeof o[k]==='number' && o[k] && typeof tL[k]==='number') tL[k]=+(tL[k]*sL[k]/o[k]).toFixed(4); });
+          if(typeof sL.x==='number') tL.x=+((tL.x||0)+(sL.x-(o.x||0))*fx).toFixed(3); if(typeof sL.y==='number') tL.y=+((tL.y||0)+(sL.y-(o.y||0))*fy).toFixed(3);
+          ['x1','x2'].forEach(k=>{ if(typeof sL[k]==='number') tL[k]=+(tL[k]+(sL[k]-o[k])*fx).toFixed(3); }); ['y1','y2'].forEach(k=>{ if(typeof sL[k]==='number') tL[k]=+(tL[k]+(sL[k]-o[k])*fy).toFixed(3); });
+          tL.rotacao=sL.rotacao;
+        } else { const n=adaptaCamada(sL,gO,gD); if(n){ const i=t.camadas.indexOf(tL); t.camadas[i]=n; return; } }
+      }
       for(const k in sL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id') tL[k]=JSON.parse(JSON.stringify(sL[k])); }
       for(const k in tL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id' && !(k in sL)) delete tL[k]; }
     });
     if(t.estado==='conferida') t.estado='auto';   // conteúdo mudou lá: pede nova conferida
     design.confirmadas=(design.confirmadas||[]).filter(x=>x!==bid);
   });
-  b.proprio = []; b.layout = [];
+  b.proprio = []; b.layout = []; b.layoutAntes = {};
   salvaHist(); render(); atualizaSacolas();
-  faixa(`✅ Aplicado em ${outras.length} outra${outras.length>1?'s':''} sacola${outras.length>1?'s':''}. Elas ficaram 🟡 para você conferir.`, null, 6000);
+  faixa(`✅ Levado para ${outras.length} outra${outras.length>1?'s':''} sacola${outras.length>1?'s':''}. Elas voltaram para 🟡 Falta aprovar — abra cada uma e confira.`, [['↶ Desfazer em todas', ()=>restaura(antesApl)]], 0);
 }
 
 /* ---------- histórico do projeto inteiro ---------- */
@@ -2140,7 +2181,7 @@ function histSacolas(){ (design.carrinho||[]).forEach(id=>{ if(!design.sacolas[i
   if(!H){ HIST[id]={p:[j], i:0}; return; } if(H.p[H.i]===j) return; H.p=H.p.slice(0,H.i+1); H.p.push(j); if(H.p.length>120) H.p.shift(); H.i=H.p.length-1; }); }
 function aplicaFoto(id, j){ const o=JSON.parse(j), b=design.sacolas[id]; b.camadas=o.camadas; b.estado=o.estado; b.proprio=o.proprio; design.paleta=o.paleta; design.cliente=o.cliente;
   propagando=false; abreSacola(id, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
-commit = function(){ sincroniza(); aposEdicao(); salvaHist(); };
+commit = function(){ sincroniza(); aposEdicao(); salvaHist(); atualizaSacolas(); };   // status das abas sempre em dia
 function restaura(i){ const atual=design.atual; hpos=i; design=JSON.parse(hist[hpos]); if(design.carrinho.includes(atual)) design.atual=atual; propagando=false; abreSacola(design.atual, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
 undo = function(){ if(editando) fechaEdicao(); sincroniza(); histSacolas(); const id=design.atual, H=HIST[id];
   if(!H || H.i<=0){ toast('Nada para desfazer nesta sacola.'); return; } H.i--; aplicaFoto(id, H.p[H.i]); };
@@ -2149,7 +2190,7 @@ redo = function(){ const id=design.atual, H=HIST[id]; if(!H || H.i>=H.p.length-1
 /* ---------- salvar sozinho ---------- */
 let salvarTimer=null;
 function agendaSalvar(){ const s=$('salvo'); s.className='salvo ing'; s.textContent='Salvando…'; clearTimeout(salvarTimer);
-  salvarTimer=setTimeout(()=>{ try{ localStorage.setItem(CHAVE_LS, snap()); }catch(_){} s.className='salvo ok'; s.textContent='✓ Salvo'; }, 700); }
+  salvarTimer=setTimeout(()=>{ try{ localStorage.setItem(CHAVE_LS, snap()); }catch(_){} seloSalvo(); }, 700); }
 
 // fechou/recarregou a aba no meio da edição: grava na hora (sem esperar o timer)
 function salvaJa(){ try{ if(editando) fechaEdicao(); clearTimeout(salvarTimer); localStorage.setItem(CHAVE_LS, snap()); }catch(_){} }
@@ -2160,7 +2201,7 @@ function abreSacola(id, semGerar, semSync){
   if(editando) fechaEdicao();
   if(!semSync) sincroniza();
   const b = design.sacolas[id];
-  let gerou=false; if(!semGerar && b.estado==='nenhum'){ geraAdaptada(id); gerou=b.estado==='auto' && b.camadas.length>0; }
+  let gerou=false; if(!semGerar && b.estado==='nenhum'){ geraAdaptada(id); gerou=b.estado==='auto' && b.camadas.length>0; if(gerou) HIST[id]={p:[fotoSacola(id)], i:0}; }   // Ctrl+Z não volta para a sacola vazia
   design.atual = id; setGab(CATALOGO[id]); apontaArte(); setSel(null);
   ultimoBag = JSON.stringify(arte.camadas);
   $('gabinfo').innerHTML = infoGab();
@@ -2168,13 +2209,14 @@ function abreSacola(id, semGerar, semSync){
   if((b.proprio||[]).length && outrasCriadas().length) mostraPendentes();
   else if(gerou) faixa(`🟡 A arte de <b>${esc(GAB.nome)}</b> foi adaptada sozinha. Confira e aprove.`, [['✅ Aprovar esta arte', marcaConferida, true]], 12000);
 }
-function bloqueiosChecagem(){ return valida().filter(([t,id,m])=>!(id==='paleta' && /sem uso/.test(m))); }
+function bloqueiosChecagem(){ return valida().filter(([t,id,m])=>!String(id).startsWith('paleta:')); }
 function marcaConferida(){
   const bl=bloqueiosChecagem();
   if(bl.length){ toggleDrawer('d-check', true); toast(`⛔ Antes de aprovar, resolva ${bl.length===1?'o aviso':'os '+bl.length+' avisos'} da Checagem (à direita).`); return; }
   design.sacolas[design.atual].estado='conferida'; design.ultima=design.atual; salvaHist(); atualizaSacolas(); toast('✅ Arte aprovada.');
+  { const prox=design.carrinho.find(i=>design.sacolas[i].estado!=='conferida'); if(prox) setTimeout(()=>faixa(`Falta aprovar <b>${esc(CATALOGO[prox].nome)}</b>.`, [['Abrir', ()=>abreSacola(prox), true]], 0), 400); }
   const falta=design.carrinho.filter(i=>design.sacolas[i].estado!=='conferida');
-  if(!falta.length) faixa('🎉 Todas as sacolas aprovadas!', [['🛒 Ir para o carrinho e finalizar', ()=>vaiLoja(true), true]], 15000);
+  if(!falta.length) setTimeout(()=>faixa('🎉 Todas as sacolas aprovadas!', [['🛒 Ir para o carrinho e finalizar', ()=>vaiLoja(true), true]], 0), 400);
 }
 function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.7">(faca ${esc(GAB.fonte)})</span>`:''}<br>Frente ${GAB.paineis.frente.w} × ${GAB.paineis.frente.h} cm${GAB.paineis.sanfona_esq.w?` · sanfonas ${GAB.paineis.sanfona_esq.w} cm`:' · sem sanfona'}${GAB.aprox?`<br><span style="color:var(--warn)">⚠️ ${esc(GAB.aprox)}</span>`:''}<br>Máx. ${GAB.regras.max_cores} cores · margem ${M} cm · texto ≥ ${GAB.regras.texto_min_pt} pt · traço ≥ ${GAB.regras.linha_min_mm} mm · retícula ${lpiMax()} lpi<br><span style="color:#e5007e">rosa</span> = gabarito · <span style="color:#2563eb">azul tracejado</span> = área útil`; }
 
@@ -2183,6 +2225,7 @@ const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Falta aprovar'
 function miniSacola(g, cor){ const w=g.paineis.frente.w, h=g.paineis.frente.h, k=38/h; return `<svg width="${Math.max(16,w*k)}" height="38" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="0.6" fill="${cor}" stroke="rgba(0,0,0,.18)" stroke-width="0.3"/><path d="M0 0.8 ${Array.from({length:Math.floor(w/1.2)},(_,i)=>`L${i*1.2+0.6} 0 L${i*1.2+1.2} 0.8`).join(' ')}" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="0.25"/></svg>`; }
 function atualizaSacolas(){
   const S=$('sacolas'); S.innerHTML='';
+  design.carrinho.forEach(id=>{ const b0=design.sacolas[id]; if(b0 && !b0.camadas.length && b0.estado!=='nenhum') b0.estado='nenhum'; });
   design.carrinho.forEach(id=>{
     const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], prop=(b.proprio||[]).length;
     const d=document.createElement('button'); d.className='sac'+(id===design.atual?' on':'')+(b.estado==='nenhum'?' cinza':'');
@@ -2249,7 +2292,7 @@ function carregaExemplo(){
   const destino = design.carrinho.includes(design.atual) ? design.atual : design.carrinho[0];
   // o exemplo foi desenhado na faca de 5 kg: adapta para a sacola aberta
   const gO=CATALOGO.f5_kraft, gD=CATALOGO[destino], gA=GAB, aA=arte;
-  setGab(gO); arte={cliente:ex.cliente, paleta:ex.paleta, camadas:ex.camadas}; render();
+  setGab(gO); arte={cliente:ex.cliente, paleta:ex.paleta, camadas:ex.camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
   design.sacolas[destino].camadas = destino.startsWith('f5_') ? ex.camadas : ex.camadas.map(c=>adaptaCamada(c,gO,gD)).filter(Boolean);
   setGab(gA); arte=aA;
   design.sacolas[destino].estado = 'auto'; design.ultima=destino;
@@ -2286,7 +2329,7 @@ function statusArte(id){
   const b=design.sacolas[id]; if(!b) return ['⚪','Sem arte','#a49a8e'];
   return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Falta aprovar a arte','#b07f00'], conferida:['✅','Arte aprovada','#2f6b3f']})[b.estado];
 }
-function novaHistoria(){ hist=[snap()]; hpos=0; HIST={}; histSacolas(); ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+function novaHistoria(){ hist=[snap()]; hpos=0; histSacolas(); ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
 function noCarrinho(id){ return design.carrinho.includes(id); }
 function addCarrinho(id, qtd){
   design.qtd = design.qtd || {};
@@ -2425,7 +2468,11 @@ function normalizaSVG(texto){
   const el = document.importNode(raiz, true); host.appendChild(el); document.body.appendChild(host);
   // estilos do arquivo original (classes) ficam no host temporário só para o cálculo
   const st=document.createElement('style'); st.textContent=[...doc.querySelectorAll('style')].map(s=>s.textContent).join('\n'); el.prepend(st);
-  const toHex = v=>{ if(!v||v==='none'||v.startsWith('url')) return v&&v.startsWith('url') ? '#808080' : 'none';
+  // degradê não imprime em flexo: vira a cor média das paradas (e avisa)
+  const medGrad={}; let temDegrade=false;
+  el.querySelectorAll('linearGradient,radialGradient').forEach(g=>{ const ps=[...g.querySelectorAll('stop')].map(st0=>{ const c=getComputedStyle(st0).stopColor||st0.getAttribute('stop-color')||''; const m=c.match(/rgba?\(([^)]+)\)/); return m?m[1].split(',').map(parseFloat):null; }).filter(Boolean);
+    if(ps.length){ const a=[0,1,2].map(i=>ps.reduce((t,p)=>t+p[i],0)/ps.length); medGrad[g.id]=rgb2hex(...a.map(Math.round)); } });
+  const toHex = v=>{ if(!v||v==='none') return 'none'; if(v.startsWith('url')){ temDegrade=true; const id=(v.match(/#([^"')]+)/)||[])[1]; return medGrad[id]||'#808080'; }
     const m=v.match(/rgba?\(([^)]+)\)/); if(!m) return 'none'; const p=m[1].split(',').map(x=>parseFloat(x)); if(p.length>3 && p[3]===0) return 'none'; return rgb2hex(p[0],p[1],p[2]); };
   const cores = {};
   el.querySelectorAll('path,rect,circle,ellipse,polygon,polyline,line,text').forEach(s=>{
@@ -2440,7 +2487,7 @@ function normalizaSVG(texto){
   if(vb.length!==4 || vb.some(isNaN)){ try{ const b=el.getBBox(); vb=[b.x,b.y,b.width||100,b.height||100]; }catch(_){ vb=[0,0,100,100]; } }
   st.remove();
   const markup = el.innerHTML; host.remove();
-  return {vb, markup, cores};
+  return {vb, markup, cores, temDegrade};
 }
 let _vetMask=0;
 function svgDoVetor(el, comCores){
@@ -2631,6 +2678,7 @@ async function recebeArquivo(f){
     const usadas=coresUsadas(c).size, max=GAB.regras.max_cores;
     if(nCores + usadas > max){ editorVetor(c, `Este arquivo tem <b>${nCores} cor${nCores>1?'es':''}</b> e a sacola já usa ${usadas}. A impressão aceita no máximo <b>${max}</b> no total.`); }
     else { COR_TROCADA=[]; c.mapa = mapaAutomatico(dados.cores, c); commit(); render(); toast(`✦ ${esc(f.name)} adicionado. Cores entraram em 🎨 Cores.`); setTimeout(avisoCoresTrocadas, 2600); }
+    if(dados.temDegrade) setTimeout(()=>toast('ℹ️ O desenho tinha <b>degradê</b>. A impressão só faz cores lisas, então ele virou uma cor só.', 7000), 5200);
     renderElementos();
   } else if(['png','jpg','jpeg','webp','gif'].includes(ext)){
     const data = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(f); });
@@ -2645,7 +2693,8 @@ function insereImagem(assetId){
   const a=ASSETS[assetId], A=alvoNovo(), pn=GAB.paineis[A.k], w=Math.min(8, pn.w*0.5);
   const c={id:novoId('foto'), painel:A.k, tipo:'meiotom', asset:assetId, ar:a.ar, w, x:+(A.cx(w/2)-w/2).toFixed(2), y:+(A.cy(w*a.ar/2)-w*a.ar/2).toFixed(2),
            cor:corTintaPadrao(), angulo:45, forma:'ponto', brilho:0, contraste:0.2, inverter:false, corte:0.05, cheio:0.94};
-  arte.camadas.push(c); setSel(c.id); commit(); render(); editorMeiotom(c);
+  { const i=arte.camadas.findIndex(x=>x.tipo==='texto'); arte.camadas.splice(i<0?arte.camadas.length:i, 0, c); }   // foto entra atrás dos textos
+  setSel(c.id); commit(); render(); editorMeiotom(c);
 }
 
 /* ---------- painel Elementos ---------- */
@@ -2684,7 +2733,8 @@ function editorVetor(c, aviso){
       <div class="vtot ${total>max?'err':''}">Cores de tinta na sacola: <b>${total}</b> de ${max} ${total>max?'— passa do limite':''}</div>
       <div style="display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap"><button id="vAuto" class="${total>max||!Object.keys(c.mapa||{}).length?'pri':''}">✨ Converter para ${max} cores</button>
       <span><button id="vCan">Cancelar</button> <button id="vOk" class="pri" ${total>max?'disabled':''}>Aplicar</button></span></div>`;
-    $('mbox').querySelectorAll('select[data-h]').forEach(sl=>sl.onchange=()=>{ let v=sl.value; if(v==='__nova'){ const p=pantoneProximo(sl.dataset.h); v=chaveNova(p[0]); arte.paleta[v]={pantone:p[0], cmyk:p[2]}; }
+    $('mbox').querySelectorAll('select[data-h]').forEach(sl=>sl.onchange=()=>{ let v=sl.value; if(v==='__nova'){ const p=pantoneProximo(sl.dataset.h), ja=Object.keys(arte.paleta).find(k=>arte.paleta[k].pantone===p[0]);
+        if(ja) v=ja; else if(Object.keys(arte.paleta).length>=GAB.regras.max_cores){ toast(`Já são ${GAB.regras.max_cores} cores. Escolha uma da lista ou tire uma cor antes.`, 5000); desenha(); return; } else { v=chaveNova(p[0]); arte.paleta[v]={pantone:p[0], cmyk:p[2]}; } }
       c.mapa=Object.assign({}, c.mapa, {[sl.dataset.h]:v}); render(); desenha(); });
     $('vAuto').onclick=()=>{ COR_TROCADA=[]; c.mapa=mapaAutomatico(orig, c); render(); desenha(); avisoCoresTrocadas(); };
     $('vCan').onclick=()=>{ const a=JSON.parse(antes); c.mapa=a.mapa; Object.keys(arte.paleta).forEach(k=>delete arte.paleta[k]); Object.assign(arte.paleta, a.paleta); $('modal').style.display='none'; render(); };
@@ -2741,17 +2791,20 @@ function seletorPantone(titulo, sub, aoEscolher, bloqueadas){
   $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">${titulo}</h3>
     <div class="hint" style="margin-bottom:10px">${sub}</div>
     ${PANTONE_GRUPOS.map(([g,lista])=>`<div class="ptg"><div class="ptgt">${g}</div><div class="pts">${lista.map(n=>pantoneInfo(n)).filter(Boolean).map(tile).join('')}</div></div>`).join('')}
-    <div class="ptg"><div class="ptgt">Já sabe o código?</div><div class="ptcod"><input id="ptCod" placeholder="Ex.: 7409 C"><input id="ptCor" type="color" value="#cc3333" title="Cor aproximada para ver na tela"><button id="ptUsar">Usar</button></div>
+    <div class="ptg"><div class="ptgt">Já sabe o código?</div><div class="ptcod"><input id="ptCod" placeholder="Ex.: 7409 C ou #F48FB1"><input id="ptCor" type="color" value="#cc3333" title="Cor aproximada para ver na tela"><button id="ptUsar">Usar</button></div>
     <div class="hint">A cor da tela é só aproximada — a gráfica imprime pelo código.</div></div>
     <div style="text-align:right;margin-top:12px"><button id="ptFx">Cancelar</button></div>`;
   $('modal').style.display='flex';
   $('ptFx').onclick=()=>$('modal').style.display='none';
   $('mbox').querySelectorAll('.pt').forEach(b=>b.onclick=()=>{ const p=pantoneInfo(b.dataset.p); $('modal').style.display='none'; aoEscolher(p[0], p[2]); });
   $('ptCod').oninput=()=>{ const v=$('ptCod').value.trim().toUpperCase().replace(/^PANTONE\s*/,''); const p=PANTONES.find(x=>x[0]==='PANTONE '+v); if(p) $('ptCor').value=p[1]; };
+  let corMexida=false; $('ptCor').oninput=()=>{ corMexida=true; };
   $('ptUsar').onclick=()=>{ let v=$('ptCod').value.trim().replace(/^pantone\s*/i,''); if(!v){ $('ptCod').focus(); return; }
+    if(/^#?[0-9a-f]{6}$/i.test(v)){ const hx=(v[0]==='#'?v:'#'+v).toLowerCase(), p=pantoneProximo(hx); $('modal').style.display='none'; toast(`Cor mais parecida que a gráfica imprime: <b>${esc(p[0])}</b>`, 5000); aoEscolher(p[0], p[2]); return; }
     const conhecido=PANTONES.some(x=>x[0]==='PANTONE '+v.toUpperCase()), formato=/^\d{3,5}\s?[CUM]?$/i.test(v);
     if(!conhecido && !formato){ $('ptCod').style.borderColor='var(--err)'; $('ptCod').value=''; $('ptCod').placeholder='Use o número, ex.: 7409 C'; $('ptCod').focus(); toast('Isso não parece um código Pantone. Digite o número da cor (ex.: <b>7409 C</b>) ou escolha uma cor na grade acima.'); return; }
     if(formato && !/[CUM]$/i.test(v)) v=v+' C';
+    if(!PANTONES.some(x=>x[0]==='PANTONE '+v.toUpperCase()) && !corMexida){ $('ptCor').focus(); $('ptCor').click(); toast('Não tenho a amostra desse código: escolha no quadradinho colorido uma cor parecida (é só para ver na tela; a gráfica imprime pelo código).', 7000); corMexida=true; return; }
     const nome='PANTONE '+v.toUpperCase(); const p=PANTONES.find(x=>x[0]===nome); const [r,g,b]=hex2rgb($('ptCor').value);
     const k=1-Math.max(r,g,b)/255, cm = k>=1?[0,0,0,100]:[ (1-r/255-k)/(1-k), (1-g/255-k)/(1-k), (1-b/255-k)/(1-k), k ].map(x=>Math.round(x*100));
     $('modal').style.display='none'; aoEscolher(nome, p?p[2]:cm); };
@@ -2822,6 +2875,8 @@ function atualizaConta(){
   const t = USUARIO ? `👤 ${esc(nomeDe(USUARIO.email))}` : '👤 Entrar';
   ['conta','conta2'].forEach(id=>{ if($(id)) $(id).innerHTML=t; });
   if($('nuvemNome')) $('nuvemNome').textContent = ARTE_ID ? `☁️ ${ARTE_NOME}` : '';
+  if(ARTE_ID && NUVEM_SNAP===null && design){ try{ const t=snap(); if(localStorage.getItem('glopel_nuvem_hash')===hashTxt(t)) NUVEM_SNAP=t; }catch(_){} }
+  if(design) seloSalvo();
 }
 function modal(html){ $('mbox').innerHTML=html; $('modal').style.display='flex'; }
 const fecha = ()=>{ $('modal').style.display='none'; };
@@ -2854,25 +2909,37 @@ function pacoteArte(){
   return {versao:VERSAO, design:JSON.parse(JSON.stringify(design)), assets:usados};
 }
 function resumoArte(){ return design.carrinho.map(id=>CATALOGO[id]?CATALOGO[id].nome:id).join(' · '); }
+let NUVEM_SNAP=null;
+const hashTxt=t=>{ let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))|0; return String(h); };
+function marcaNuvem(){ NUVEM_SNAP=snap(); try{ localStorage.setItem('glopel_nuvem_hash', hashTxt(NUVEM_SNAP)); }catch(_){} }   // snapshot do que está na nuvem para a arte aberta
+const mudouDesdeNuvem = ()=> !!(ARTE_ID ? NUVEM_SNAP!==snap() : (design && design.carrinho.length && design.carrinho.some(i=>design.sacolas[i].camadas.length)));
+function seloSalvo(){ const s=$('salvo'); if(!s) return; if(NUVEM && USUARIO && ARTE_ID){ const ok=NUVEM_SNAP===snap(); s.className='salvo '+(ok?'ok':'ing'); s.textContent = ok?'☁️ Salvo na nuvem':'💾 Só neste computador'; s.title = ok?'Esta arte está igual à salva na sua conta':'Há mudanças ainda não salvas na sua conta — clique em Salvar'; }
+  else { s.className='salvo ok'; s.textContent='✓ Salvo neste computador'; s.title='Fica guardado neste navegador. Para abrir em outro computador, entre e salve na nuvem.'; } }
+function confirmaPerda(acao){ if(!NUVEM || !USUARIO || !mudouDesdeNuvem()) return true;
+  return confirm(`A arte aberta tem mudanças que não estão salvas na sua conta. ${acao} agora faz você perder essas mudanças.\n\nOK = continuar mesmo assim · Cancelar = voltar e salvar antes`); }
 async function salvarNuvem(comoNova){
   if(!NUVEM){ toast('Salvar na nuvem só funciona no site (GitHub).'); return; }
   if(!USUARIO){ telaLogin(()=>salvarNuvem(comoNova)); return; }
   if(!design.carrinho.length){ toast('Não há nenhuma sacola para salvar.'); return; }
   if(!ARTE_ID || comoNova){
     modal(`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">💾 Salvar arte</h3>
-      <form id="fNome"><div class="row"><label>Nome</label><input id="anNome" value="${esc(comoNova&&ARTE_NOME?ARTE_NOME+' (cópia)':(design.cliente&&design.cliente!=='Minha padaria'?design.cliente:''))}" placeholder="Ex.: Padaria Bom Dia — Natal"></div>
+      <form id="fNome"><div class="row"><label>Nome</label><input id="anNome" value="${esc(comoNova&&ARTE_NOME?ARTE_NOME+' (cópia)':((design.dados&&design.dados.nome)||(design.cliente&&design.cliente!=='Minha padaria'?design.cliente:'')))}" placeholder="Ex.: Padaria Bom Dia — Natal"></div>
       <div class="hint">Salva todas as sacolas do carrinho, as cores e as imagens.</div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="anX">Cancelar</button><button class="pri">Salvar</button></div></form>`);
     $('anNome').focus(); $('anNome').select(); $('anX').onclick=fecha;
     $('fNome').onsubmit=async e=>{ e.preventDefault(); const nome=$('anNome').value.trim()||'Sem nome';
-      const {data,error}=await SB.from('artes').insert({nome, dados:pacoteArte(), resumo:resumoArte()}).select('id').single();
+      const {data:mesmo}=await SB.from('artes').select('id').eq('nome',nome).limit(1);
+      if(mesmo && mesmo.length && !confirm(`Já existe uma arte chamada "${nome}".\n\nOK = substituir a que existe · Cancelar = escolher outro nome`)){ $('anNome').focus(); $('anNome').select(); return; }
+      let data, error;
+      if(mesmo && mesmo.length){ ({error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoArte(), atualizado:new Date().toISOString()}).eq('id',mesmo[0].id)); data={id:mesmo[0].id}; }
+      else ({data,error}=await SB.from('artes').insert({nome, dados:pacoteArte(), resumo:resumoArte()}).select('id').single());
       if(error){ toast('⚠️ Não salvou: '+esc(error.message)); return; }
-      ARTE_ID=data.id; ARTE_NOME=nome; lembraArte(); fecha(); atualizaConta(); toast(`☁️ <b>${esc(nome)}</b> salva na nuvem.`); };
+      ARTE_ID=data.id; ARTE_NOME=nome; marcaNuvem(); lembraArte(); fecha(); atualizaConta(); seloSalvo(); toast(`☁️ <b>${esc(nome)}</b> salva na nuvem.`); };
     return;
   }
   const {error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoArte(), atualizado:new Date().toISOString()}).eq('id',ARTE_ID);
   if(error){ toast('⚠️ Não salvou: '+esc(error.message)); return; }
-  toast(`☁️ <b>${esc(ARTE_NOME)}</b> atualizada.`);
+  marcaNuvem(); seloSalvo(); toast(`☁️ <b>${esc(ARTE_NOME)}</b> atualizada.`);
 }
 async function minhasArtes(){
   if(!NUVEM) return; if(!USUARIO){ telaLogin(minhasArtes); return; }
@@ -2885,18 +2952,18 @@ async function minhasArtes(){
       <button data-a="abrir" class="pri">Abrir</button><button data-a="ren">✏️</button><button data-a="del" title="Apagar">🗑</button></div>`).join(''):'<div class="empty">Nenhuma arte salva ainda. No editor, use 💾 Salvar.</div>'}
     <div style="display:flex;justify-content:space-between;margin-top:12px"><button id="maNova">＋ Começar arte nova</button><button id="maX">Fechar</button></div>`);
   $('maX').onclick=fecha;
-  $('maNova').onclick=()=>{ if(design.carrinho.length && !confirm('Começar uma arte nova? A arte atual sai da tela (se não salvou na nuvem, ela se perde).')) return; fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); setGab(CATALOGO[design.atual]); apontaArte(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Arte nova: escolha as sacolas.'); };
+  $('maNova').onclick=()=>{ if(design.carrinho.length && !(NUVEM&&USUARIO&&ARTE_ID&&!mudouDesdeNuvem()) && !confirm('Começar uma arte nova? A arte atual sai da tela'+(USUARIO?' e as mudanças não salvas na sua conta se perdem.':' (ela só está guardada neste computador).'))) return; NUVEM_SNAP=null; fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); setGab(CATALOGO[design.atual]); apontaArte(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Arte nova: escolha as sacolas.'); };
   $('mbox').querySelectorAll('.pr button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.pr').dataset.id, a=data.find(x=>x.id===id);
-    if(b.dataset.a==='abrir'){ const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ toast('⚠️ '+esc(error.message)); return; }
+    if(b.dataset.a==='abrir'){ if(id!==ARTE_ID && !confirmaPerda('Abrir outra arte')) return; const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ toast('⚠️ '+esc(error.message)); return; }
       Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
       design=migraAprovacao(row.dados.design); design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[];
       design.carrinho=(design.carrinho||[]).filter(i=>CATALOGO[i]); Object.keys(CATALOGO).forEach(i=>{ if(!design.sacolas[i]) design.sacolas[i]={estado:'nenhum',proprio:[],camadas:[]}; });
       if(!CATALOGO[design.atual]) design.atual=design.carrinho[0]||'f5_kraft'; if(editando){ const t=editando.ta; editando=null; t.remove(); }
       setGab(CATALOGO[design.atual]); apontaArte();   // senão o sincroniza() seguinte grava a arte antiga da tela por cima da que veio da nuvem
-      ARTE_ID=id; ARTE_NOME=row.nome; lembraArte(); fecha(); novaHistoria(); renderElementos(); atualizaConta();
+      ARTE_ID=id; ARTE_NOME=row.nome; lembraArte(); fecha(); novaHistoria(); marcaNuvem(); seloSalvo(); $('faixa').classList.remove('show'); renderElementos(); atualizaConta();
       if(design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
       toast(`📂 <b>${esc(row.nome)}</b> aberta.`); }
-    if(b.dataset.a==='ren'){ const li=b.closest('.pr'); li.querySelector('.nm').innerHTML=`<input value="${esc(a.nome)}">`; const inp=li.querySelector('input'); inp.focus(); inp.select();
+    if(b.dataset.a==='ren'){ const li=b.closest('.pr'); li.querySelector('.nm').innerHTML=`<input value="${esc(a.nome)}">`; const inp=li.querySelector('input'); inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') b.click(); if(e.key==='Escape') minhasArtes(); };
       b.textContent='✓'; b.onclick=async()=>{ const nome=inp.value.trim()||a.nome; await SB.from('artes').update({nome}).eq('id',id); if(id===ARTE_ID){ ARTE_NOME=nome; lembraArte(); atualizaConta(); } minhasArtes(); }; }
     if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; }
       await SB.from('artes').delete().eq('id',id); if(id===ARTE_ID){ ARTE_ID=null; lembraArte(); atualizaConta(); } minhasArtes(); }
@@ -3055,8 +3122,14 @@ function abrePorta(){
   modal(`<h3 style="margin:0 0 6px;color:var(--ink);font-size:18px;text-transform:none;letter-spacing:0">Como você quer começar?</h3>
     <div class="hint" style="margin-bottom:14px">Dá para mudar tudo depois, nas duas opções.</div>
     <div class="porta"><button id="ptAj" class="pri"><b>✨ Criar com ajuda</b><span>Responda 4 perguntas e a arte fica pronta em todas as sacolas</span></button>
-    <button id="ptZero"><b>Começar do zero</b><span>Folha em branco para montar do seu jeito</span></button></div>`);
+    <button id="ptZero"><b>Começar do zero</b><span>Folha em branco para montar do seu jeito</span></button>
+    ${NUVEM?'<button id="ptAbrir"><b>📂 Abrir arte salva</b><span>Continuar uma arte que você salvou na sua conta</span></button>':''}</div>`);
   $('ptAj').onclick=()=>assistente(); $('ptZero').onclick=()=>{ design.portaVista=true; agendaSalvar(); fecha(); };
+  if($('ptAbrir')) $('ptAbrir').onclick=()=>{ design.portaVista=true; fecha(); minhasArtes(); };
+  const sai=()=>{ design.portaVista=true; agendaSalvar(); fecha(); $('modal').removeEventListener('click',fora); document.removeEventListener('keydown',esc_); };
+  const fora=e=>{ if(e.target===$('modal')) sai(); }, esc_=e=>{ if(e.key==='Escape' && $('modal').style.display==='flex') sai(); };
+  $('modal').addEventListener('click',fora); document.addEventListener('keydown',esc_);
+  ['ptAj','ptZero','ptAbrir'].forEach(i=>{ if($(i)) $(i).addEventListener('click',()=>{ $('modal').removeEventListener('click',fora); document.removeEventListener('keydown',esc_); }); });
 }
 function assistente(){
   WZ={passo:0, dados:Object.assign({}, design.dados||{}), estilo:design.estilo||'classico', pal:design.paletaPronta||'classica'};
@@ -3151,6 +3224,8 @@ $('logtog').onclick=()=>{ const m=$('log').classList.toggle('min'); $('logtog').
 $('prompt').addEventListener('input', e=>{ e.target.style.height='auto'; e.target.style.height=Math.min(110,e.target.scrollHeight)+'px'; });
 // gavetas (abas escondíveis, fechadas por padrão)
 function toggleDrawer(id, forcar){
+  const r0=svg.getBoundingClientRect(); requestAnimationFrame(()=>{ const r=svg.getBoundingClientRect(); if(!r0.width||!r.width||(r0.width===r.width&&r0.height===r.height)) return;   // painel abriu/fechou: mesma escala e mesma posição na tela (a arte não pula)
+    const k=view.w/r0.width; view.x+= (r.left-r0.left)*k; view.y+= (r.top-r0.top)*k; view.w=r.width*k; view.h=r.height*k; /* cada coisa fica no mesmo lugar da tela */ svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); desenhaSel(); });
   const d=$(id), lado = d.classList.contains('left')?'left':'right', abrir = forcar!==undefined?forcar:!d.classList.contains('open');
   document.querySelectorAll('.drawer.'+lado).forEach(x=>x.classList.remove('open'));
   document.querySelectorAll('.tabs.'+lado+' .tab').forEach(x=>x.classList.remove('on'));
@@ -3182,7 +3257,16 @@ nuvemInit(); $('wzBtn').onclick=assistente; $('dadosBtn').onclick=()=> design.da
 document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvarNuvem(false); } });
 $('voltaloja').onclick=()=>vaiLoja(true);
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
-$('finalizar').onclick=()=>{ $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">🎉 Pedido enviado (simulação)</h3><div style="color:var(--mute);line-height:1.5">No site real: pagamento → as artes aprovadas viram PDF para a clicheria → produção.</div><div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`; $('modal').style.display='flex'; };
+$('finalizar').onclick=()=>{
+  sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
+  design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens});
+  itens.forEach(i=>{ const b=design.sacolas[i.id]; if(b && b.estado==='conferida') b.estado='auto'; });   // arte fica guardada; num novo pedido, aprova de novo
+  design.carrinho=[]; novaHistoria(); agendaSalvar(); renderLoja();
+  $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🎉 Pedido <b>${num}</b> enviado</h3>
+    <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>`).join('<br>')}</div>
+    <div style="color:var(--mute);line-height:1.5">Guarde o número do pedido. Sua arte continua salva para o próximo pedido.<br><i>(Demonstração: no site real vem o pagamento e as artes aprovadas vão para a gráfica.)</i></div>
+    <div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
+  $('modal').style.display='flex'; };
 if(location.hash==='#editor' && design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
 document.fonts && document.fonts.ready.then(()=>render());
 render();
