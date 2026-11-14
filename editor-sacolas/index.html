@@ -245,6 +245,7 @@ button{user-select:none;-webkit-user-select:none}
 #mockbox .face>div{position:absolute;inset:0;backface-visibility:hidden}
 #mockbox .face svg{display:block;width:100%;height:100%}
 #mockbox .face .in{background:linear-gradient(#a57a4a,#b88c5a);transform:rotateY(180deg)}
+#mockbox.branco .face .in{background:linear-gradient(#ddd8ce,#ece8e0)}
 #mockbox .face .sh{pointer-events:none}
 #mockshadow{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(25,45,80,.35),rgba(25,45,80,0) 70%)}
 #mockctl{left:50%;bottom:14px;transform:translateX(-50%)}
@@ -271,7 +272,33 @@ button{user-select:none;-webkit-user-select:none}
 #pbox textarea{min-height:46px;max-height:110px;resize:none;border-radius:14px;padding:12px 14px;font-size:14.5px;background:#ffffff;box-shadow:inset 0 1px 3px rgba(25,45,80,.08)}
 #pbox button{height:46px;border-radius:14px;white-space:nowrap}
 #top button,#top select{white-space:nowrap}
-@media (max-width:1050px){ #top .brand b, #undo .lbl{display:none} }
+@media (max-width:1500px){ #top .brand b, #top .brand small, #top .lbl{display:none} #top{gap:6px} }
+@media (max-width:1180px){ #top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} #top::-webkit-scrollbar{display:none} #top #modo{max-width:150px} #top button,#top select{flex-shrink:0} #nuvemNome{display:none} }
+/* ---------- celular / tela estreita: barra do topo numa linha, abas viram barra de baixo, painéis viram folha deslizante ---------- */
+@media (max-width:700px){
+  #top{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px;gap:6px;scrollbar-width:none}
+  #top::-webkit-scrollbar{display:none}
+  #top .brand{display:none}
+  #top button,#top select{padding:6px 9px;font-size:12.5px;flex-shrink:0}
+  #main{grid-template-columns:1fr}
+  #main>#center{grid-column:1;padding-bottom:56px}
+  #main>.tabs{position:fixed;bottom:0;flex-direction:row;justify-content:space-around;gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));z-index:30;border:none;border-top:1px solid var(--line);background:var(--surf)}
+  #main>.tabs.left{left:0;right:50%} #main>.tabs.right{left:50%;right:0}
+  .tab{flex-direction:column;width:auto;flex:1;padding:4px 2px;gap:1px;font-size:17px;min-height:46px}
+  .tab span{writing-mode:horizontal-tb;transform:none;font-size:10.5px;letter-spacing:0}
+  .drawer.open{position:fixed;left:0;right:0;bottom:56px;height:58vh;width:auto!important;z-index:29;border:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(20,40,70,.18)}
+  #tools,#tools.vert,#tools.moved{left:6px!important;right:6px;top:auto!important;bottom:6px;transform:none!important;flex-direction:row!important;overflow-x:auto;max-width:none;padding:5px;gap:4px}
+  #tools #grip,#tools .sep{display:none}
+  #tools button{width:58px;padding:5px 3px;font-size:10px}
+  #tools button b{font-size:15px}
+  #zoom{top:8px!important;bottom:auto!important;right:8px!important;left:auto!important;padding:4px}
+  #zoom button{padding:5px 9px}
+  #sacbar{padding:6px 8px;gap:6px}
+  #sacbar #conferir{font-size:12.5px;padding:7px 10px;white-space:nowrap}
+  #faixa{left:8px;right:8px;transform:none;bottom:84px;flex-wrap:wrap;font-size:12.5px}
+  #toast{bottom:70px;max-width:calc(100% - 24px)}
+  #hovnome{display:none!important}
+}
 .tag{font-size:10.5px;background:#f6e3a7;border-radius:5px;padding:1px 6px;color:#7a5410;font-weight:600}
 .props{padding:0 14px 10px}
 .row{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center;margin:7px 0}
@@ -340,14 +367,14 @@ button{user-select:none;-webkit-user-select:none}
 <path d="M22 96 Q70 92 104 60" fill="none" stroke="url(#gsE)" stroke-width="5" stroke-linecap="round"/></svg> <b>GloboEditor</b> <small style="color:var(--mute);font-weight:600">α 0.1</small></span>
     <div id="prodwrap"><button id="prodbtn" title="Trocar de sacola"></button><div id="prodmenu"></div></div>
     <span id="salvo" class="salvo ok">✓ Salvo</span>
-    <button id="nuvemSalvar" class="so-nuvem" title="Salvar na nuvem (Ctrl+S)">💾 Salvar</button>
+    <button id="nuvemSalvar" class="so-nuvem" title="Salvar na nuvem (Ctrl+S)">💾<span class="lbl"> Salvar</span></button>
     <span id="nuvemNome" class="so-nuvem" style="font-size:12px;color:var(--mute);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
     <span class="grow"></span>
     <button id="undo" class="ic" title="Desfazer (Ctrl+Z)">↶<span class="lbl"> Desfazer</span></button>
     <button id="redo" class="ic" title="Refazer (Ctrl+Shift+Z)">↷</button>
     <select id="modo" title="Como ver a arte"></select>
-    <button id="wzBtn" class="ic" title="Criar a arte com ajuda">✨ Assistente</button>
-    <button id="dadosBtn" class="ic" title="Nome, telefone, Instagram… em todas as sacolas">📝 Dados</button>
+    <button id="wzBtn" class="ic" title="Criar a arte com ajuda">✨<span class="lbl"> Assistente</span></button>
+    <button id="dadosBtn" class="ic" title="Nome, telefone, Instagram… em todas as sacolas">📝<span class="lbl"> Dados</span></button>
     <button id="conta2" class="ic so-nuvem">👤 Entrar</button>
     <button id="ajuda" class="ic" title="Ajuda, exemplo e recomeçar">❓</button>
     <button id="export" class="pri">✅ Pronto</button>
@@ -374,7 +401,7 @@ button{user-select:none;-webkit-user-select:none}
       <div id="elementos"></div>
     </aside>
     <section id="center">
-      <div id="sacbar"><div id="sacolas"></div><button id="conferir" class="pri" title="Marcar esta sacola como conferida">Está boa ✓</button></div>
+      <div id="sacbar"><div id="sacolas"></div><button id="conferir" class="pri" title="Aprovar a arte desta sacola para impressão">✅ Aprovar esta arte</button></div>
       <div id="hovnome"></div>
       <div id="stage">
         <div id="faixa"></div>
@@ -451,7 +478,16 @@ const FONTES = {
   "Schola Bold":      {f:"'Libre Baskerville', Georgia, serif", w:700, s:"normal"}
 };
 let PAINEIS = Object.keys(GAB.paineis).filter(k=>!GAB.paineis[k].oculto);
-const SIGLA = {frente:"FR", verso:"VS", sanfona_esq:"SE", sanfona_dir:"SD"};
+const SIGLA = {frente:"Frente", verso:"Verso", sanfona_esq:"Lateral", sanfona_dir:"Lateral"};
+const NOME_PAINEL = {frente:"a frente", verso:"o verso", sanfona_esq:"a lateral esquerda", sanfona_dir:"a lateral direita"};
+// nome que o leigo entende (camadas, hover, checagem, faixas); o id técnico fica só como dica
+function nomeAmigavel(c){ if(!c) return ''; if(c.nome) return c.nome;
+  const corta=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>24?t.slice(0,23)+'…':t; };
+  if(c.tipo==='texto') return `“${corta(c.texto)||'texto vazio'}”`;
+  if(c.tipo==='vetor'){ const b=String(c.id).replace(/(_copia)?(_\d+)*$/,'').replace(/_/g,' '); return (BANCO[b.replace(/ /g,'_')]?BANCO[b.replace(/ /g,'_')].nome:'Desenho: '+b); }
+  if(c.tipo==='meiotom') return 'Foto' + (ASSETS[c.asset]&&ASSETS[c.asset].nome?': '+corta(ASSETS[c.asset].nome):'');
+  return ({retangulo:'Retângulo', elipse:'Círculo', linha:'Linha', grupo:`Pasta (${(c.filhos||[]).length})`})[c.tipo] || c.id; }
+const nomeDeId = id => { const c=layer(id); return c?nomeAmigavel(c):(id==='paleta'?'Cores':id); };
 let M = GAB.regras.margem_seguranca_cm;
 let ymin = Math.min(...GAB.contorno.map(p=>p[1])), ymax = Math.max(...GAB.contorno.map(p=>p[1]));
 let xmin = Math.min(...GAB.contorno.map(p=>p[0])), xmax = Math.max(...GAB.contorno.map(p=>p[0]));
@@ -783,7 +819,7 @@ function nomeHover(e){
   const hv=$('hovnome'); if(drag || tool==='mao' || espaco || modo==='mockup' || modo==='produto'){ hv.style.display='none'; return; }
   const g=e.target.closest && e.target.closest('[data-layer]'), c=g && layer(g.dataset.layer);
   if(!c){ hv.style.display='none'; return; }
-  hv.textContent=(c.bloqueado?'🔒 ':'')+(c.nome||c.id); hv.style.display='block';
+  hv.textContent=(c.bloqueado?'🔒 ':'')+nomeAmigavel(c); hv.style.display='block';
   const r=hv.getBoundingClientRect(); let x=e.clientX+16, y=e.clientY+14;
   if(x+r.width>innerWidth-6) x=e.clientX-r.width-10; if(y+r.height>innerHeight-6) y=e.clientY-r.height-8;
   hv.style.left=x+'px'; hv.style.top=y+'px';
@@ -849,7 +885,7 @@ function listaCamadas(){
       <button class="ic" data-a="lock" title="Travar">${c.bloqueado?'🔒':'🔓'}</button>
       ${pasta?`<button class="ic" data-a="fold" title="Abrir/fechar pasta" style="width:16px;padding:0">${aberto?'▾':'▸'}</button>`:''}
       <span style="width:16px;text-align:center;color:var(--mute)">${ICO[c.tipo]||'•'}</span>
-      <span class="nm" title="${esc(c.id)}">${esc(c.id)}${pasta?` <span style="color:var(--mute)">(${c.filhos.length})</span>`:''}</span>
+      <span class="nm" title="${esc(c.id)}">${esc(nomeAmigavel(c))}${pasta&&0?` <span style="color:var(--mute)">(${c.filhos.length})</span>`:''}</span>
       ${design && (design.sacolas[design.atual].proprio||[]).includes(c.id)?'<span class="prop" title="Mudança só nesta sacola (ainda não aplicada nas outras)">✏️</span>':''}<span class="chip">${SIGLA[c.painel]}</span>
       <button class="ic" data-a="up" title="Subir">▲</button><button class="ic" data-a="dn" title="Descer">▼</button>`;
     d.onclick = e=>{
@@ -945,7 +981,8 @@ function props(){
       if(inp.dataset.num){ v = parseFloat(String(v).trim().replace(',','.')); if(!isFinite(v)) return render(); }
       if(k==='id'){ if(!v || arte.camadas.some(x=>x.id===v && x!==c)) return render(); setSel(v); }
       if(v==='__nova'){ render(); adicionarCor(); return; }
-      if((k==='cor'||k==='contorno') && !v) delete c[k]; else c[k]=v;
+      if(['rotacao','escala','tamanho_pt'].includes(k) && c.tipo!=='linha'){ const c0=centro(c); c[k]=v; render(); const c1=centro(c); mover(c, c0[0]-c1[0], c0[1]-c1[1]); arred(c); }   // gira/cresce pelo centro: não foge da sacola
+      else if((k==='cor'||k==='contorno') && !v) delete c[k]; else c[k]=v;
       commit(); render();
     };
   });
@@ -977,14 +1014,14 @@ function valida(){
     if(c.visivel===false || c.fundo) return;
     const pn = GAB.paineis[c.painel], b = bboxPainel(c); if(!b) return;
     const fora = b.x1<0 || b.y1<0 || b.x0>pn.w || b.y0>pn.h;
-    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`fora do painel ${c.painel}`:`invade margem de ${M} cm`]);
-    (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `cruza a ${li.tipo}`]); });
+    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`está saindo de ${NOME_PAINEL[c.painel]||c.painel} — puxe para dentro`:`muito perto da borda (deixe ${M*10} mm de folga)`]);
+    (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `passa por cima da ${li.tipo} (lá o papel dobra ou é colado)`]); });
   });
   const n = Object.keys(arte.paleta).length;
   if(n>GAB.regras.max_cores) out.push(['err','paleta',`${n} cores (máx. ${GAB.regras.max_cores})`]);
-  Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta',`${arte.paleta[k].pantone} sem uso`]));
-  const V = $('val');
-  V.innerHTML = out.length ? out.map(([t,id,m])=>`<div class="v ${t}" data-id="${esc(id)}">${t==='err'?'⛔':'⚠️'} <b>${esc(id)}</b> — ${esc(m)}</div>`).join('')
+  if(arte.camadas.length) Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta',`${arte.paleta[k].pantone} sem uso`]));   // sacola vazia: sem ruído
+  const V = $('val'); V.onclick = e=>{ const d=e.target.closest('.v[data-id]'); const c=d&&layer(d.dataset.id); if(c){ setSel(c.id); render(); } };
+  V.innerHTML = out.length ? out.map(([t,id,m])=>`<div class="v ${t}" data-id="${esc(id)}">${t==='err'?'⛔':'⚠️'} <b>${esc(nomeDeId(id))}</b> — ${esc(m)}</div>`).join('')
     : `<div class="v ok">✅ Pronta: ${n} cor(es), tudo dentro da área útil, sem texto/traço abaixo do mínimo.</div>`;
   const nE = out.filter(x=>x[0]==='err').length, nW = out.length-nE, bk = $('b-ck');
   bk.className = 'badge show'; bk.style.background = nE?'var(--err)':nW?'var(--warn)':'var(--ok)'; bk.textContent = out.length?out.length:'✓';
@@ -1012,6 +1049,8 @@ document.addEventListener('keydown', e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
   if(e.code==='Space'){ e.preventDefault(); if(!espaco){ espaco=true; $('stage').classList.add('hand'); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='d'){ if(sels.length){ e.preventDefault(); copiar(); colar(); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='c'){ if(sels.length){ e.preventDefault(); copiar(); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='v'){ if(CLIP){ e.preventDefault(); colar(); } return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='g'){ e.preventDefault(); e.shiftKey?desagrupar():agrupar(); return; }
@@ -1069,7 +1108,7 @@ function lerJSON(t){ t=String(t||'').trim(); const tenta=x=>{ try{ return JSON.p
   const tg0=document.querySelector('#chat .tag'); tg0.textContent='desativado nesta versão'; tg0.style.background='#e7e2da'; tg0.style.color='#6f665c';
   const pr=document.getElementById('prompt'); pr.disabled=true; pr.placeholder='Pedir ao Claude fica disponível na versão integrada. Aqui, edite direto na arte.';
   document.getElementById('send').disabled=true; document.getElementById('clip').disabled=true; document.getElementById('chips').style.display='none';
-  document.getElementById('log').innerHTML=''; return;
+  document.getElementById('log').innerHTML=''; document.getElementById('chat').style.display='none'; setTimeout(()=>{ try{ fit(); }catch(_){} },50); return;
   const tag=document.querySelector('#chat .tag');
   if(SAMPLE){ tag.textContent='conectado'; tag.style.background='#d6efd9'; tag.style.color='#245b31'; }
   else { tag.textContent='simulado'; }
@@ -1748,7 +1787,7 @@ function mockup(){
   const st=$('stage').getBoundingClientRect(), P=GAB.paineis, H=Math.max(P.verso.h, P.frente.h);
   const S = Math.max(4, Math.min((st.height-150)/H, (st.width-80)/(P.frente.w+P.sanfona_esq.w*1.2+1)));
   const W=P.frente.w*S, D=Math.max(0.4*S, P.sanfona_esq.w*S), HH=H*S;
-  const box=$('mockbox'); box.style.width=W+'px'; box.style.height=HH+'px';
+  const box=$('mockbox'); box.style.width=W+'px'; box.style.height=HH+'px'; box.classList.toggle('branco', GAB.papel==='branco');
   box.style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   let n=0;
   const face=(conteudo, fw, fh, tr, sombra)=>`<div class="face" style="width:${fw}px;height:${fh}px;left:${(W-fw)/2}px;top:${HH-fh}px;transform:${tr}">
@@ -1760,7 +1799,7 @@ function mockup(){
     face(faceSVG(sd,n++), D, P.sanfona_dir.h*S, `rotateY(90deg) translateZ(${W/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,.22) 50%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.16))') +
     face(verso, W, P.verso.h*S, `rotateY(180deg) translateZ(${D/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.10),rgba(0,0,0,.14))') +
     face(faceSVG(se,n++), D, P.sanfona_esq.h*S, `rotateY(-90deg) translateZ(${W/2}px)`, 'linear-gradient(90deg,rgba(0,0,0,.16),rgba(0,0,0,.08) 50%,rgba(0,0,0,.22) 50%,rgba(0,0,0,.10))') +
-    `<div class="face" style="width:${W}px;height:${D}px;left:0;top:${HH-D/2}px;transform:rotateX(90deg)"><div style="background:#9c7346"></div><div class="in" style="background:#9c7346"></div></div>`;
+    `<div class="face" style="width:${W}px;height:${D}px;left:0;top:${HH-D/2}px;transform:rotateX(90deg)"><div style="background:${GAB.papel==='branco'?'#d6d1c6':'#9c7346'}"></div><div class="in" style="background:${GAB.papel==='branco'?'#d6d1c6':'#9c7346'}"></div></div>`;
   const sh=$('mockshadow'); sh.style.width=(W*1.9)+'px'; sh.style.height=(D*1.4)+'px'; sh.style.top=(HH/2+HH*0.47)+'px'; sh.style.left='0px';
   $('mockscene').style.width=W+'px'; $('mockscene').style.height=HH+'px';
   sh.style.left=(W/2)+'px';
@@ -1890,16 +1929,17 @@ const CHAVE_LS = 'glopel_editor_projeto_v2';
 const VERSAO = 'alpha 0.1';
 const PALETA_INICIAL = {preto:{pantone:'PANTONE Black C', cmyk:[0,13,49,98]}};
 function designVazio(){
-  const d = {cliente:'Minha padaria', paleta:JSON.parse(JSON.stringify(PALETA_INICIAL)), atual:'f5_kraft', ultima:'f5_kraft', carrinho:[], qtd:{}, confirmadas:[], sacolas:{}};
+  const d = {aprov2:true, cliente:'Minha padaria', paleta:JSON.parse(JSON.stringify(PALETA_INICIAL)), atual:'f5_kraft', ultima:'f5_kraft', carrinho:[], qtd:{}, confirmadas:[], sacolas:{}};
   Object.keys(CATALOGO).forEach(id=>d.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]});
   return d;
 }
 let design = null;
 function carregaDesign(){
-  try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return d; } } }catch(_){}
+  try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return migraAprovacao(d); } } }catch(_){}
   return designVazio();
 }
 function sincroniza(){ if(!design) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
+function migraAprovacao(d){ if(!d || d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
 function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:design.paleta, camadas:b.camadas}; }
 
 /* ---------- adaptação automática entre tamanhos ---------- */
@@ -1979,19 +2019,23 @@ function aposEdicao(){
   if(!design || !propagando) return;
   const b = design.sacolas[design.atual];
   const antes = ultimoBag ? JSON.parse(ultimoBag) : [];
-  if(JSON.stringify(antes)!==JSON.stringify(arte.camadas)){ if(b.estado!=='conferida') b.estado='conferida'; design.confirmadas=(design.confirmadas||[]).filter(x=>x!==design.atual); }
+  if(JSON.stringify(antes)!==JSON.stringify(arte.camadas)){ b.estado = arte.camadas.length ? 'auto' : 'nenhum'; }   // qualquer mudança pede nova aprovação
   design.ultima = design.atual;
   const df = diffConteudo(antes, arte.camadas);
-  const ids = [...df.add, ...df.rem, ...df.mud];
+  // tamanho/posição também podem ir para as outras (adaptados) — pedido dos testes: "nome maior" em todas
+  const LAY=['x','y','escala','rotacao','w','h','rx','ry','x1','y1','x2','y2','raio','tamanho_pt','painel','traco_mm'], A=new Map(antes.map(c=>[c.id,c]));
+  const lay = arte.camadas.filter(c=>{ const a=A.get(c.id); return a && LAY.some(k=>JSON.stringify(a[k])!==JSON.stringify(c[k])); }).map(c=>c.id);
+  const ids = [...df.add, ...df.rem, ...df.mud, ...lay];
   if(!ids.length) return;
   if(!outrasCriadas().length) return;            // sem outras sacolas criadas: nada a sincronizar
   b.proprio = [...new Set([...(b.proprio||[]), ...ids])];
+  b.layout = [...new Set([...(b.layout||[]), ...lay])];
   mostraPendentes();
 }
 function mostraPendentes(){
   const b = design.sacolas[design.atual], pend = b.proprio||[], outras = outrasCriadas();
   if(!pend.length || !outras.length){ $('faixa').classList.remove('show'); return; }
-  const nomes = pend.map(i=>`<b>${esc(i)}</b>`).slice(0,3).join(', ')+(pend.length>3?` +${pend.length-3}`:'');
+  const nomes = pend.map(i=>`<b>${esc(nomeDeId(i))}</b>`).slice(0,3).join(', ')+(pend.length>3?` +${pend.length-3}`:'');
   faixa(`✏️ Mudança só nesta sacola: ${nomes}.`, [['Aplicar nas outras sacolas', aplicaNasOutras, true]], 0);
 }
 function aplicaNasOutras(){
@@ -2003,24 +2047,34 @@ function aplicaNasOutras(){
       const sL = src.find(c=>c.id===id), tL = t.camadas.find(c=>c.id===id);
       if(!sL){ t.camadas = t.camadas.filter(c=>c.id!==id); return; }                       // apagada aqui → apaga lá
       if(!tL){ const n=adaptaCamada(sL,gO,gD); if(!n) return; t.camadas.splice(Math.min(src.indexOf(sL), t.camadas.length),0,n); return; } // nova → entra adaptada (posição/tamanho finais)
+      if((b.layout||[]).includes(id)){ const n=adaptaCamada(sL,gO,gD); if(n){ const i=t.camadas.indexOf(tL); t.camadas[i]=n; return; } }   // tamanho/posição mudou: leva adaptado
       for(const k in sL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id') tL[k]=JSON.parse(JSON.stringify(sL[k])); }
       for(const k in tL){ if(!CAMPOS_LAYOUT.has(k) && k!=='id' && !(k in sL)) delete tL[k]; }
     });
     if(t.estado==='conferida') t.estado='auto';   // conteúdo mudou lá: pede nova conferida
     design.confirmadas=(design.confirmadas||[]).filter(x=>x!==bid);
   });
-  b.proprio = [];
+  b.proprio = []; b.layout = [];
   salvaHist(); render(); atualizaSacolas();
   faixa(`✅ Aplicado em ${outras.length} outra${outras.length>1?'s':''} sacola${outras.length>1?'s':''}. Elas ficaram 🟡 para você conferir.`, null, 6000);
 }
 
 /* ---------- histórico do projeto inteiro ---------- */
 function snap(){ sincroniza(); return JSON.stringify(design); }
-function salvaHist(){ const j=snap(); if(j===hist[hpos]) return; hist=hist.slice(0,hpos+1); hist.push(j); hpos++; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+function salvaHist(){ const j=snap(); histSacolas(); if(j===hist[hpos]) return; hist=hist.slice(0,hpos+1); hist.push(j); hpos++; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+/* Desfazer/Refazer POR SACOLA (Ctrl+Z, botões): cada sacola tem sua pilha; nunca troca de sacola sozinho.
+   O histórico global (hist/hpos) fica só para os "↶ Desfazer" das faixas de ações em lote (assistente, exemplo, recomeçar). */
+let HIST = {};
+function fotoSacola(id){ const b=design.sacolas[id]; return JSON.stringify({camadas:b.camadas, estado:b.estado, proprio:b.proprio||[], paleta:design.paleta, cliente:design.cliente}); }
+function histSacolas(){ (design.carrinho||[]).forEach(id=>{ if(!design.sacolas[id]) return; const j=fotoSacola(id), H=HIST[id];
+  if(!H){ HIST[id]={p:[j], i:0}; return; } if(H.p[H.i]===j) return; H.p=H.p.slice(0,H.i+1); H.p.push(j); if(H.p.length>120) H.p.shift(); H.i=H.p.length-1; }); }
+function aplicaFoto(id, j){ const o=JSON.parse(j), b=design.sacolas[id]; b.camadas=o.camadas; b.estado=o.estado; b.proprio=o.proprio; design.paleta=o.paleta; design.cliente=o.cliente;
+  propagando=false; abreSacola(id, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
 commit = function(){ sincroniza(); aposEdicao(); salvaHist(); };
-function restaura(i){ hpos=i; design=JSON.parse(hist[hpos]); propagando=false; abreSacola(design.atual, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
-undo = function(){ if(hpos>0) restaura(hpos-1); };
-redo = function(){ if(hpos<hist.length-1) restaura(hpos+1); };
+function restaura(i){ const atual=design.atual; hpos=i; design=JSON.parse(hist[hpos]); if(design.carrinho.includes(atual)) design.atual=atual; propagando=false; abreSacola(design.atual, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
+undo = function(){ if(editando) fechaEdicao(); sincroniza(); histSacolas(); const id=design.atual, H=HIST[id];
+  if(!H || H.i<=0){ toast('Nada para desfazer nesta sacola.'); return; } H.i--; aplicaFoto(id, H.p[H.i]); };
+redo = function(){ const id=design.atual, H=HIST[id]; if(!H || H.i>=H.p.length-1){ toast('Nada para refazer.'); return; } H.i++; aplicaFoto(id, H.p[H.i]); };
 
 /* ---------- salvar sozinho ---------- */
 let salvarTimer=null;
@@ -2036,19 +2090,26 @@ function abreSacola(id, semGerar, semSync){
   if(editando) fechaEdicao();
   if(!semSync) sincroniza();
   const b = design.sacolas[id];
-  if(!semGerar && b.estado==='nenhum'){ geraAdaptada(id); }
+  let gerou=false; if(!semGerar && b.estado==='nenhum'){ geraAdaptada(id); gerou=b.estado==='auto' && b.camadas.length>0; }
   design.atual = id; setGab(CATALOGO[id]); apontaArte(); setSel(null);
   ultimoBag = JSON.stringify(arte.camadas);
   $('gabinfo').innerHTML = infoGab();
   fit(); render(); atualizaSacolas();
   if((b.proprio||[]).length && outrasCriadas().length) mostraPendentes();
-  else if(!semGerar && b.estado==='auto' && b.camadas.length) faixa(`🟡 <b>${esc(GAB.nome)}</b> foi adaptada sozinha a partir de outra sacola. Confira e ajuste se precisar.`, [['Está boa ✓', marcaConferida, true]], 12000);
+  else if(gerou) faixa(`🟡 A arte de <b>${esc(GAB.nome)}</b> foi adaptada sozinha. Confira e aprove.`, [['✅ Aprovar esta arte', marcaConferida, true]], 12000);
 }
-function marcaConferida(){ design.sacolas[design.atual].estado='conferida'; design.ultima=design.atual; salvaHist(); atualizaSacolas(); }
+function bloqueiosChecagem(){ return valida().filter(([t,id,m])=>!(id==='paleta' && /sem uso/.test(m))); }
+function marcaConferida(){
+  const bl=bloqueiosChecagem();
+  if(bl.length){ toggleDrawer('d-check', true); toast(`⛔ Antes de aprovar, resolva ${bl.length===1?'o aviso':'os '+bl.length+' avisos'} da Checagem (à direita).`); return; }
+  design.sacolas[design.atual].estado='conferida'; design.ultima=design.atual; salvaHist(); atualizaSacolas(); toast('✅ Arte aprovada.');
+  const falta=design.carrinho.filter(i=>design.sacolas[i].estado!=='conferida');
+  if(!falta.length) faixa('🎉 Todas as sacolas aprovadas!', [['🛒 Ir para o carrinho e finalizar', ()=>vaiLoja(true), true]], 15000);
+}
 function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.7">(faca ${esc(GAB.fonte)})</span>`:''}<br>Frente ${GAB.paineis.frente.w} × ${GAB.paineis.frente.h} cm${GAB.paineis.sanfona_esq.w?` · sanfonas ${GAB.paineis.sanfona_esq.w} cm`:' · sem sanfona'}${GAB.aprox?`<br><span style="color:var(--warn)">⚠️ ${esc(GAB.aprox)}</span>`:''}<br>Máx. ${GAB.regras.max_cores} cores · margem ${M} cm · texto ≥ ${GAB.regras.texto_min_pt} pt · traço ≥ ${GAB.regras.linha_min_mm} mm · retícula ${lpiMax()} lpi<br><span style="color:#e5007e">rosa</span> = gabarito · <span style="color:#2563eb">azul tracejado</span> = área útil`; }
 
 /* ---------- status visível: faixa de miniaturas + menu ---------- */
-const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Conferir','#d9a400'], conferida:['🟢','Conferida','#3f8f5a']};
+const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Falta aprovar','#d9a400'], conferida:['✅','Aprovada','#2f6b3f']};
 function miniSacola(g, cor){ const w=g.paineis.frente.w, h=g.paineis.frente.h, k=38/h; return `<svg width="${Math.max(16,w*k)}" height="38" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="0.6" fill="${cor}" stroke="rgba(0,0,0,.18)" stroke-width="0.3"/><path d="M0 0.8 ${Array.from({length:Math.floor(w/1.2)},(_,i)=>`L${i*1.2+0.6} 0 L${i*1.2+1.2} 0.8`).join(' ')}" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="0.25"/></svg>`; }
 function atualizaSacolas(){
   const S=$('sacolas'); S.innerHTML='';
@@ -2070,7 +2131,7 @@ function menuProdutos(){
   if(m.classList.contains('show')){ m.classList.remove('show'); return; }
   m.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], prop=(b.proprio||[]).length;
     return `<div class="pm ${b.estado==='nenhum'?'cinza':'feita'} ${id===design.atual?'on':''}" data-id="${id}"><span>${ic}</span><span class="nm">${esc(g.nome)}</span><span class="st" style="color:${cor}">${txt}${prop?' · ✏️':''}</span></div>`; }).join('')
-    + `<div class="leg">🟢 conferida · 🟡 adaptada sozinha, conferir · ⚪ falta criar · ✏️ tem mudança só nela</div>`;
+    + `<div class="leg">✅ aprovada · 🟡 falta aprovar · ⚪ falta criar · ✏️ tem mudança só nela</div>`;
   m.querySelectorAll('[data-id]').forEach(e=>e.onclick=()=>{ m.classList.remove('show'); if(e.dataset.id!==design.atual) abreSacola(e.dataset.id); });
   m.classList.add('show');
 }
@@ -2078,28 +2139,24 @@ function menuProdutos(){
 /* ---------- PRONTO: confirmar cada produto do carrinho ---------- */
 function pronto(){
   sincroniza();
-  const linhas = design.carrinho.map(id=>{ const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado];
-    const bloq = b.estado!=='conferida';
-    const jaOk=(design.confirmadas||[]).includes(id);
-    return `<div class="pr${jaOk?' conf':''}" data-id="${id}">${miniSacola(g, COR_PAPEL[g.papel])}<div class="nm"><b>${esc(g.nome)}</b><div class="st" style="color:${cor}">${ic} ${txt}${(b.proprio||[]).length?' · ✏️ mudança só nesta':''}${b.camadas.length?'':' · sem arte'}</div></div>
-      <button data-a="rem" title="Tirar do carrinho">🗑 Remover</button><button data-a="edit">✏️ Editar</button>
-      <button data-a="ok" class="${bloq||jaOk?'':'pri'}" ${bloq||jaOk?'disabled':''} ${bloq?'title="Abra e confira esta sacola antes"':''}>${jaOk?'✓ Confirmada':'✓ Confirmar'}</button></div>`; }).join('');
+  const falta = design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
+  const linhas = design.carrinho.map(id=>{ const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], ok=b.estado==='conferida';
+    const acao = ok ? `<button data-a="edit">✏️ Mexer de novo</button><button disabled>✅ Aprovada</button>`
+      : `<button data-a="rem" title="Tirar do carrinho">🗑 Remover</button><button data-a="edit" class="pri">${b.estado==='nenhum'?'🎨 Criar a arte':'👀 Abrir e aprovar'}</button>`;
+    return `<div class="pr${ok?' conf':''}" data-id="${id}">${miniSacola(g, COR_PAPEL[g.papel])}<div class="nm"><b>${esc(g.nome)}</b><div class="st" style="color:${cor}">${ic} ${txt}</div></div>${acao}</div>`; }).join('');
   $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Tudo pronto?</h3>
-    <div style="color:var(--mute);margin-bottom:10px">Confirme cada sacola do carrinho. As que estão 🟡 ou ⚪ precisam ser abertas e conferidas antes.</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
+    <div style="color:var(--mute);margin-bottom:10px">${falta.length ? `Falta aprovar ${falta.length===1?'1 sacola':falta.length+' sacolas'}. Abra cada uma, confira e clique <b>✅ Aprovar esta arte</b>.` : 'Todas as artes estão aprovadas.'}</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
+    ${!falta.length && design.carrinho.length ? '<div class="fim">🎉 Tudo aprovado! <button id="irCar" class="pri" style="margin-left:8px">🛒 Ir para o carrinho e finalizar</button></div>' : ''}
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="fx">Voltar a editar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
-  $('mbox').querySelectorAll('.pr button').forEach(bt=>bt.onclick=()=>{
+  if($('irCar')) $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); };
+  $('mbox').querySelectorAll('.pr button[data-a]').forEach(bt=>bt.onclick=()=>{
     const id=bt.closest('.pr').dataset.id, a=bt.dataset.a;
-    if(a==='edit'){ $('modal').style.display='none'; abreSacola(id); }
+    if(a==='edit'){ $('modal').style.display='none'; if(id!==design.atual) abreSacola(id); }
     if(a==='rem'){ sincroniza(); remCarrinho(id); novaHistoria();
       if(!design.carrinho.length){ $('modal').style.display='none'; vaiLoja(); toast('Carrinho vazio.'); return; }
       if(design.atual===id) abreSacola(design.carrinho[0], false, true); atualizaSacolas(); pronto(); }
-    if(a==='ok'){ bt.closest('.pr').classList.add('conf'); bt.textContent='✓ Confirmada'; bt.disabled=true;
-      design.confirmadas=[...new Set([...(design.confirmadas||[]), id])]; agendaSalvar();
-      const todas=[...$('mbox').querySelectorAll('.pr')].every(p=>p.classList.contains('conf'));
-      if(todas){ const f=document.createElement('div'); f.className='fim'; f.innerHTML='🎉 Tudo confirmado! <button id="irCar" class="pri" style="margin-left:8px">Voltar ao carrinho e finalizar</button>'; $('mbox').appendChild(f);
-        $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); }; } }
   });
 }
 
@@ -2125,7 +2182,7 @@ function carregaExemplo(){
   setGab(gO); arte={cliente:ex.cliente, paleta:ex.paleta, camadas:ex.camadas}; render();
   design.sacolas[destino].camadas = destino.startsWith('f5_') ? ex.camadas : ex.camadas.map(c=>adaptaCamada(c,gO,gD)).filter(Boolean);
   setGab(gA); arte=aA;
-  design.sacolas[destino].estado = destino.startsWith('f5_') ? 'conferida' : 'auto'; design.ultima=destino;
+  design.sacolas[destino].estado = 'auto'; design.ultima=destino;
   propagando=false; abreSacola(destino, false, true); propagando=true; salvaHist();
   faixa('🥖 Exemplo carregado. As outras sacolas se adaptam quando você abrir cada uma.', [['↶ Desfazer', ()=>restaura(antes)]], 10000);
 }
@@ -2157,10 +2214,9 @@ function sacolaIlustra(id, alt=150){
 }
 function statusArte(id){
   const b=design.sacolas[id]; if(!b) return ['⚪','Sem arte','#a49a8e'];
-  if((design.confirmadas||[]).includes(id)) return ['✅','Arte aprovada','#2f6b3f'];
-  return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Arte para conferir','#b07f00'], conferida:['🟢','Arte pronta — falta aprovar','#3f8f5a']})[b.estado];
+  return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Falta aprovar a arte','#b07f00'], conferida:['✅','Arte aprovada','#2f6b3f']})[b.estado];
 }
-function novaHistoria(){ hist=[snap()]; hpos=0; ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
+function novaHistoria(){ hist=[snap()]; hpos=0; HIST={}; histSacolas(); ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
 function noCarrinho(id){ return design.carrinho.includes(id); }
 function addCarrinho(id, qtd){
   design.qtd = design.qtd || {};
@@ -2172,7 +2228,7 @@ function remCarrinho(id){
   design.carrinho = design.carrinho.filter(x=>x!==id);
   design.confirmadas = (design.confirmadas||[]).filter(x=>x!==id);
 }
-function toast(t){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); clearTimeout(d._t); d._t=setTimeout(()=>d.classList.remove('show'), 2600); }
+function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); clearTimeout(d._t); d._t=setTimeout(()=>d.classList.remove('show'), ms||2600); }
 
 function renderLoja(){
   sincroniza();
@@ -2223,9 +2279,9 @@ function renderCarrinho(){
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>
         <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   $('cartotal').textContent=brl(tot);
-  const pend = design.carrinho.filter(id=>!(design.confirmadas||[]).includes(id));
+  const pend = design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
   $('finalizar').disabled = !!pend.length;
-  $('carmsg').innerHTML = pend.length ? `Para finalizar, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Pronto</b> no editor).` : '✅ Todas as artes aprovadas.';
+  $('carmsg').innerHTML = pend.length ? `Para finalizar, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : '✅ Todas as artes aprovadas.';
   L.querySelectorAll('.ci').forEach(c=>{ const id=c.dataset.id;
     c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
       const q=design.qtd[id]||1;
@@ -2465,11 +2521,15 @@ function coresUsadas(excetoLayer){
 }
 function limpaPaletaNaoUsada(excetoLayer){ const u=coresUsadas(excetoLayer); Object.keys(arte.paleta).forEach(k=>{ if(!u.has(k)) delete arte.paleta[k]; }); }
 function chaveNova(pantone){ const base=pantone.replace('PANTONE ','').replace(/\W+/g,'_').toLowerCase(); let k='p'+base, i=2; while(arte.paleta[k]) k='p'+base+'_'+(i++); return k; }
+let COR_TROCADA=[];
+function avisoCoresTrocadas(){ if(!COR_TROCADA.length) return; const alvo=[...new Set(COR_TROCADA.map(x=>x[1]))];
+  toast(`⚠️ ${COR_TROCADA.length} cor${COR_TROCADA.length>1?'es':''} do desenho não coube${COR_TROCADA.length>1?'ram':''} no limite de ${GAB.regras.max_cores} e virou${COR_TROCADA.length>1?'ram':''} <b>${esc(alvo.join(', '))}</b>. Para manter a cor original, tire uma cor da lista 🎨 Cores.`, 9000); COR_TROCADA=[]; }
 function corParaPaleta(hex, livreParaNovas){
   // usa uma cor da paleta parecida; senão cria uma nova Pantone (se couber)
   const c=hex2rgb(hex); let melhor=null;
   for(const k in arte.paleta){ const d=dist(c, hex2rgb(cmyk2hex(arte.paleta[k].cmyk))); if(!melhor||d<melhor.d) melhor={k,d}; }
-  if(melhor && (melhor.d<90 || !livreParaNovas())) return melhor.k;
+  if(melhor && melhor.d<90) return melhor.k;
+  if(melhor && !livreParaNovas()){ COR_TROCADA.push([hex, arte.paleta[melhor.k].pantone]); return melhor.k; }   // não cabe: usa a mais parecida e avisa
   const p=pantoneProximo(hex), k=chaveNova(p[0]); arte.paleta[k]={pantone:p[0], cmyk:p[2]}; return k;
 }
 // agrupa cores (aglomerativo, ponderado pela área) até n grupos; brancos viram papel
@@ -2500,7 +2560,7 @@ async function recebeArquivo(f){
     const c = insereVetor(dados, base, {}, {asset:id});
     const usadas=coresUsadas(c).size, max=GAB.regras.max_cores;
     if(nCores + usadas > max){ editorVetor(c, `Este arquivo tem <b>${nCores} cor${nCores>1?'es':''}</b> e a sacola já usa ${usadas}. A impressão aceita no máximo <b>${max}</b> no total.`); }
-    else { c.mapa = mapaAutomatico(dados.cores, c); commit(); render(); toast(`✦ ${esc(f.name)} adicionado. Cores entraram em 🎨 Cores.`); }
+    else { COR_TROCADA=[]; c.mapa = mapaAutomatico(dados.cores, c); commit(); render(); toast(`✦ ${esc(f.name)} adicionado. Cores entraram em 🎨 Cores.`); setTimeout(avisoCoresTrocadas, 2600); }
     renderElementos();
   } else if(['png','jpg','jpeg','webp','gif'].includes(ext)){
     const data = await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(f); });
@@ -2556,7 +2616,7 @@ function editorVetor(c, aviso){
       <span><button id="vCan">Cancelar</button> <button id="vOk" class="pri" ${total>max?'disabled':''}>Aplicar</button></span></div>`;
     $('mbox').querySelectorAll('select[data-h]').forEach(sl=>sl.onchange=()=>{ let v=sl.value; if(v==='__nova'){ const p=pantoneProximo(sl.dataset.h); v=chaveNova(p[0]); arte.paleta[v]={pantone:p[0], cmyk:p[2]}; }
       c.mapa=Object.assign({}, c.mapa, {[sl.dataset.h]:v}); render(); desenha(); });
-    $('vAuto').onclick=()=>{ c.mapa=mapaAutomatico(orig, c); render(); desenha(); };
+    $('vAuto').onclick=()=>{ COR_TROCADA=[]; c.mapa=mapaAutomatico(orig, c); render(); desenha(); avisoCoresTrocadas(); };
     $('vCan').onclick=()=>{ const a=JSON.parse(antes); c.mapa=a.mapa; Object.keys(arte.paleta).forEach(k=>delete arte.paleta[k]); Object.assign(arte.paleta, a.paleta); $('modal').style.display='none'; render(); };
     $('vOk').onclick=()=>{ limpaPaletaNaoUsada(); $('modal').style.display='none'; commit(); render(); };
   };
@@ -2619,6 +2679,9 @@ function seletorPantone(titulo, sub, aoEscolher, bloqueadas){
   $('mbox').querySelectorAll('.pt').forEach(b=>b.onclick=()=>{ const p=pantoneInfo(b.dataset.p); $('modal').style.display='none'; aoEscolher(p[0], p[2]); });
   $('ptCod').oninput=()=>{ const v=$('ptCod').value.trim().toUpperCase().replace(/^PANTONE\s*/,''); const p=PANTONES.find(x=>x[0]==='PANTONE '+v); if(p) $('ptCor').value=p[1]; };
   $('ptUsar').onclick=()=>{ let v=$('ptCod').value.trim().replace(/^pantone\s*/i,''); if(!v){ $('ptCod').focus(); return; }
+    const conhecido=PANTONES.some(x=>x[0]==='PANTONE '+v.toUpperCase()), formato=/^\d{3,5}\s?[CUM]?$/i.test(v);
+    if(!conhecido && !formato){ $('ptCod').style.borderColor='var(--err)'; $('ptCod').value=''; $('ptCod').placeholder='Use o número, ex.: 7409 C'; $('ptCod').focus(); toast('Isso não parece um código Pantone. Digite o número da cor (ex.: <b>7409 C</b>) ou escolha uma cor na grade acima.'); return; }
+    if(formato && !/[CUM]$/i.test(v)) v=v+' C';
     const nome='PANTONE '+v.toUpperCase(); const p=PANTONES.find(x=>x[0]===nome); const [r,g,b]=hex2rgb($('ptCor').value);
     const k=1-Math.max(r,g,b)/255, cm = k>=1?[0,0,0,100]:[ (1-r/255-k)/(1-k), (1-g/255-k)/(1-k), (1-b/255-k)/(1-k), k ].map(x=>Math.round(x*100));
     $('modal').style.display='none'; aoEscolher(nome, p?p[2]:cm); };
@@ -2756,7 +2819,7 @@ async function minhasArtes(){
   $('mbox').querySelectorAll('.pr button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.pr').dataset.id, a=data.find(x=>x.id===id);
     if(b.dataset.a==='abrir'){ const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ toast('⚠️ '+esc(error.message)); return; }
       Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
-      design=row.dados.design; design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[];
+      design=migraAprovacao(row.dados.design); design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[];
       design.carrinho=(design.carrinho||[]).filter(i=>CATALOGO[i]); Object.keys(CATALOGO).forEach(i=>{ if(!design.sacolas[i]) design.sacolas[i]={estado:'nenhum',proprio:[],camadas:[]}; });
       if(!CATALOGO[design.atual]) design.atual=design.carrinho[0]||'f5_kraft'; if(editando){ const t=editando.ta; editando=null; t.remove(); }
       setGab(CATALOGO[design.atual]); apontaArte();   // senão o sincroniza() seguinte grava a arte antiga da tela por cima da que veio da nuvem
@@ -3004,7 +3067,7 @@ function painelDados(){
 
 /* ---------- init ---------- */
 design = carregaDesign(); setGab(CATALOGO[design.atual]); apontaArte();
-hist=[snap()]; hpos=0; ultimoBag=JSON.stringify(arte.camadas);
+hist=[snap()]; hpos=0; HIST={}; histSacolas(); ultimoBag=JSON.stringify(arte.camadas);
 $('gabinfo').innerHTML = infoGab(); atualizaSacolas();
 $('prodbtn').onclick=e=>{ e.stopPropagation(); menuProdutos(); };
 document.addEventListener('click', e=>{ if(!e.target.closest('#prodwrap')) $('prodmenu').classList.remove('show'); });

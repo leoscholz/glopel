@@ -19,7 +19,7 @@ gh = full_t.replace('__NUVEM__','true').replace('__GABARITO__', json.dumps(g, en
   const tg0=document.querySelector('#chat .tag'); tg0.textContent='desativado nesta versão'; tg0.style.background='#e7e2da'; tg0.style.color='#6f665c';
   const pr=document.getElementById('prompt'); pr.disabled=true; pr.placeholder='Pedir ao Claude fica disponível na versão integrada. Aqui, edite direto na arte.';
   document.getElementById('send').disabled=true; document.getElementById('clip').disabled=true; document.getElementById('chips').style.display='none';
-  document.getElementById('log').innerHTML=''; return;''', 1)
+  document.getElementById('log').innerHTML=''; document.getElementById('chat').style.display='none'; setTimeout(()=>{ try{ fit(); }catch(_){} },50); return;''', 1)
 os.makedirs(os.path.join(AQUI, 'dist'), exist_ok=True)
 open(os.path.join(AQUI, 'dist', 'artifact.html'), 'w', encoding='utf-8').write(full)
 open(os.path.join(AQUI, '..', 'index.html'), 'w', encoding='utf-8').write(gh)

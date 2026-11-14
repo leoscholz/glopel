@@ -58,6 +58,16 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 ## Bugs / testes a fazer
 - **Corrigidos 14-11 (rodada de testadores):** Desfazer pelo botão quebrava o editor (onclick apontava para o `undo` antigo, que fazia `arte = design` → erros forEach/length e Pronto mudo) — agora `()=>undo()`; texto digitado salvo cortado (agora salva a cada tecla + `pagehide/beforeunload/visibilitychange` gravam na hora); vírgula decimal nos campos de Ajustes (`inputmode=decimal`, aceita `1,6`).
 - **Corrigidos 14-11 (2):** Abrir arte da nuvem vinha em branco (o `sincroniza()` gravava a `arte` antiga da tela por cima do design carregado — agora `setGab+apontaArte` logo após trocar `design`; mesmo bug no "Começar arte nova", que agora também pede confirmação); editor sempre abre na Prévia (Produto final travava ao reabrir); colar desloca 0,5 cm sempre que o item já existe no destino.
+- **Lote pós-testes (14-11 noite, decisões do Leo 1–3 = sim, 4 = decidido por Claude):**
+  - **Aprovação única**: estados ⚪ Falta criar · 🟡 Falta aprovar · ✅ Aprovada (`estado:'conferida'` internamente). Só o botão **✅ Aprovar esta arte** aprova; qualquer edição volta a 🟡. `design.confirmadas` aposentado (migração `migraAprovacao()`, flag `aprov2`: 🟢 antigos sem confirmação voltam a 🟡). "Tudo pronto?" só lista status e leva a abrir/aprovar.
+  - **Checagem bloqueia aprovar** (`bloqueiosChecagem()`: tudo menos "cor sem uso"); finalizar exige todas aprovadas.
+  - **Desfazer por sacola** (`HIST[id]`, `histSacolas()`, `aplicaFoto()`); nunca troca de sacola; Ctrl+Y refaz; Ctrl+D duplica. Histórico global `hist/hpos` só para os "↶ Desfazer" das faixas de lote (assistente, exemplo, recomeçar), e `restaura()` mantém a sacola aberta.
+  - **Aplicar nas outras** agora leva também tamanho/posição (`b.layout`, adaptado com `adaptaCamada`).
+  - Rotação/escala/corpo pelo Ajustes giram/crescem pelo centro.
+  - Cores: código Pantone validado; "Converter"/upload avisam quando cor não coube e virou outra (`COR_TROCADA`).
+  - Nomes amigáveis (`nomeAmigavel()`): camadas, hover, checagem, faixa; chips Frente/Verso/Lateral; mensagens da checagem em linguagem leiga; clicar no aviso seleciona o item.
+  - Mockup CSS: interior do saco branco claro. Faixa "adaptada sozinha" só quando a sacola acabou de ser gerada. "Sem uso" não aparece em sacola vazia. Chat desativado escondido no build do GitHub.
+  - **Layout**: ≤1500 px botões do topo só com ícone; ≤1180 px topo numa linha com rolagem; **≤700 px (celular)** abas viram barra de baixo, painéis viram folha deslizante (58vh), ferramentas em faixa horizontal, zoom no canto superior.
 - **Backlog da rodada de testes (14-11)**: ver `TESTE-UX-2026-11-14.md` (bugs abertos, decisões do Leo, UX por impacto).
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Barra do topo quebra linha perto de 1300 px quando aparecem Salvar/Entrar (build GitHub) — avaliar compactar.
