@@ -307,6 +307,21 @@ button{user-select:none;-webkit-user-select:none}
 .tag{font-size:10.5px;background:#f6e3a7;border-radius:5px;padding:1px 6px;color:#7a5410;font-weight:600}
 .props{padding:0 14px 10px}
 .row{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center;margin:7px 0}
+.aj-tit{font-size:15px;margin:2px 0 8px;display:flex;gap:6px;align-items:center}
+.aj-sec{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 5px;display:flex;justify-content:space-between;align-items:baseline}
+.aj-med{font-weight:500;text-transform:none;letter-spacing:0;color:var(--mute)}
+.aj-txt{width:100%;box-sizing:border-box;font-size:15px;padding:8px;border-radius:10px}
+.aj-bts{display:flex;gap:6px;flex-wrap:wrap;margin:5px 0}
+.aj-bts button{flex:1;padding:8px 6px;font-size:13px;white-space:nowrap}
+.aj-bts button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.aj-bts.grande button{padding:11px 6px;font-size:15px;font-weight:700}
+.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.swb{width:34px;height:34px;border-radius:50%;padding:0;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.swb.on{box-shadow:0 0 0 3px var(--acc)}
+.swb.papel{background:repeating-linear-gradient(45deg,#d8b98f 0 4px,#ead6b8 4px 8px)}
+.swn{padding:7px 10px;font-size:12.5px}
+details.avanc{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4px 0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
 .row label,.row2 label{color:var(--mute);font-size:12.5px}
 #val{padding:0 14px 14px}
@@ -803,6 +818,7 @@ svg.addEventListener('pointerdown', e=>{
   if(duplo && c.tipo==='meiotom'){ e.preventDefault(); editorMeiotom(c); return; }
   if(e.shiftKey || e.metaKey || e.ctrlKey){ toggleSel(c.id); render(); return; }
   if(!sels.includes(c.id)) setSel(c.id); else sel = c.id;
+  if(innerWidth>700 && !document.querySelector('.drawer.right.open')) toggleDrawer('d-ajustes', true);   // abre Ajustes sozinho ao clicar num item
   if(c.bloqueado){ render(); return; }
   if(tool==='escalar'){ drag = iniciaEscala(p); }
   else {
@@ -934,6 +950,7 @@ function paleta(){
   m.value = [...m.options].some(o=>o.value===cur) ? cur : 'previa'; if(m.value!==cur) modo=m.value;
 }
 function campo(lbl, key, val, type='number', step='0.1'){ return `<div class="row"><label>${lbl}</label><input data-k="${key}" type="${type}" step="${step}" value="${esc(val)}"></div>`; }
+let AJ_AVANC=false;
 function props(){
   const P = $('props'); const ba=$('b-aj'); ba.className = sels.length?'badge show':'badge'; ba.textContent = sels.length;
   if(sels.length>1){
@@ -951,35 +968,64 @@ function props(){
   if(!c){ P.innerHTML = `<div class="empty">👆 Clique em qualquer parte da arte para ajustar aqui: posição, tamanho, cor, texto…</div>`; return; }
   const cores = ['', ...Object.keys(arte.paleta), 'papel'];
   const opt = v => cores.map(k=>`<option value="${k}" ${k===(v||'')?'selected':''}>${k?esc(k==='papel'?'papel (sem tinta)':arte.paleta[k].pantone):'— nenhuma —'}</option>`).join('');
-  let h = `<div class="row"><label>Nome</label><input data-k="id" type="text" value="${esc(c.id)}"></div>
-    <div class="row"><label>Painel</label><select data-k="painel">${PAINEIS.map(p=>`<option ${p===c.painel?'selected':''}>${p}</option>`).join('')}</select></div>`;
+  // ---- parte simples (leigo) ----
+  const NOMEP={frente:'Frente', verso:'Verso', sanfona_esq:'Lateral esquerda', sanfona_dir:'Lateral direita'};
+  const ehTxt=c.tipo==='texto', b0=bboxPainel(c);
+  const medida = ehTxt ? `letras com ~${Math.max(1,Math.round((c.tamanho_pt||12)*(c.escala||1)*PT_CM*10*0.72))} mm de altura` : (b0?`~${((b0.x1-b0.x0)).toFixed(1).replace('.',',')} × ${((b0.y1-b0.y0)).toFixed(1).replace('.',',')} cm`:'');
+  const swatches = (c.tipo!=='vetor' && c.tipo!=='meiotom' && c.tipo!=='grupo') ? `<div class="sw">${Object.keys(arte.paleta).map(k=>`<button class="swb${c.cor===k?' on':''}" data-cor="${k}" title="${esc(arte.paleta[k].pantone)}" style="background:${cmyk2hex(arte.paleta[k].cmyk)}"></button>`).join('')}<button class="swb papel${c.cor==='papel'?' on':''}" data-cor="papel" title="Sem tinta (cor do papel)"></button><button class="swn" data-cor="__nova">＋ Nova cor</button></div>` : '';
+  let simples = `<div class="aj-tit">${ICO[c.tipo]||'•'} <b>${esc(nomeAmigavel(c))}</b></div>
+    <div class="row"><label>Fica no</label><select data-k="painel">${PAINEIS.map(p=>`<option value="${p}" ${p===c.painel?'selected':''}>${NOMEP[p]||p}</option>`).join('')}</select></div>`;
+  if(ehTxt) simples += `<div class="aj-sec">O que está escrito</div><textarea data-k="texto" rows="2" class="aj-txt">${esc(c.texto)}</textarea>
+    <div class="aj-bts"><button data-aj="linhas">${(c.texto||'').includes('\n')?'⤒ Juntar numa linha':'↵ Quebrar em 2 linhas'}</button>
+    ${['esquerda','centro','direita'].map(a=>`<button data-aj="al-${a}" class="${(c.alinhamento||'esquerda')===a?'on':''}" title="Alinhar à ${a}">${{esquerda:'⇤',centro:'↔',direita:'⇥'}[a]}</button>`).join('')}</div>
+    <div class="row"><label>Letra</label><select data-k="fonte">${Object.keys(FONTES).map(f=>`<option ${f===c.fonte?'selected':''}>${f}</option>`).join('')}</select></div>`;
+  simples += `<div class="aj-sec">Tamanho <span class="aj-med">${medida}</span></div>
+    <div class="aj-bts grande"><button data-aj="menor">${ehTxt?'A−':'−'} Menor</button><button data-aj="maior">${ehTxt?'A+':'＋'} Maior</button></div>
+    <div class="aj-sec">Posição</div>
+    <div class="aj-bts"><button data-aj="ch">↔ Meio (largura)</button><button data-aj="cv">↕ Meio (altura)</button><button data-aj="gira">⟳ Girar</button></div>`;
+  if(swatches) simples += `<div class="aj-sec">Cor</div>${swatches}`;
+  simples += `<div class="aj-sec">Ordem</div><div class="aj-bts"><button data-aj="frente">⬆ Para cima de tudo</button><button data-aj="tras">⬇ Para baixo</button></div>`;
+  let h = `<div class="row"><label>Nome</label><input data-k="id" type="text" value="${esc(c.id)}"></div>`;
   if(c.tipo==='linha') h += `<div class="row2">${['x1','y1','x2','y2'].map(k=>`<div><label>${k} (cm)</label><input data-k="${k}" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c[k]}"></div>`).join('')}</div>`;
   else h += `<div class="row2"><div><label>X (cm)</label><input data-k="x" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.x||0}"></div><div><label>Y (cm)</label><input data-k="y" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.y||0}"></div>
      <div><label>Escala</label><input data-k="escala" type="text" inputmode="decimal" data-num="1" data-step="0.05" value="${c.escala||1}"></div><div><label>Rotação (°)</label><input data-k="rotacao" type="text" inputmode="decimal" data-num="1" data-step="1" value="${c.rotacao||0}"></div></div>`;
   if(c.tipo==='texto'){
-    h += `<div class="row"><label>Texto</label><textarea data-k="texto" rows="2">${esc(c.texto)}</textarea></div>
-      <div class="row"><label>Fonte</label><select data-k="fonte">${Object.keys(FONTES).map(f=>`<option ${f===c.fonte?'selected':''}>${f}</option>`).join('')}</select></div>
-      <div class="row2"><div><label>Corpo (pt)</label><input data-k="tamanho_pt" type="text" inputmode="decimal" data-num="1" data-step="1" value="${c.tamanho_pt||12}"></div>
-      <div><label>Alinhamento</label><select data-k="alinhamento">${['esquerda','centro','direita'].map(a=>`<option ${a===(c.alinhamento||'esquerda')?'selected':''}>${a}</option>`).join('')}</select></div></div>`;
+    h += `<div class="row2"><div><label>Corpo (pt)</label><input data-k="tamanho_pt" type="text" inputmode="decimal" data-num="1" data-step="1" value="${c.tamanho_pt||12}"></div>
+      <div><label>Entrelinha</label><input data-k="entrelinha" type="text" inputmode="decimal" data-num="1" value="${c.entrelinha||1.2}"></div></div>`;
   }
   if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.h}"></div></div>`;
   if(c.tipo==='vetor'||c.tipo==='meiotom'){
-    h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div>`;
+    h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div><!--vet-->`;
     if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Vazado (furo)</option>`].join('');
       const orig = Object.keys(c.mapa||{}).filter(h0=>(c.svg||'').includes(`="${h0}"`));
       h += orig.map((h0,i)=>`<div class="row"><label>${orig.length>1?'Cor '+(i+1):'Cor'}</label><select data-map="${h0}">${ops(c.mapa[h0])}</select></div>`).join('');
       h += `<button id="pNova" style="width:100%;margin:2px 0 4px">＋ Nova cor…</button>`; }
     h += c.tipo==='vetor' ? `<button id="pEd" style="width:100%;margin:6px 0">🎨 Mais opções de cor</button>` : `<button id="pEd" class="pri" style="width:100%;margin:6px 0">🔳 Ajustar retícula</button>`;
+    simples += `<div class="aj-sec">${c.tipo==='vetor'?'Cores do desenho':'Foto'}</div>` + h.slice(h.indexOf('<!--vet-->')>=0?h.indexOf('<!--vet-->'):h.length); h = h.slice(0, h.indexOf('<!--vet-->')>=0?h.indexOf('<!--vet-->'):h.length);
   }
   if(c.tipo!=='grupo' && c.tipo!=='svg' && c.tipo!=='imagem' && c.tipo!=='vetor' && c.tipo!=='meiotom'){
-    h += `<div class="row"><label>Cor</label><select data-k="cor">${opt(c.cor)}<option value="__nova">＋ Nova cor…</option></select></div>
-      <div class="row"><label>Contorno</label><select data-k="contorno">${opt(c.contorno)}</select></div>`;
+    h += `<div class="row"><label>Contorno</label><select data-k="contorno">${opt(c.contorno)}</select></div>`;
     if(c.contorno) h += campo('Traço (mm)','traco_mm',c.traco_mm||0.5,'number','0.1');
   }
   if(c.tipo==='grupo') h += `<div style="color:var(--mute);font-size:12px;margin:6px 0">📁 Pasta com ${c.filhos.length} elementos — move e escala junto.</div><button id="ungrp">Desfazer pasta (Ctrl+Shift+G)</button>`;
   if(c.tipo==='imagem') h += `<div style="color:var(--err);font-size:12px;margin:6px 0">Imagem raster: na versão real é vetorizada e reduzida às cores da paleta antes de ir pra clicheria.</div>`;
-  h += `<div style="display:flex;gap:6px;margin:8px 0 4px"><button id="dup">Duplicar</button><button id="del">Apagar</button></div>`;
-  P.innerHTML = h;
+  P.innerHTML = simples + `<div class="aj-bts" style="margin-top:12px"><button id="dup">⧉ Duplicar</button><button id="del">🗑 Apagar</button></div>`
+    + `<details class="avanc"${AJ_AVANC?' open':''}><summary>⚙️ Mais opções (medidas exatas)</summary>${h}</details>`;
+  P.querySelector('details.avanc').ontoggle=e=>{ AJ_AVANC=e.target.open; };
+  // ações simples
+  const pelocentro = fn=>{ const c0=centro(c); fn(); render(); const c1=centro(c); mover(c, c0[0]-c1[0], c0[1]-c1[1]); arred(c); };
+  P.querySelectorAll('[data-aj]').forEach(bt=>bt.onclick=()=>{
+    const a=bt.dataset.aj;
+    if(a==='maior'||a==='menor'){ const f=a==='maior'?1.1:1/1.1; pelocentro(()=>{ if(ehTxt) c.tamanho_pt=+Math.max(6,(c.tamanho_pt||12)*f).toFixed(1); else if(c.tipo==='linha') escalarEm(c,f,(c.x1+c.x2)/2,(c.y1+c.y2)/2); else c.escala=+((c.escala||1)*f).toFixed(4); }); }
+    if(a==='gira' && c.tipo!=='linha') pelocentro(()=>{ c.rotacao=((c.rotacao||0)+90)%360; });
+    if(a==='ch'){ const s0=sels; sels=[c.id]; centralizarSilencioso(); sels=s0; }
+    if(a==='cv'){ const pn=GAB.paineis[c.painel], b=bboxPainel(c); if(b) mover(c, 0, pn.h/2-(b.y0+b.y1)/2); arred(c); }
+    if(a==='linhas'){ const t=c.texto||''; if(t.includes('\n')) c.texto=t.replace(/\s*\n\s*/g,' '); else { const m=t.length/2; let i=-1,best=1e9; for(let k=0;k<t.length;k++) if(t[k]===' ' && Math.abs(k-m)<best){ best=Math.abs(k-m); i=k; } if(i>0) c.texto=t.slice(0,i)+'\n'+t.slice(i+1); else { toast('Esse texto não tem espaço para quebrar.'); return; } } }
+    if(a.startsWith('al-')) pelocentro(()=>{ c.alinhamento=a.slice(3); });
+    if(a==='frente'||a==='tras'){ const i=arte.camadas.indexOf(c); arte.camadas.splice(i,1); if(a==='frente') arte.camadas.push(c); else arte.camadas.unshift(c); }
+    commit(); render();
+  });
+  P.querySelectorAll('[data-cor]').forEach(bt=>bt.onclick=()=>{ const k=bt.dataset.cor; if(k==='__nova'){ adicionarCor(); return; } c.cor=k; commit(); render(); });
   P.querySelectorAll('[data-k]').forEach(inp=>{
     if(inp.dataset.k==='texto') inp.oninput = ()=>{ c.texto = inp.value; agendaSalvar(); const pos=inp.selectionStart; render(); const t2=document.querySelector('#props textarea[data-k="texto"]'); if(t2){ t2.focus(); t2.setSelectionRange(pos,pos); } };
     inp.onchange = ()=>{
