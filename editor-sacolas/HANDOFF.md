@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 13-11-2026 20:50)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 13:30)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -34,6 +34,8 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Cores: aba 🎨 Cores com **＋ Adicionar cor** (grade de Pantones de padaria + código livre), clicar numa cor troca em toda a arte/sacolas, remover se sem uso; limite de 3 explicado. Ajustes de vetor/texto/forma têm seletor de cor + "＋ Nova cor…".
 - **Ctrl+C / Ctrl+V** de camadas, inclusive entre sacolas (cola já adaptado ao tamanho de destino).
 - Marca d'água "EMBALAGENS GLOBO"; checagem de clicheria ao vivo.
+- **Visual do editor = azul Globo** (13-11): variáveis `--acc #2f7fd0 / --acc-d #1f5fae`, fundos cinza-azulados; globo do logo na barra (cópia do SVG da loja com ids `ggE/gsE/gcE`). Linhas da faca seguem magenta (convenção de clicheria).
+- **Layout**: `#main` é grid de 5 colunas com `grid-column` explícito por filho (tabs esq · gavetas esq · `#center` · gavetas dir · tabs dir). Sem isso, gavetas fechadas (`display:none`) faziam o centro cair na coluna errada e sobrava tela vazia em monitor largo (bug visto no Chrome do Leo, corrigido 13-11).
 - **✨ Assistente "Criar com ajuda"** (`assistente.js`, inlinado no template): porta de entrada quando todas as sacolas estão vazias (opção "Começar do zero" grava `portaVista`). 4 passos: Dados (nome, slogan, telefone, Instagram, endereço, extra) → Logo (upload SVG/foto, banco ou sem logo) → Estilo (Clássico, Logo + contatos, Faixas laterais, Estampa, Selo — baseados nas artes reais da pasta Drive `11d4Ddf3mjkj8nT_9_TMmyrvhSGIc4uC1`; prévia na sacola aberta) → Cores (6 paletas prontas ≤2 Pantones). Gera em todas as sacolas do carrinho (estado 🟡, desfazível); escala tipográfica pela área da frente e bloco centralizado. Textos ficam ligados a `campo`: **📝 Dados** troca em todas as sacolas (campo vazio = camada oculta) e oferece "Trocar estilo". Testado sem alertas de checagem em 1/2 kg, 5 kg e envelope 17×21.
 
 ## Nuvem (login + Minhas artes)
@@ -49,6 +51,12 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Margem 0,5 cm; texto ≥ 6 pt; traço ≥ 0,3 mm; não cruzar dobra da sanfona nem emenda do verso; nada em área de cola.
 - Facas 1/2 kg e 1 kg: **tira de cola compõe o verso** (vd 7 + cola 3 = 10) — premissa a confirmar com a Glopel.
 - Interface para leigo: linguagem simples, botões grandes, nada destrutivo sem desfazer.
+
+## Bugs / testes a fazer
+- Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
+- Barra do topo quebra linha perto de 1300 px quando aparecem Salvar/Entrar (build GitHub) — avaliar compactar.
+- Checagem acusa "PANTONE Black C sem uso" em sacola vazia (paleta padrão) — ruído para leigo.
+- Decisão aberta do Leo: barra do topo azul escura como a da loja?
 
 ## Pendências
 - Assistente: testar com logos enviados reais (SVG multicor, foto) e nomes muito longos (hoje só encolhe até 8 pt, não quebra linha).
