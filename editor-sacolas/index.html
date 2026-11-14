@@ -2336,9 +2336,41 @@ function pontosMeiotom(el, cb){
   }
   return true;
 }
+// modo "Preencher": contorno vetorial (marching squares) de tudo que passa de 50% de tom — vira tinta chapada
+function contornoMeiotom(el){
+  const g=gradeLum(el.asset); if(!g) return null;
+  const W=g.W, H=g.H, w=el.w, h=el.w*el.ar, GW=W+2, GH=H+2, v=new Float32Array(GW*GH).fill(-1);
+  for(let j=0;j<H;j++) for(let i=0;i<W;i++) v[(j+1)*GW+i+1]=tomDe(el, g.L[j*W+i])-0.5;
+  const X=i=>Math.max(0,Math.min(1,(i-1)/(W-1)))*w, Y=j=>Math.max(0,Math.min(1,(j-1)/(H-1)))*h;
+  const P=new Map(), adj=new Map(), f=n=>n.toFixed(3);
+  const pt=(k,x0,y0,x1,y1,a,b)=>{ if(!P.has(k)){ const t=a/(a-b); P.set(k,[x0+(x1-x0)*t, y0+(y1-y0)*t]); } return k; };
+  const liga=(a,b)=>{ (adj.get(a)||adj.set(a,[]).get(a)).push(b); (adj.get(b)||adj.set(b,[]).get(b)).push(a); };
+  for(let j=0;j<GH-1;j++) for(let i=0;i<GW-1;i++){
+    const tl=v[j*GW+i], tr=v[j*GW+i+1], br=v[(j+1)*GW+i+1], bl=v[(j+1)*GW+i];
+    const c=(tl>0?8:0)|(tr>0?4:0)|(br>0?2:0)|(bl>0?1:0); if(c===0||c===15) continue;
+    const T=()=>pt('h'+i+','+j, X(i),Y(j),X(i+1),Y(j), tl,tr), B=()=>pt('h'+i+','+(j+1), X(i),Y(j+1),X(i+1),Y(j+1), bl,br);
+    const L=()=>pt('v'+i+','+j, X(i),Y(j),X(i),Y(j+1), tl,bl), R=()=>pt('v'+(i+1)+','+j, X(i+1),Y(j),X(i+1),Y(j+1), tr,br);
+    const m=(tl+tr+br+bl)/4>0;
+    switch(c){ case 1: case 14: liga(L(),B()); break; case 2: case 13: liga(B(),R()); break; case 3: case 12: liga(L(),R()); break;
+      case 4: case 11: liga(T(),R()); break; case 6: case 9: liga(T(),B()); break; case 7: case 8: liga(L(),T()); break;
+      case 5: if(m){ liga(T(),R()); liga(L(),B()); } else { liga(L(),T()); liga(B(),R()); } break;
+      case 10: if(m){ liga(L(),T()); liga(B(),R()); } else { liga(T(),R()); liga(L(),B()); } break; }
+  }
+  const usado=new Set(), partes=[], minimo=0.03;   // ilhas menores que 0,3 mm somem (não imprimem)
+  for(const k0 of adj.keys()){ if(usado.has(k0)) continue;
+    const laco=[k0]; usado.add(k0); let ant=null, cur=k0;
+    for(;;){ const nx=(adj.get(cur)||[]).find(n=>n!==ant && !usado.has(n)); if(!nx) break; usado.add(nx); laco.push(nx); ant=cur; cur=nx; }
+    if(laco.length<3) continue;
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; const q=laco.map(k=>P.get(k)); q.forEach(([x,y])=>{ x0=Math.min(x0,x); x1=Math.max(x1,x); y0=Math.min(y0,y); y1=Math.max(y1,y); });
+    if(x1-x0<minimo && y1-y0<minimo) continue;
+    partes.push('M'+q.map(([x,y])=>f(x)+' '+f(-h+y)).join('L')+'Z');
+  }
+  return partes.join('');
+}
 function meiotomSVG(el){
   const h=el.w*el.ar, key=[el.asset,lpiMax(),el.escala||1,el.angulo,el.forma,el.brilho,el.contraste,el.inverter,el.corte,el.cheio,el.w,el.ar].join('|');
   let d=PATHS.get(key);
+  if(d===undefined && el.forma==='cheio'){ const c=contornoMeiotom(el); if(c===null) return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="#ddd" opacity=".5"/>`; d=c; if(PATHS.size>40) PATHS.clear(); PATHS.set(key,d); }
   if(d===undefined){ let p=[]; const f=v=>v.toFixed(3);
     const ok = pontosMeiotom(el, (x,y,t,cell,ca,sa)=>{
       if(el.forma==='linha'){ const hw=cell*0.55, ht=Math.max(0.004, t*cell/2)*(t>=1?1.15:1); // segmento de linha engrossada
@@ -2348,7 +2380,7 @@ function meiotomSVG(el){
     if(!ok) return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="#ddd" opacity=".5"/>`;
     d=p.join(''); if(PATHS.size>40) PATHS.clear(); PATHS.set(key,d);
   }
-  return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="transparent"/><path d="${d}" fill="${cor(el.cor, 100)}"/>`;
+  return `<rect x="0" y="${-h}" width="${el.w}" height="${h}" fill="transparent"/><path d="${d}" fill="${cor(el.cor, 100)}"${el.forma==='cheio'?' fill-rule="evenodd"':''}/>`;
 }
 
 /* ---------- banco de vetores (1 cor: preto = tinta, branco = papel) ---------- */
@@ -2513,8 +2545,9 @@ function editorMeiotom(c){
     <div class="htedit"><div class="htprev"><canvas id="htc"></canvas><div class="hint">Prévia ${a?`· ${esc(a.nome)}`:''}</div></div>
     <div class="htctl">
       <div class="row"><label>Cor</label><select id="htCor">${Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===c.cor?'selected':''} style="color:${cmyk2hex(arte.paleta[k].cmyk)}">${esc(arte.paleta[k].pantone)}</option>`).join('')}</select></div>
-      <div class="row"><label>Forma</label><select id="htForma"><option value="ponto" ${c.forma!=='linha'?'selected':''}>● Pontos</option><option value="linha" ${c.forma==='linha'?'selected':''}>☰ Linhas</option></select></div>
-      ${campos.map(([k,l,mn,mx,st])=>`<div class="rng"><label>${l} <b id="v_${k}">${c[k]}</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${c[k]??0}"></div>`).join('')}
+      <div class="row"><label>Forma</label><select id="htForma"><option value="ponto" ${c.forma!=='linha'?'selected':''}>● Pontos</option><option value="linha" ${c.forma==='linha'?'selected':''}>☰ Linhas</option><option value="cheio" ${c.forma==='cheio'?'selected':''}>⬛ Preencher (cor lisa)</option></select></div>
+      <div class="hint" id="htCheioInfo" style="display:${c.forma==='cheio'?'block':'none'};margin:-2px 0 6px">Tudo que for escuro vira <b>tinta lisa</b>, sem pontos — bom para logos e desenhos. Use o <b>Brilho</b> para preencher mais ou menos.</div>
+      ${campos.map(([k,l,mn,mx,st])=>`<div class="rng" data-campo="${k}"><label>${l} <b id="v_${k}">${c[k]}</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${c[k]??0}"></div>`).join('')}
       <label class="chk"><input type="checkbox" id="htInv" ${c.inverter?'checked':''}> Inverter (negativo)</label>
       <div class="lpinfo">🔍 Resolução automática: <b>${lpiMax()} linhas/pol.</b> (o máximo da clicheria). Tamanho na sacola: <b>${(c.w*(c.escala||1)).toFixed(1)} cm</b> → <b>${Math.round(c.w*(c.escala||1)/2.54*lpiMax())} pontos</b> de largura.<br>Quer mais detalhe? <b>Aumente a imagem</b> na sacola.</div>
     </div></div>
@@ -2522,15 +2555,18 @@ function editorMeiotom(c){
   $('modal').style.display='flex';
   const cv=$('htc'), W=320, H=Math.round(W*c.ar); cv.width=W*2; cv.height=H*2; cv.style.width=W+'px'; cv.style.height=H+'px';
   const prev=()=>{ const x=cv.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.fillStyle=KRAFT; x.fillRect(0,0,W,H); x.fillStyle=cor(c.cor,100); x.strokeStyle='none';
+    if(c.forma==='cheio'){ const d=contornoMeiotom(c); if(d===null){ setTimeout(prev,150); return; } const k=W/c.w;
+      x.save(); x.translate(0,c.w*c.ar*k); x.scale(k,k); x.fill(new Path2D(d),'evenodd'); x.restore(); return; }
     const k=W/c.w, ok=pontosMeiotom(c,(px,py,t,cell,ca,sa)=>{ if(c.forma==='linha'){ x.save(); x.translate(px*k,py*k); x.rotate(Math.atan2(sa,ca)); const ht=Math.max(0.2,t*cell*k/2); x.fillRect(-cell*k*0.55,-ht,cell*k*1.1,ht*2); x.restore(); }
       else { const r=(t>=1?cell*0.75:cell*Math.sqrt(t/Math.PI))*k; x.beginPath(); x.arc(px*k,py*k,r,0,7); x.fill(); } });
     if(!ok) setTimeout(prev,150); };
   let tm=null; const upd=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ prev(); render(); },60); };
   $('mbox').querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>{ c[r.dataset.k]=parseFloat(r.value); $('v_'+r.dataset.k).textContent=r.value; upd(); });
-  $('htCor').onchange=e=>{ c.cor=e.target.value; upd(); }; $('htForma').onchange=e=>{ c.forma=e.target.value; upd(); }; $('htInv').onchange=e=>{ c.inverter=e.target.checked; upd(); };
+  $('htCor').onchange=e=>{ c.cor=e.target.value; upd(); }; const modoCampos=()=>{ const ch=c.forma==='cheio'; ['angulo','corte'].forEach(k=>{ const r=$('mbox').querySelector(`[data-campo="${k}"]`); if(r) r.style.display=ch?'none':''; }); $('htCheioInfo').style.display=ch?'block':'none'; $('mbox').querySelector('.lpinfo').style.display=ch?'none':''; };
+  $('htForma').onchange=e=>{ c.forma=e.target.value; modoCampos(); upd(); }; $('htInv').onchange=e=>{ c.inverter=e.target.checked; upd(); };
   $('htCan').onclick=()=>{ const o=JSON.parse(antes); Object.keys(c).forEach(k=>delete c[k]); Object.assign(c,o); $('modal').style.display='none'; render(); };
   $('htOk').onclick=()=>{ $('modal').style.display='none'; commit(); render(); };
-  prev();
+  modoCampos(); prev();
 }
 
 /* ---------- CORES: adicionar, trocar, remover ---------- */
