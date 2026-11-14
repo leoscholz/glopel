@@ -2312,7 +2312,10 @@ function gradeLum(assetId){
   const img=new Image(); img.onload=()=>{ const W=Math.min(500,img.naturalWidth), H=Math.round(W*img.naturalHeight/img.naturalWidth);
     const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.drawImage(img,0,0,W,H);
     const d=x.getImageData(0,0,W,H).data, L=new Float32Array(W*H); for(let i=0;i<W*H;i++) L[i]=(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;
-    GRADES[assetId]={W,H,L}; render(); };
+    const hist=new Array(256).fill(0); for(let i=0;i<W*H;i++) hist[Math.round(L[i]*255)]++;
+    let tot=W*H, sum=0; for(let i=0;i<256;i++) sum+=i*hist[i]; let sB=0, wB=0, best=-1, otsu=128;
+    for(let t=0;t<256;t++){ wB+=hist[t]; if(!wB) continue; const wF=tot-wB; if(!wF) break; sB+=t*hist[t]; const mB=sB/wB, mF=(sum-sB)/wF, v=wB*wF*(mB-mF)*(mB-mF); if(v>best){ best=v; otsu=t; } }
+    GRADES[assetId]={W,H,L,otsu:(otsu+0.5)/255}; render(); };
   img.src=a.data; return null;
 }
 function amostra(g, u, v){ const x=Math.max(0,Math.min(g.W-1,u*(g.W-1))), y=Math.max(0,Math.min(g.H-1,v*(g.H-1))), i=Math.floor(x), j=Math.floor(y), fx=x-i, fy=y-j, i2=Math.min(g.W-1,i+1), j2=Math.min(g.H-1,j+1);
@@ -2326,7 +2329,7 @@ function pontosMeiotom(el, cb){
   const a=(el.angulo||45)*Math.PI/180, ca=Math.cos(a), sa=Math.sin(a), N=Math.ceil(Math.hypot(w,h)/cell/2)+1, cx=w/2, cy=h/2;
   const corte=Math.max(PONTO_MIN, el.corte??0.05), cheio=el.cheio??0.94;
   for(let i=-N;i<=N;i++) for(let j=-N;j<=N;j++){
-    const x=cx+(i*ca-j*sa)*cell, y=cy+(i*sa+j*ca)*cell; if(x<0||y<0||x>w||y>h) continue;
+    const x=cx+(i*ca-j*sa)*cell, y=cy+(i*sa+j*ca)*cell; if(x<-cell/2||y<-cell/2||x>w+cell/2||y>h+cell/2) continue;
     let d=tomDe(el, amostra(g, x/w, y/h)); if(d<corte) continue; if(d>cheio) d=1;
     cb(x,y,d,cell,ca,sa);
   }
@@ -2336,7 +2339,8 @@ function pontosMeiotom(el, cb){
 function contornoMeiotom(el){
   const g=gradeLum(el.asset); if(!g) return null;
   const W=g.W, H=g.H, w=el.w, h=el.w*el.ar, GW=W+2, GH=H+2, v=new Float32Array(GW*GH).fill(-1);
-  for(let j=0;j<H;j++) for(let i=0;i<W;i++) v[(j+1)*GW+i+1]=tomDe(el, g.L[j*W+i])-0.5;
+  const thr=Math.max(0.02,Math.min(0.98,(g.otsu??0.5)-(el.brilho||0)*0.5));   // limiar automático (Otsu) — cinza claro do logo também vira tinta
+  for(let j=0;j<H;j++) for(let i=0;i<W;i++){ const l=g.L[j*W+i]; v[(j+1)*GW+i+1]=el.inverter ? l-thr : thr-l; }
   const X=i=>Math.max(0,Math.min(1,(i-1)/(W-1)))*w, Y=j=>Math.max(0,Math.min(1,(j-1)/(H-1)))*h;
   const P=new Map(), adj=new Map(), f=n=>n.toFixed(3);
   const pt=(k,x0,y0,x1,y1,a,b)=>{ if(!P.has(k)){ const t=a/(a-b); P.set(k,[x0+(x1-x0)*t, y0+(y1-y0)*t]); } return k; };
@@ -2542,7 +2546,7 @@ function editorMeiotom(c){
     <div class="htctl">
       <div class="row"><label>Cor</label><select id="htCor">${Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===c.cor?'selected':''} style="color:${cmyk2hex(arte.paleta[k].cmyk)}">${esc(arte.paleta[k].pantone)}</option>`).join('')}</select></div>
       <div class="row"><label>Forma</label><select id="htForma"><option value="ponto" ${c.forma!=='linha'?'selected':''}>● Pontos</option><option value="linha" ${c.forma==='linha'?'selected':''}>☰ Linhas</option><option value="cheio" ${c.forma==='cheio'?'selected':''}>⬛ Preencher (cor lisa)</option></select></div>
-      <div class="hint" id="htCheioInfo" style="display:${c.forma==='cheio'?'block':'none'};margin:-2px 0 6px">Tudo que for escuro vira <b>tinta lisa</b>, sem pontos — bom para logos e desenhos. Use o <b>Brilho</b> para preencher mais ou menos.</div>
+      <div class="hint" id="htCheioInfo" style="display:${c.forma==='cheio'?'block':'none'};margin:-2px 0 6px">Tudo que for escuro vira <b>tinta lisa</b>, sem pontos — bom para logos e desenhos. O ponto de corte é automático; use o <b>Brilho</b> para preencher mais ou menos.</div>
       ${campos.map(([k,l,mn,mx,st])=>`<div class="rng" data-campo="${k}"><label>${l} <b id="v_${k}">${c[k]}</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${c[k]??0}"></div>`).join('')}
       <label class="chk"><input type="checkbox" id="htInv" ${c.inverter?'checked':''}> Inverter (negativo)</label>
       <div class="lpinfo">🔍 Resolução automática: <b>${lpiMax()} linhas/pol.</b> (o máximo da clicheria). Tamanho na sacola: <b>${(c.w*(c.escala||1)).toFixed(1)} cm</b> → <b>${Math.round(c.w*(c.escala||1)/2.54*lpiMax())} pontos</b> de largura.<br>Quer mais detalhe? <b>Aumente a imagem</b> na sacola.</div>
@@ -2558,7 +2562,7 @@ function editorMeiotom(c){
     if(!ok) setTimeout(prev,150); };
   let tm=null; const upd=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ prev(); render(); },60); };
   $('mbox').querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>{ c[r.dataset.k]=parseFloat(r.value); $('v_'+r.dataset.k).textContent=r.value; upd(); });
-  $('htCor').onchange=e=>{ c.cor=e.target.value; upd(); }; const modoCampos=()=>{ const ch=c.forma==='cheio'; ['angulo','corte'].forEach(k=>{ const r=$('mbox').querySelector(`[data-campo="${k}"]`); if(r) r.style.display=ch?'none':''; }); $('htCheioInfo').style.display=ch?'block':'none'; $('mbox').querySelector('.lpinfo').style.display=ch?'none':''; };
+  $('htCor').onchange=e=>{ c.cor=e.target.value; upd(); }; const modoCampos=()=>{ const ch=c.forma==='cheio'; ['angulo','corte','contraste'].forEach(k=>{ const r=$('mbox').querySelector(`[data-campo="${k}"]`); if(r) r.style.display=ch?'none':''; }); $('htCheioInfo').style.display=ch?'block':'none'; $('mbox').querySelector('.lpinfo').style.display=ch?'none':''; };
   $('htForma').onchange=e=>{ c.forma=e.target.value; modoCampos(); upd(); }; $('htInv').onchange=e=>{ c.inverter=e.target.checked; upd(); };
   $('htCan').onclick=()=>{ const o=JSON.parse(antes); Object.keys(c).forEach(k=>delete c[k]); Object.assign(c,o); $('modal').style.display='none'; render(); };
   $('htOk').onclick=()=>{ $('modal').style.display='none'; commit(); render(); };
