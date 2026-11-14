@@ -56,6 +56,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - Interface para leigo: linguagem simples, botões grandes, nada destrutivo sem desfazer.
 
 ## Bugs / testes a fazer
+- **Corrigidos 14-11 (rodada de testadores):** Desfazer pelo botão quebrava o editor (onclick apontava para o `undo` antigo, que fazia `arte = design` → erros forEach/length e Pronto mudo) — agora `()=>undo()`; texto digitado salvo cortado (agora salva a cada tecla + `pagehide/beforeunload/visibilitychange` gravam na hora); vírgula decimal nos campos de Ajustes (`inputmode=decimal`, aceita `1,6`).
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Barra do topo quebra linha perto de 1300 px quando aparecem Salvar/Entrar (build GitHub) — avaliar compactar.
 - Checagem acusa "PANTONE Black C sem uso" em sacola vazia (paleta padrão) — ruído para leigo.

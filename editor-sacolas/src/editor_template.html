@@ -649,7 +649,7 @@ function editaTexto(c, selecionaTudo){
     borderRadius:'4px', padding:'2px 6px', resize:'none', outline:'none', overflow:'hidden', zIndex:5, boxShadow:'0 4px 18px rgba(0,0,0,.18)'});
   $('stage').appendChild(ta);
   editando = {c, ta};
-  ta.addEventListener('input', ()=>{ c.texto = ta.value; render(); });
+  ta.addEventListener('input', ()=>{ c.texto = ta.value; render(); agendaSalvar(); });
   ta.addEventListener('keydown', e=>{ if(e.key==='Escape' || (e.key==='Enter' && (e.ctrlKey||e.metaKey))){ e.preventDefault(); fechaEdicao(); } e.stopPropagation(); });
   setTimeout(()=>ta.addEventListener('blur', ()=>setTimeout(fechaEdicao, 0)), 50);
   ta.addEventListener('pointerdown', e=>e.stopPropagation());
@@ -911,18 +911,18 @@ function props(){
   const opt = v => cores.map(k=>`<option value="${k}" ${k===(v||'')?'selected':''}>${k?esc(k==='papel'?'papel (sem tinta)':arte.paleta[k].pantone):'— nenhuma —'}</option>`).join('');
   let h = `<div class="row"><label>Nome</label><input data-k="id" type="text" value="${esc(c.id)}"></div>
     <div class="row"><label>Painel</label><select data-k="painel">${PAINEIS.map(p=>`<option ${p===c.painel?'selected':''}>${p}</option>`).join('')}</select></div>`;
-  if(c.tipo==='linha') h += `<div class="row2">${['x1','y1','x2','y2'].map(k=>`<div><label>${k} (cm)</label><input data-k="${k}" type="number" step="0.1" value="${c[k]}"></div>`).join('')}</div>`;
-  else h += `<div class="row2"><div><label>X (cm)</label><input data-k="x" type="number" step="0.1" value="${c.x||0}"></div><div><label>Y (cm)</label><input data-k="y" type="number" step="0.1" value="${c.y||0}"></div>
-     <div><label>Escala</label><input data-k="escala" type="number" step="0.05" value="${c.escala||1}"></div><div><label>Rotação (°)</label><input data-k="rotacao" type="number" step="1" value="${c.rotacao||0}"></div></div>`;
+  if(c.tipo==='linha') h += `<div class="row2">${['x1','y1','x2','y2'].map(k=>`<div><label>${k} (cm)</label><input data-k="${k}" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c[k]}"></div>`).join('')}</div>`;
+  else h += `<div class="row2"><div><label>X (cm)</label><input data-k="x" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.x||0}"></div><div><label>Y (cm)</label><input data-k="y" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.y||0}"></div>
+     <div><label>Escala</label><input data-k="escala" type="text" inputmode="decimal" data-num="1" data-step="0.05" value="${c.escala||1}"></div><div><label>Rotação (°)</label><input data-k="rotacao" type="text" inputmode="decimal" data-num="1" data-step="1" value="${c.rotacao||0}"></div></div>`;
   if(c.tipo==='texto'){
     h += `<div class="row"><label>Texto</label><textarea data-k="texto" rows="2">${esc(c.texto)}</textarea></div>
       <div class="row"><label>Fonte</label><select data-k="fonte">${Object.keys(FONTES).map(f=>`<option ${f===c.fonte?'selected':''}>${f}</option>`).join('')}</select></div>
-      <div class="row2"><div><label>Corpo (pt)</label><input data-k="tamanho_pt" type="number" step="1" value="${c.tamanho_pt||12}"></div>
+      <div class="row2"><div><label>Corpo (pt)</label><input data-k="tamanho_pt" type="text" inputmode="decimal" data-num="1" data-step="1" value="${c.tamanho_pt||12}"></div>
       <div><label>Alinhamento</label><select data-k="alinhamento">${['esquerda','centro','direita'].map(a=>`<option ${a===(c.alinhamento||'esquerda')?'selected':''}>${a}</option>`).join('')}</select></div></div>`;
   }
-  if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="number" step="0.1" value="${c.h}"></div></div>`;
+  if(c.tipo==='retangulo') h += `<div class="row2"><div><label>Largura</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div><div><label>Altura</label><input data-k="h" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.h}"></div></div>`;
   if(c.tipo==='vetor'||c.tipo==='meiotom'){
-    h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="number" step="0.1" value="${c.w}"></div>`;
+    h += `<div class="row"><label>Largura (cm)</label><input data-k="w" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c.w}"></div>`;
     if(c.tipo==='vetor'){ const ops=v=>[...Object.keys(arte.paleta).map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(arte.paleta[k].pantone)}</option>`),`<option value="papel" ${v==='papel'?'selected':''}>Vazado (furo)</option>`].join('');
       const orig = Object.keys(c.mapa||{}).filter(h0=>(c.svg||'').includes(`="${h0}"`));
       h += orig.map((h0,i)=>`<div class="row"><label>${orig.length>1?'Cor '+(i+1):'Cor'}</label><select data-map="${h0}">${ops(c.mapa[h0])}</select></div>`).join('');
@@ -939,10 +939,10 @@ function props(){
   h += `<div style="display:flex;gap:6px;margin:8px 0 4px"><button id="dup">Duplicar</button><button id="del">Apagar</button></div>`;
   P.innerHTML = h;
   P.querySelectorAll('[data-k]').forEach(inp=>{
-    if(inp.dataset.k==='texto') inp.oninput = ()=>{ c.texto = inp.value; const pos=inp.selectionStart; render(); const t2=document.querySelector('#props textarea[data-k="texto"]'); if(t2){ t2.focus(); t2.setSelectionRange(pos,pos); } };
+    if(inp.dataset.k==='texto') inp.oninput = ()=>{ c.texto = inp.value; agendaSalvar(); const pos=inp.selectionStart; render(); const t2=document.querySelector('#props textarea[data-k="texto"]'); if(t2){ t2.focus(); t2.setSelectionRange(pos,pos); } };
     inp.onchange = ()=>{
       const k=inp.dataset.k; let v = inp.value;
-      if(inp.type==='number') v = parseFloat(v);
+      if(inp.dataset.num){ v = parseFloat(String(v).trim().replace(',','.')); if(!isFinite(v)) return render(); }
       if(k==='id'){ if(!v || arte.camadas.some(x=>x.id===v && x!==c)) return render(); setSel(v); }
       if(v==='__nova'){ render(); adicionarCor(); return; }
       if((k==='cor'||k==='contorno') && !v) delete c[k]; else c[k]=v;
@@ -997,7 +997,7 @@ function setTool(t){ tool=t; ['mover','escalar','texto','mao'].forEach(k=>$('t-'
 $('t-mover').onclick=()=>setTool('mover'); $('t-escalar').onclick=()=>setTool('escalar'); $('t-mao').onclick=()=>setTool('mao'); $('t-texto').onclick=()=>setTool('texto');
 function setSnap(v){ snapOn=v; $('snap').classList.toggle('on', v); $('snap').innerHTML = v?'<b>🧲</b>Ímã':'<b>🧲</b>Ímã off'; }
 $('snap').onclick=()=>setSnap(!snapOn);
-$('undo').onclick=undo; $('redo').onclick=redo;
+$('undo').onclick=()=>undo(); $('redo').onclick=()=>redo();   // chama sempre a versão atual (undo/redo são redefinidos para o histórico do projeto)
 $('modo').onchange=e=>{ modo=e.target.value; render(); };
 function fit(){ const r=svg.getBoundingClientRect(); if(!r.width) return; const PADL=96, PAD=24;
   const W=(xmax-xmin)+2, H=(ymax-ymin)+2; const k=Math.max(W/(r.width-PADL-PAD), H/(r.height-2*PAD));
@@ -2023,6 +2023,10 @@ let salvarTimer=null;
 function agendaSalvar(){ const s=$('salvo'); s.className='salvo ing'; s.textContent='Salvando…'; clearTimeout(salvarTimer);
   salvarTimer=setTimeout(()=>{ try{ localStorage.setItem(CHAVE_LS, snap()); }catch(_){} s.className='salvo ok'; s.textContent='✓ Salvo'; }, 700); }
 
+// fechou/recarregou a aba no meio da edição: grava na hora (sem esperar o timer)
+function salvaJa(){ try{ if(editando) fechaEdicao(); clearTimeout(salvarTimer); localStorage.setItem(CHAVE_LS, snap()); }catch(_){} }
+window.addEventListener('pagehide', salvaJa); window.addEventListener('beforeunload', salvaJa);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') salvaJa(); });
 /* ---------- abrir / trocar sacola ---------- */
 function abreSacola(id, semGerar, semSync){
   if(editando) fechaEdicao();
