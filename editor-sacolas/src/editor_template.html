@@ -679,6 +679,20 @@ function desagrupar(){
 }
 
 /* ---------- transformações ---------- */
+/* arrastar de um painel para outro (ex.: Frente → Verso): o centro do elemento decide o painel */
+function painelSob(painel, cx, cy){   // devolve {k, q} se o centro (coords do painel) caiu em OUTRO painel
+  const pn=GAB.paineis[painel]; if(!pn) return null;
+  const p=pn.partes.find(pt=>cx>=pt.px && cx<pt.px+pt.w) || (cx<pn.partes[0].px?pn.partes[0]:pn.partes[pn.partes.length-1]);
+  const sx=cx+p.x-p.px, sy=cy+p.y;
+  if(pn.partes.some(pt=>sx>=pt.x && sx<=pt.x+pt.w && sy>=pt.y && sy<=pt.y+pt.h)) return null;
+  for(const k of PAINEIS){ if(k===painel) continue; const q=GAB.paineis[k].partes.find(pt=>pt.w>0 && sx>=pt.x && sx<=pt.x+pt.w && sy>=pt.y && sy<=pt.y+pt.h);
+    if(q) return {k, q, sx, sy}; }
+  return null;
+}
+function reatribuiPainel(c, cx, cy){
+  const r=painelSob(c.painel, cx, cy); if(!r) return;
+  mover(c, (r.sx-r.q.x+r.q.px)-cx, (r.sy-r.q.y)-cy); c.painel=r.k;
+}
 function mover(c, dx, dy){
   if(c.tipo==='linha'){ c.x1+=dx; c.x2+=dx; c.y1+=dy; c.y2+=dy; } else { c.x=(c.x||0)+dx; c.y=(c.y||0)+dy; }
 }
@@ -747,6 +761,7 @@ svg.addEventListener('pointerdown', e=>{
   else {
     const cs = selLayers().filter(x=>!x.bloqueado);
     drag = {k:'mov', cs, sx:p.x, sy:-p.y, snap:cs.map(x=>JSON.stringify(x))};
+    drag.c0 = cs.map(x=>{ const b=bboxPainel(x); return b?[(b.x0+b.x1)/2,(b.y0+b.y1)/2]:null; });
     if(mesmoPainel(cs)){ drag.box = uniaoPainel(cs); drag.alvos = alvosSnap(cs[0].painel, cs); drag.painel = cs[0].painel; }
   }
   if(drag) svg.setPointerCapture(e.pointerId); render();
@@ -768,8 +783,10 @@ svg.addEventListener('pointermove', e=>{
   }
   if(drag.k==='mov'){
     let dx = p.x-drag.sx, dy = -p.y-drag.sy; guias = [];
-    if(drag.box && !e.altKey){ const r = resolveSnap(drag.box, dx, dy, drag.alvos, drag.painel); dx=r.dx; dy=r.dy; guias=r.G; }
-    drag.cs.forEach((c,i)=>{ Object.keys(c).forEach(k=>delete c[k]); Object.assign(c, JSON.parse(drag.snap[i])); mover(c, dx, dy); });
+    const trocaPainel = drag.cs.some((c,i)=>drag.c0[i] && painelSob(JSON.parse(drag.snap[i]).painel, drag.c0[i][0]+dx, drag.c0[i][1]+dy));
+    if(drag.box && !e.altKey && !trocaPainel){ const r = resolveSnap(drag.box, dx, dy, drag.alvos, drag.painel); dx=r.dx; dy=r.dy; guias=r.G; }
+    drag.cs.forEach((c,i)=>{ Object.keys(c).forEach(k=>delete c[k]); Object.assign(c, JSON.parse(drag.snap[i])); mover(c, dx, dy);
+      if(drag.c0[i]) reatribuiPainel(c, drag.c0[i][0]+dx, drag.c0[i][1]+dy); });
   }
   if(drag.k==='esc'){
     const d = Math.hypot(p.x-(drag.cx+drag.off), -p.y-(drag.cy+drag.oy)); if(drag.d0<0.05) return;
