@@ -184,6 +184,10 @@ button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-de
 #sacbar{overflow:hidden}
 .sac{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 8px;text-align:left;font-weight:500;white-space:nowrap}
 .sac .t{display:flex;flex-direction:column;line-height:1.25}
+.sac .mais{margin-left:4px;padding:2px 7px;border-radius:7px;font-weight:800;color:var(--mute);line-height:1} .sac .mais:hover{background:#0000000f;color:var(--ink)}
+#sacmenu{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px #0002;padding:6px;display:flex;flex-direction:column;min-width:230px}
+#sacmenu button{border:0;background:none;text-align:left;padding:9px 10px;border-radius:8px;font-weight:600;box-shadow:none} #sacmenu button:hover:not(:disabled){background:#eef4fc} #sacmenu button small{font-weight:400;color:var(--mute)}
+#sacmenu button.perigo{color:var(--err)} #sacmenu button:disabled{opacity:.45}
 .sac .st{font-size:11.5px;font-weight:600}
 .sac.on{background:linear-gradient(#e8f0fd,#dbe7fb);border-color:#a9c3ef;box-shadow:0 0 0 2px #bcd0f5}
 .sac.cinza{opacity:.6}
@@ -2138,7 +2142,7 @@ function designVazio(){
 }
 let design = null;
 function carregaDesign(){
-  try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return migraAprovacao(d); } } }catch(_){}
+  try{ const t=localStorage.getItem(CHAVE_LS); if(t){ const d=JSON.parse(t); if(d && d.sacolas && d.carrinho){ d.carrinho.forEach(garanteCopia); d.carrinho=d.carrinho.filter(id=>CATALOGO[id]); if(!CATALOGO[d.atual]) d.atual=d.carrinho[0]||'f5_kraft'; d.qtd=d.qtd||{}; d.confirmadas=d.confirmadas||[]; Object.keys(CATALOGO).forEach(id=>{ if(!d.sacolas[id]) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); return migraAprovacao(d); } } }catch(_){}
   return designVazio();
 }
 let SYNC_OFF=0;   // >0 enquanto a tela mostra uma arte emprestada (medição): sincroniza() não pode gravar isso em nenhuma sacola
@@ -2150,6 +2154,7 @@ function sincroniza(){ if(!design || SYNC_OFF) return; const b=design.sacolas[de
   if(b.pal && design.paletas && design.paletas[b.pal]) design.paletas[b.pal]=arte.paleta; else design.paleta = arte.paleta;
   b.camadas = arte.camadas; design.cliente = arte.cliente; }
 function migraAprovacao(d){ if(!d) return d;
+  (d.carrinho||[]).concat(Object.keys(d.sacolas||{})).forEach(garanteCopia);   // cópias (Duplicar)
   if(!d.limpaFora){ const no=new Set(d.carrinho||[]); Object.keys(d.sacolas||{}).forEach(id=>{ if(!no.has(id) && d.sacolas[id].camadas && d.sacolas[id].camadas.length) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); d.limpaFora=true; }   // arte só vive em sacola que está no carrinho
   if(d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
 function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:paletaSac(design.atual), camadas:b.camadas}; }
@@ -2340,8 +2345,8 @@ function atualizaSacolas(){
   design.carrinho.forEach(id=>{
     const g=CATALOGO[id], b=design.sacolas[id], [ic,txt,cor]=ST[b.estado], prop=(b.proprio||[]).length;
     const d=document.createElement('button'); d.className='sac'+(id===design.atual?' on':'')+(b.estado==='nenhum'?' cinza':'');
-    d.innerHTML = `${miniSacola(g, COR_PAPEL[g.papel])}<span class="t"><b>${esc(g.nome)}</b><span class="st" style="color:${cor}">${ic} ${txt}${prop?' · ✏️ só nesta':''}</span></span>`;
-    d.onclick=()=>{ if(id!==design.atual) abreSacola(id); };
+    d.innerHTML = `${miniSacola(g, COR_PAPEL[g.papel])}<span class="t"><b>${esc(g.nome)}</b><span class="st" style="color:${cor}">${ic} ${txt}${prop?' · ✏️ só nesta':''}</span></span><span class="mais" title="Mudar papel, duplicar, recomeçar, remover">⋯</span>`;
+    d.onclick=e=>{ if(e.target.classList.contains('mais')){ e.stopPropagation(); menuSacola(id, e.target); return; } if(id!==design.atual) abreSacola(id); };
     S.appendChild(d);
   });
   // botão do dropdown
@@ -2349,6 +2354,64 @@ function atualizaSacolas(){
   $('prodbtn').innerHTML = `${ic} <b>${esc(GAB.nome)}</b> ▾`;
   // conferir (atalho)
   $('conferir').style.display = b.estado==='auto' ? '' : 'none';
+}
+/* ---- Menu ⋯ de cada sacola (barra das sacolas): mudar papel · duplicar · recomeçar · remover ----
+   Duplicar cria uma CÓPIA da mesma sacola com arte própria: id "f1_kraft~2" (mesmo gabarito; registrada em CATALOGO
+   como propriedade não-enumerável para não aparecer na loja nem em Object.keys). */
+const idBase = id=>String(id).split('~')[0];
+function garanteCopia(id){
+  if(!id || CATALOGO[id]) return !!CATALOGO[id]; if(!String(id).includes('~')) return false;
+  const base=CATALOGO[idBase(id)]; if(!base) return false;
+  const g=Object.create(base); g.nome=base.nome+' ('+id.split('~')[1]+')';
+  Object.defineProperty(CATALOGO, id, {value:g, enumerable:false, configurable:true}); return true;
+}
+function outroPapel(id){ const f=facaDe(id); if(!f) return null; const g=CATALOGO[id], novo=g.papel==='kraft'?'branco':'kraft', suf=id.includes('~')?'~'+id.split('~')[1]:'', nid=f.faca+'_'+novo+suf;
+  return CATALOGO[f.faca+'_'+novo] ? {nid, papel:novo} : null; }
+function menuSacola(id, el){
+  let m=$('sacmenu'); if(m){ const era=m.dataset.id; m.remove(); if(era===id) return; }
+  const op=outroPapel(id), r=el.getBoundingClientRect();
+  m=document.createElement('div'); m.id='sacmenu'; m.dataset.id=id;
+  m.innerHTML=`<button data-a="papel" ${op?'':'disabled title="Este modelo só existe num papel"'}>📄 Mudar para ${op?(op.papel==='branco'?'papel branco':'kraft'):'outro papel'}</button>
+    <button data-a="dup">⧉ Duplicar <small>(outra arte no mesmo tamanho)</small></button><button data-a="rec">↺ Recomeçar a arte</button><button data-a="rem" class="perigo">🗑 Remover do carrinho</button>`;
+  m.style.left=Math.max(8, Math.min(innerWidth-250, r.left))+'px'; m.style.top=(r.bottom+6)+'px'; document.body.appendChild(m);
+  m.querySelectorAll('button').forEach(b=>b.onclick=e=>{ e.stopPropagation(); m.remove(); ({papel:mudaPapel, dup:duplicaSacola, rec:recomecaSacola, rem:removeSacola})[b.dataset.a](id); });
+  setTimeout(()=>document.addEventListener('pointerdown', function fora(e){ if(!m.contains(e.target)){ m.remove(); } document.removeEventListener('pointerdown', fora, true); }, true), 0);
+}
+function trocaIdNoCarrinho(de, para){ const i=design.carrinho.indexOf(de); if(i>=0) design.carrinho[i]=para; design.qtd[para]=design.qtd[de]||1; delete design.qtd[de]; }
+function mudaPapel(id){
+  const op=outroPapel(id); if(!op) return; const nid=op.nid;
+  if(design.carrinho.includes(nid)){ toast(`Já existe ${esc(CATALOGO[nid].nome)} no carrinho.`); return; }
+  garanteCopia(nid); sincroniza(); const antes=hpos;
+  const b=design.sacolas[id]; design.sacolas[nid]=b; design.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]};
+  if(b.camadas.length) b.estado='auto';   // papel diferente: aprova de novo
+  trocaIdNoCarrinho(id, nid); const eraAtual=design.atual===id;
+  propagando=false; abreSacola(eraAtual?nid:design.atual, true, true); propagando=true;
+  salvaHist(); agendaSalvar(); atualizaSacolas();
+  faixa(`<span>📄 ${esc(CATALOGO[nid].nome)}: a arte veio junto. Confira as cores no papel ${op.papel==='branco'?'branco':'kraft'} e aprove de novo.</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 9000);
+}
+function duplicaSacola(id){
+  sincroniza(); const antes=hpos, base=idBase(id); let n=2; while(design.sacolas[base+'~'+n] && (design.carrinho.includes(base+'~'+n) || design.sacolas[base+'~'+n].camadas.length)) n++;
+  const nid=base+'~'+n; garanteCopia(nid);
+  const b=JSON.parse(JSON.stringify(design.sacolas[id])); if(b.camadas.length) b.estado='auto'; b.proprio=[]; design.sacolas[nid]=b;
+  design.carrinho.splice(design.carrinho.indexOf(id)+1, 0, nid); design.qtd[nid]=design.qtd[id]||1;
+  propagando=false; abreSacola(nid, true, true); propagando=true;
+  salvaHist(); agendaSalvar(); atualizaSacolas();
+  faixa(`<span>⧉ <b>${esc(CATALOGO[nid].nome)}</b> criada: mesma medida, arte própria. Mude o que quiser nela.</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 9000);
+}
+function recomecaSacola(id){
+  if(!design.sacolas[id].camadas.length){ toast('Esta sacola já está vazia.'); return; }
+  if(!confirm(`Apagar a arte de ${CATALOGO[id].nome} e começar de novo?\n(Dá para desfazer.)`)) return;
+  sincroniza(); const antes=hpos; const pal=design.sacolas[id].pal;
+  design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]}; if(pal) design.sacolas[id].pal=pal;
+  if(design.atual===id){ propagando=false; abreSacola(id, true, true); propagando=true; }
+  salvaHist(); agendaSalvar(); atualizaSacolas();
+  faixa(`<span>↺ ${esc(CATALOGO[id].nome)} ficou vazia. Use ✨ Assistente, 🗂️ Artes Salvas ou crie do zero.</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 9000);
+}
+function removeSacola(id){
+  if(design.carrinho.length===1 && !confirm('Esta é a única sacola do carrinho. Tirar mesmo?')) return;
+  remCarrinho(id); novaHistoria();
+  if(!design.carrinho.length){ vaiLoja(); return; }
+  if(design.atual===id) abreSacola(design.carrinho[0], false, true); atualizaSacolas();
 }
 function menuProdutos(){
   const m=$('prodmenu');
@@ -2450,7 +2513,7 @@ const xminDe=g=>Math.min(...g.contorno.map(p=>p[0])), xmaxDe=g=>Math.max(...g.co
 function cliche(id){
   if(design.atual===id && typeof arte!=='undefined' && arte) sincroniza();
   const b=design.sacolas[id], g=CATALOGO[id]; if(!b || !b.camadas || !b.camadas.length) return {pend:true};
-  const h=assinaturaArte(b.camadas, paletaSac(id)), conhecidos=new Set([...((design.cliches||{})[id]||[]), ...(CLICHES_NUVEM[id]||[])]);
+  const h=assinaturaArte(b.camadas, paletaSac(id)), conhecidos=new Set([...((design.cliches||{})[idBase(id)]||[]), ...(CLICHES_NUVEM[idBase(id)]||[])]);
   if(conhecidos.has(h)) return {novo:false, h};
   const n=Math.max(1, coresDaSacola(id).size), area=(xmaxDe(g)-xminDe(g))*(ymaxDe(g)-yminDe(g)), uma=Math.max(CLICHE_MIN, Math.round(area*CLICHE_CM2/5)*5);
   return {novo:true, h, cores:n, valor:n*uma, uma, motivo: conhecidos.size ? 'a arte mudou desde o último pedido' : 'primeiro pedido deste tamanho'};
@@ -2463,7 +2526,7 @@ function totalCliches(){ return design.carrinho.reduce((t,id)=>{ const c=cliche(
 async function carregaClichesNuvem(){
   if(!NUVEM || !SB || !USUARIO){ CLICHES_NUVEM={}; return; }
   const {data,error}=await SB.from('artes').select('d:dados->design').eq('tipo','feito'); if(error || !data) return;
-  const m={}; data.forEach(r=>{ const d=r.d; if(!d || !d.sacolas) return; (d.carrinho||[]).forEach(id=>{ const b=d.sacolas[id]; if(!b || !b.camadas || !b.camadas.length) return; (m[id]=m[id]||new Set()).add(assinaturaArte(b.camadas, paletaDoDesign(d,id))); }); });
+  const m={}; data.forEach(r=>{ const d=r.d; if(!d || !d.sacolas) return; (d.carrinho||[]).forEach(id=>{ const b=d.sacolas[id]; if(!b || !b.camadas || !b.camadas.length) return; (m[idBase(id)]=m[idBase(id)]||new Set()).add(assinaturaArte(b.camadas, paletaDoDesign(d,id))); }); });
   CLICHES_NUVEM=m; if(document.body.classList.contains('vloja')) renderCarrinho(); if($('d-car') && $('d-car').classList.contains('open')) gavetaCarrinho();
 }
 const brl = v => 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
@@ -3872,7 +3935,7 @@ $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').
 $('finalizar').onclick=()=>{
   sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
   const clis=Object.fromEntries(itens.map(i=>[i.id, cliche(i.id)])), tcli=Object.values(clis).reduce((t,c)=>t+(c.novo?c.valor:0),0);
-  design.cliches=design.cliches||{}; itens.forEach(i=>{ const c=clis[i.id]; if(c && c.h){ const l=design.cliches[i.id]=design.cliches[i.id]||[]; if(!l.includes(c.h)) l.push(c.h); } });
+  design.cliches=design.cliches||{}; itens.forEach(i=>{ const c=clis[i.id]; if(c && c.h){ const l=design.cliches[idBase(i.id)]=design.cliches[idBase(i.id)]||[]; if(!l.includes(c.h)) l.push(c.h); } });
   design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens, cliches:tcli});
   registraPedidoFeito(num, pacoteArte(), itens.map(i=>`${i.qtd} mil × ${i.nome}`).join(' · '));
   const aprovadas=itens.filter(i=>design.sacolas[i.id]&&design.sacolas[i.id].estado==='conferida').map(i=>i.id);

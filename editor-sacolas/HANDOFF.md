@@ -25,6 +25,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 
 **Editor**
 - Várias sacolas do carrinho; faixa de miniaturas com status ⚪ falta criar · 🟡 falta aprovar · ✅ aprovada · ✏️ mudança só nesta.
+- **Menu ⋯ em cada sacola da barra (15-11):** `menuSacola()` → 📄 Mudar para papel branco/kraft (`mudaPapel()`: troca o id no carrinho mantendo arte e quantidade, volta a 🟡; desativado se o modelo só existe num papel) · ⧉ Duplicar (`duplicaSacola()`: cópia com arte própria no mesmo tamanho, id `f1_kraft~2`, registrada por `garanteCopia()` como propriedade NÃO enumerável de `CATALOGO` (objeto com protótipo = gabarito base, nome "… (2)"), recriada no carregamento local/nuvem; clichê usa `idBase()` para o histórico) · ↺ Recomeçar a arte (`recomecaSacola()`, fica ⚪ e não regera sozinha) · 🗑 Remover (`removeSacola()` → `remCarrinho`). Todos com ↶ Desfazer.
 - Adaptação automática entre facas (topo/base ancorados, meio proporcional; nunca abaixo de texto/traço mínimo).
 - Mudanças ficam **só na sacola atual** por padrão; faixa "Aplicar nas outras sacolas" leva o estado FINAL (decisão do Leo — não reverter).
 - Salva sozinho (localStorage `glopel_editor_projeto_v2`, assets em `glopel_editor_assets_v1`); começa vazio; ❓ › Carregar exemplo / Recomeçar (desfazível).
