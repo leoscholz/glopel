@@ -309,6 +309,8 @@ button{user-select:none;-webkit-user-select:none}
 .tag{font-size:10.5px;background:#f6e3a7;border-radius:5px;padding:1px 6px;color:#7a5410;font-weight:600}
 .props{padding:0 14px 10px}
 .row{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center;margin:7px 0}
+#val .v{cursor:pointer} #val .v button.corr{display:block;margin-top:6px;padding:5px 10px;font-size:12.5px;font-weight:600}
+@keyframes pisca{0%,100%{opacity:1}30%{opacity:.25}60%{opacity:1}80%{opacity:.4}} [data-layer].pisca{animation:pisca 1s ease 1}
 .aj-tit{font-size:15px;margin:2px 0 8px;display:flex;gap:6px;align-items:center}
 .aj-sec{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 5px;display:flex;justify-content:space-between;align-items:baseline}
 .aj-med{font-weight:500;text-transform:none;letter-spacing:0;color:var(--mute)}
@@ -501,7 +503,7 @@ const FONTES = {
 };
 let PAINEIS = Object.keys(GAB.paineis).filter(k=>!GAB.paineis[k].oculto);
 const SIGLA = {frente:"Frente", verso:"Verso", sanfona_esq:"Lateral", sanfona_dir:"Lateral"};
-const NOME_PAINEL = {frente:"a frente", verso:"o verso", sanfona_esq:"a lateral esquerda", sanfona_dir:"a lateral direita"};
+const NOME_PAINEL = {frente:"da frente", verso:"do verso", sanfona_esq:"da lateral esquerda", sanfona_dir:"da lateral direita"};
 // nome que o leigo entende (camadas, hover, checagem, faixas); o id técnico fica só como dica
 function nomeAmigavel(c){ if(!c) return ''; if(c.nome) return c.nome;
   const corta=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>24?t.slice(0,23)+'…':t; };
@@ -1062,44 +1064,96 @@ function props(){
 /* ---------- validação ---------- */
 function coletaEl(el, raiz, out, usadas){
   if(el.visivel===false) return;
-  ['cor','contorno'].forEach(k=>{ const v=el[k]; if(v && v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,`cor '${v}' fora da paleta`]); } });
-  if(el.tipo==='texto' && (el.tamanho_pt||12)*(el.escala||1) < GAB.regras.texto_min_pt) out.push(['err',raiz,`texto ${((el.tamanho_pt||12)*(el.escala||1)).toFixed(1)} pt < mínimo ${GAB.regras.texto_min_pt} pt`]);
-  if(el.contorno && (el.traco_mm||0.5)*(el.escala||1) < GAB.regras.linha_min_mm) out.push(['err',raiz,`traço < ${GAB.regras.linha_min_mm} mm`]);
+  ['cor','contorno'].forEach(k=>{ const v=el[k]; if(v && v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,'usa uma cor que saiu da lista de cores','cor']); } });
+  if(el.tipo==='texto' && (el.tamanho_pt||12)*(el.escala||1) < GAB.regras.texto_min_pt) out.push(['err',raiz,`letra pequena demais para imprimir (mínimo ${GAB.regras.texto_min_pt} pt)`,'textomin']);
+  if(el.contorno && (el.traco_mm||0.5)*(el.escala||1) < GAB.regras.linha_min_mm) out.push(['err',raiz,`contorno fino demais para imprimir (mínimo ${String(GAB.regras.linha_min_mm).replace('.',',')} mm)`,'traco']);
   if(el.tipo==='imagem') out.push(['err',raiz,'imagem raster — precisa vetorizar']);
   if(el.tipo==='vetor'){ const orig = el.asset && ASSETS[el.asset] ? Object.keys(ASSETS[el.asset].cores) : Object.keys(el.mapa||{});
-    const sem = orig.filter(h=>!(el.mapa||{})[h]); if(sem.length) out.push(['err',raiz,`${sem.length} cor(es) do vetor sem Pantone — duplo clique para ajustar`]);
-    Object.values(el.mapa||{}).forEach(v=>{ if(v&&v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,`cor '${v}' fora da paleta`]); } }); }
+    const sem = orig.filter(h=>!(el.mapa||{})[h]); if(sem.length) out.push(['err',raiz,`${sem.length} parte(s) do desenho sem cor escolhida`,'semcor']);
+    Object.values(el.mapa||{}).forEach(v=>{ if(v&&v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,'usa uma cor que saiu da lista de cores','cor']); } }); }
   (el.filhos||[]).forEach(f=>coletaEl(f, raiz, out, usadas));
 }
+let VAL_ULT=[];
+const ROTULO_FIX={cor:'🎨 Usar cor da lista', textomin:'🔠 Aumentar até o mínimo', traco:'✏️ Engrossar', semcor:'🎨 Escolher cores', escondido:'👁 Mostrar', borda:'🪄 Trazer para dentro', dobra:'🪄 Tirar da dobra', sobre:'🪄 Afastar', cores3:'🎨 Ver cores', semuso:'🗑 Tirar da lista'};
+// leva a vista até o item (volta para a Prévia se estiver no 3D/mockup) e seleciona
+function focaItem(id, semZoom){
+  if(['produto','mockup'].includes(modo)){ modo='previa'; $('modo').value='previa'; }
+  setSel(id); render();
+  const c=layer(id), pn=c&&GAB.paineis[c.painel]; if(!pn) return;
+  const pt=pn.partes.find(p=>p.w>0)||pn.partes[0], b=bboxPainel(c); if(!b) return;
+  const off=pt.x-pt.px, bw=b.x1-b.x0, bh=b.y1-b.y0, cx=(b.x0+b.x1)/2+off, cy=(b.y0+b.y1)/2+pt.y;
+  if(!semZoom && (bw>view.w*0.8 || bh>view.h*0.8)){ const k=Math.max(bw/(view.w*0.6), bh/(view.h*0.6)); view.w*=k; view.h*=k; }
+  const fora = cx<view.x+view.w*0.1 || cx>view.x+view.w*0.9 || -cy<view.y+view.h*0.1 || -cy>view.y+view.h*0.9;
+  if(!semZoom || fora){ view.x=cx-view.w/2; view.y=-cy-view.h/2; }
+  render();
+  const g=svg.querySelector(`[data-layer="${id}"]`); if(g){ g.classList.remove('pisca'); void g.getBoundingClientRect(); g.classList.add('pisca'); }
+}
+// faixa livre na horizontal: entre dobras/emendas, dentro da margem
+function faixaLivre(c, b){ const pn=GAB.paineis[c.painel], cx=(b.x0+b.x1)/2;
+  const cortes=[0,...(pn.linhas_internas||[]).map(l=>l.x),pn.w].sort((a,b)=>a-b);
+  let best=[M,pn.w-M], melhor=-1;
+  for(let i=0;i<cortes.length-1;i++){ const z0=cortes[i]+M, z1=cortes[i+1]-M; if(z1<=z0) continue; const ov=Math.min(z1,b.x1)-Math.max(z0,b.x0), dentro=cx>=z0&&cx<=z1;
+    const nota=(dentro?1e6:0)+ov; if(nota>melhor){ melhor=nota; best=[z0,z1]; } }
+  const e=0.03; return {x0:best[0]+e, x1:best[1]-e, y0:M+e, y1:pn.h-M-e}; }   // folguinha p/ o arredondamento não deixar na linha
+// encaixa o item na faixa: diminui se não couber (sem passar do mínimo de letra) e empurra para dentro
+function encaixaNaFaixa(c){ render(); let b=bboxPainel(c); if(!b) return false; const z=faixaLivre(c,b), bw=b.x1-b.x0, bh=b.y1-b.y0, zw=z.x1-z.x0, zh=z.y1-z.y0;
+  if(bw>zw || bh>zh){ let f=Math.min(zw/bw, zh/bh)*0.97;
+    if(c.tipo==='texto'){ const pt=(c.tamanho_pt||12)*(c.escala||1); f=Math.max(f, (GAB.regras.texto_min_pt+0.1)/pt); }
+    const [cx,cy]=centro(c); escalarEm(c, f, cx, cy); render(); b=bboxPainel(c); }
+  let dx=0, dy=0; if(b.x0<z.x0) dx=z.x0-b.x0; else if(b.x1>z.x1) dx=z.x1-b.x1; if(b.y0<z.y0) dy=z.y0-b.y0; else if(b.y1>z.y1) dy=z.y1-b.y1;
+  mover(c, dx, dy); arred(c); return true; }
+function corrigeProblema(p){ const [t,id,m,cod,extra]=p, c=layer(id);
+  if(cod==='semuso'){ const k=id.slice(7); if(arte.paleta[k] && !coresEmUso().has(k)) delete arte.paleta[k]; return true; }
+  if(cod==='cores3'){ toggleDrawer('d-cores', true); toast(`Tire uma cor da lista (ou troque por uma que já existe) — a impressão aceita ${GAB.regras.max_cores}.`, 6000); return false; }
+  if(!c) return false;
+  if(cod==='cor'){ const ks=Object.keys(arte.paleta); if(!ks.length) return false; const troca=v=>(v&&v!=='papel'&&!arte.paleta[v])?ks[0]:v;
+    const vai=el=>{ el.cor=troca(el.cor); el.contorno=troca(el.contorno); if(el.mapa) Object.keys(el.mapa).forEach(h=>el.mapa[h]=troca(el.mapa[h])); (el.filhos||[]).forEach(vai); }; vai(c); return true; }
+  if(cod==='textomin'){ c.tamanho_pt=+((GAB.regras.texto_min_pt+0.1)/(c.escala||1)).toFixed(2); return true; }
+  if(cod==='traco'){ c.traco_mm=+((GAB.regras.linha_min_mm+0.02)/(c.escala||1)).toFixed(2); return true; }
+  if(cod==='semcor'){ setSel(id); render(); if(c.tipo==='vetor') editorVetor(c); return false; }
+  if(cod==='escondido'){ c.visivel=true; return true; }
+  if(cod==='borda' || cod==='dobra') return encaixaNaFaixa(c);
+  if(cod==='sobre'){ const o=layer(extra); render(); const a=bboxPainel(c), b=o&&bboxPainel(o); if(!a||!b) return false; const gap=0.25;
+    const sobe = (a.y0+a.y1)/2 >= (b.y0+b.y1)/2, dy = sobe ? (b.y1+gap)-a.y0 : (b.y0-gap)-a.y1;
+    mover(c, 0, dy); encaixaNaFaixa(c); render(); const a2=bboxPainel(c);
+    if(a2 && Math.min(a2.y1,b.y1)-Math.max(a2.y0,b.y0)>0.08){ mover(c, 0, -dy + (sobe ? (b.y0-gap)-a.y1 : (b.y1+gap)-a.y0)); encaixaNaFaixa(c); }   // não coube: tenta o outro lado
+    return true; }
+  return false; }
+function corrigeTudo(){ let n=0; for(let volta=0; volta<4; volta++){ const ps=valida().filter(p=>ROTULO_FIX[p[3]] && !['semcor','cores3'].includes(p[3])); if(!ps.length) break;
+    const vistos=new Set(); ps.forEach(p=>{ const k=p[1]+p[3]; if(vistos.has(k)) return; vistos.add(k); if(corrigeProblema(p)) n++; render(); }); }
+  commit(); render(); const resta=valida().length; toast(n ? `🪄 ${n} correç${n>1?'ões':'ão'} feita${n>1?'s':''}.${resta?` Ainda ${resta===1?'falta 1 item':'faltam '+resta+' itens'} para você olhar.`:' Tudo certo!'} (↶ desfaz)` : 'Nada que dê para corrigir sozinho.', 6000); }
 function valida(){
   const out=[], usadas=new Set();
   arte.camadas.forEach(c=>{
     coletaEl(c, c.id, out, usadas);
-    if(c.visivel===false){ out.push(['warn', c.id, 'está escondido (👁) e não vai ser impresso — mostre ou apague']); return; }
+    if(c.visivel===false){ out.push(['warn', c.id, 'está escondido (👁) e não vai ser impresso','escondido']); return; }
     if(c.fundo) return;
     const pn = GAB.paineis[c.painel], b = bboxPainel(c); if(!b) return;
     const fora = b.x0<-0.02 || b.y0<-0.02 || b.x1>pn.w+0.02 || b.y1>pn.h+0.02;   // passou da borda: vai sair cortado
-    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`está saindo de ${NOME_PAINEL[c.painel]||c.painel} e vai sair cortado — diminua ou puxe para dentro`:`muito perto da borda (deixe ${M*10} mm de folga)`]);
-    (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `passa por cima da ${li.tipo} (lá o papel dobra ou é colado)`]); });
+    if(b.x0<M-1e-3 || b.y0<M-1e-3 || b.x1>pn.w-M+1e-3 || b.y1>pn.h-M+1e-3) out.push([fora?'err':'warn', c.id, fora?`está saindo ${NOME_PAINEL[c.painel]||c.painel} e vai sair cortado`:`muito perto da borda (deixe ${M*10} mm de folga)`,'borda']);
+    (pn.linhas_internas||[]).forEach(li=>{ if(b.x0<li.x+M && b.x1>li.x-M) out.push(['warn', c.id, `passa por cima da ${li.tipo} (lá o papel dobra ou é colado)`,'dobra']); });
   });
   { // texto em cima de texto ou de linha: quase sempre é erro (nome que cresceu por cima do telefone, linha riscando o nome)
     const vis = arte.camadas.filter(c=>c.visivel!==false && !c.fundo && (c.tipo==='texto'||c.tipo==='linha')).map(c=>({c, b:bboxPainel(c)})).filter(x=>x.b);
     const enc = (a,b)=>Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0) > 0.08 && Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0) > 0.08;
     for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){ const A=vis[i], B=vis[j]; if(A.c.painel!==B.c.painel) continue;
       if(A.c.tipo==='linha' && B.c.tipo==='linha') continue; if(!enc(A.b,B.b)) continue;
-      const [t,o] = A.c.tipo==='texto' ? [A,B] : [B,A]; out.push(['warn', t.c.id, `está por cima de ${nomeAmigavel(o.c)} — afaste um do outro`]); }
+      const [t,o] = A.c.tipo==='texto' ? [A,B] : [B,A]; out.push(['warn', t.c.id, `está por cima de ${nomeAmigavel(o.c)}`,'sobre',o.c.id]); }
   }
   const n = Object.keys(arte.paleta).length;
-  if(n>GAB.regras.max_cores) out.push(['err','paleta',`${n} cores (máx. ${GAB.regras.max_cores})`]);
-  if(arte.camadas.length) Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta:'+k,`${nomeCor(arte.paleta[k])} não está sendo usada — clique aqui para tirar da lista`]));   // sacola vazia: sem ruído
-  const V = $('val'); V.onclick = e=>{ const d=e.target.closest('.v[data-id]'); const c=d&&layer(d.dataset.id); if(c){ setSel(c.id); render(); } };
-  V.innerHTML = out.length ? out.map(([t,id,m])=>`<div class="v ${t}" data-id="${esc(id)}">${t==='err'?'⛔':'⚠️'} <b>${esc(nomeDeId(id))}</b> — ${esc(m)}</div>`).join('')
+  if(n>GAB.regras.max_cores) out.push(['err','paleta',`${n} cores na lista — a impressão aceita no máximo ${GAB.regras.max_cores}`,'cores3']);
+  if(arte.camadas.length) Object.keys(arte.paleta).filter(k=>!usadas.has(k)).forEach(k=>out.push(['warn','paleta:'+k,`${nomeCor(arte.paleta[k])} não está sendo usada`,'semuso']));   // sacola vazia: sem ruído
+  const V = $('val'); V.onclick = null; VAL_ULT = out;
+  const temFix = out.filter(x=>ROTULO_FIX[x[3]]).length;
+  V.innerHTML = out.length ? (temFix>1?`<button class="pri corrTudo" style="width:100%;margin-bottom:8px">🪄 Corrigir tudo (${temFix})</button>`:'') + out.map(([t,id,m,cod],i)=>`<div class="v ${t}" data-id="${esc(id)}" data-i="${i}">${t==='err'?'⛔':'⚠️'} <b>${esc(nomeDeId(id))}</b> — ${esc(m)}${ROTULO_FIX[cod]?`<button class="corr" data-i="${i}">${ROTULO_FIX[cod]}</button>`:''}</div>`).join('')
     : `<div class="v ok">✅ Pronta: ${n} cor(es), tudo dentro da área útil, sem texto/traço abaixo do mínimo.</div>`;
   const nE = out.filter(x=>x[0]==='err').length, nW = out.length-nE, bk = $('b-ck');
   bk.className = 'badge show'; bk.style.background = nE?'var(--err)':nW?'var(--warn)':'var(--ok)'; bk.textContent = out.length?out.length:'✓';
-  V.querySelectorAll('[data-id]').forEach(d=>d.onclick=()=>{ const id=d.dataset.id;
-    if(id.startsWith('paleta:')){ const k=id.slice(7); if(arte.paleta[k] && !coresEmUso().has(k)){ delete arte.paleta[k]; commit(); render(); toast('Cor tirada da lista.'); } return; }
-    if(layer(id)){ setSel(id); render(); } });
+  V.querySelectorAll('.v[data-id]').forEach(d=>d.onclick=e=>{ if(e.target.closest('button')) return; const id=d.dataset.id;
+    if(id==='paleta'||id.startsWith('paleta:')){ toggleDrawer('d-cores', true); return; }
+    if(layer(id)) focaItem(id); });
+  V.querySelectorAll('button.corr').forEach(b=>b.onclick=()=>{ const p=VAL_ULT[+b.dataset.i]; if(p && corrigeProblema(p)){ commit(); render(); if(layer(p[1])) focaItem(p[1], true); } });
+  const ct=V.querySelector('.corrTudo'); if(ct) ct.onclick=corrigeTudo;
   // contorno vermelho/laranja no desenho em volta do que tem problema
   const pg=$('probs'); if(pg){ let h=''; const ja=new Set();
     out.forEach(([t,id])=>{ const c=layer(id); if(!c || ja.has(id)) return; ja.add(id); const pn=GAB.paineis[c.painel];
