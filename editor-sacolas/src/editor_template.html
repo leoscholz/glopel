@@ -2104,11 +2104,17 @@ function carregaDesign(){
   return designVazio();
 }
 let SYNC_OFF=0;   // >0 enquanto a tela mostra uma arte emprestada (medição): sincroniza() não pode gravar isso em nenhuma sacola
-function sincroniza(){ if(!design || SYNC_OFF) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
+// Cores: cada sacola usa a paleta do seu grupo. Sem grupo (b.pal vazio) = paleta comum (design.paleta).
+// Grupo próprio nasce quando uma arte salva é aplicada só em algumas sacolas — assim o carrinho pode ter artes diferentes, cada uma com até 3 cores.
+function paletaSac(id){ const b=design.sacolas[id]; return (b && b.pal && design.paletas && design.paletas[b.pal]) || design.paleta; }
+function mesmoGrupo(a,b){ return ((design.sacolas[a]||{}).pal||'')===((design.sacolas[b]||{}).pal||''); }
+function sincroniza(){ if(!design || SYNC_OFF) return; const b=design.sacolas[design.atual];
+  if(b.pal && design.paletas && design.paletas[b.pal]) design.paletas[b.pal]=arte.paleta; else design.paleta = arte.paleta;
+  b.camadas = arte.camadas; design.cliente = arte.cliente; }
 function migraAprovacao(d){ if(!d) return d;
   if(!d.limpaFora){ const no=new Set(d.carrinho||[]); Object.keys(d.sacolas||{}).forEach(id=>{ if(!no.has(id) && d.sacolas[id].camadas && d.sacolas[id].camadas.length) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); d.limpaFora=true; }   // arte só vive em sacola que está no carrinho
   if(d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
-function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:design.paleta, camadas:b.camadas}; }
+function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:paletaSac(design.atual), camadas:b.camadas}; }
 
 /* ---------- adaptação automática entre tamanhos ---------- */
 const CAMPOS_LAYOUT = new Set(['x','y','escala','rotacao','w','h','rx','ry','x1','y1','x2','y2','raio','tamanho_pt','painel','bloqueado','traco_mm']);
@@ -2145,7 +2151,7 @@ function geraAdaptada(idDest){
   if(!fonte){ b.camadas=[]; b.estado='auto'; return; }
   const gO = CATALOGO[fonte], gD = CATALOGO[idDest];
   const gAtual = GAB; setGab(gO);   // para medir caixas na origem
-  const prevArte = arte; arte = {cliente:design.cliente, paleta:design.paleta, camadas:design.sacolas[fonte].camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
+  const prevArte = arte; arte = {cliente:design.cliente, paleta:paletaSac(fonte), camadas:design.sacolas[fonte].camadas}; if(design.sacolas[fonte].pal) b.pal=design.sacolas[fonte].pal; else delete b.pal; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
   b.camadas = design.sacolas[fonte].camadas.map(c=>adaptaCamada(c, gO, gD)).filter(Boolean);
   arte = prevArte; setGab(gAtual);
   b.estado='auto'; b.proprio=[];
@@ -2162,7 +2168,7 @@ function diffConteudo(antes, depois){
   A.forEach((c,id)=>{ if(!D.has(id)) rem.push(id); });
   return {add, rem, mud};
 }
-function outrasCriadas(){ return design.carrinho.filter(id=>id!==design.atual && design.sacolas[id] && design.sacolas[id].estado!=='nenhum'); }
+function outrasCriadas(){ return design.carrinho.filter(id=>id!==design.atual && design.sacolas[id] && design.sacolas[id].estado!=='nenhum' && mesmoGrupo(id, design.atual)); }   // só sacolas com a mesma arte/cores
 function propagaPara(ids, df){
   const gO = GAB, src = design.sacolas[design.atual].camadas;
   ids.forEach(bid=>{
@@ -2242,10 +2248,10 @@ function salvaHist(){ const j=snap(); histSacolas(); if(j===hist[hpos]) return; 
 /* Desfazer/Refazer POR SACOLA (Ctrl+Z, botões): cada sacola tem sua pilha; nunca troca de sacola sozinho.
    O histórico global (hist/hpos) fica só para os "↶ Desfazer" das faixas de ações em lote (assistente, exemplo, recomeçar). */
 let HIST = {};
-function fotoSacola(id){ const b=design.sacolas[id]; return JSON.stringify({camadas:b.camadas, estado:b.estado, proprio:b.proprio||[], paleta:design.paleta, cliente:design.cliente}); }
+function fotoSacola(id){ const b=design.sacolas[id]; return JSON.stringify({camadas:b.camadas, estado:b.estado, proprio:b.proprio||[], paleta:paletaSac(id), pal:b.pal||'', cliente:design.cliente}); }
 function histSacolas(){ (design.carrinho||[]).forEach(id=>{ if(!design.sacolas[id]) return; const j=fotoSacola(id), H=HIST[id];
   if(!H){ HIST[id]={p:[j], i:0}; return; } if(H.p[H.i]===j) return; H.p=H.p.slice(0,H.i+1); H.p.push(j); if(H.p.length>120) H.p.shift(); H.i=H.p.length-1; }); }
-function aplicaFoto(id, j){ const o=JSON.parse(j), b=design.sacolas[id]; b.camadas=o.camadas; b.estado=o.estado; b.proprio=o.proprio; design.paleta=o.paleta; design.cliente=o.cliente;
+function aplicaFoto(id, j){ const o=JSON.parse(j), b=design.sacolas[id]; b.camadas=o.camadas; b.estado=o.estado; b.proprio=o.proprio; if(o.pal){ b.pal=o.pal; design.paletas=design.paletas||{}; design.paletas[o.pal]=o.paleta; } else { delete b.pal; design.paleta=o.paleta; } design.cliente=o.cliente;
   propagando=false; abreSacola(id, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
 commit = function(){ sincroniza(); aposEdicao(); salvaHist(); atualizaSacolas(); };   // status das abas sempre em dia
 function restaura(i){ const atual=design.atual; hpos=i; design=JSON.parse(hist[hpos]); if(design.carrinho.includes(atual)) design.atual=atual; propagando=false; abreSacola(design.atual, true, true); propagando=true; ultimoBag=JSON.stringify(arte.camadas); histSacolas(); agendaSalvar(); }
@@ -2717,7 +2723,7 @@ function insereBanco(k){ const b=BANCO[k]; insereVetor({vb:b.vb, svg:b.svg}, k, 
 /* ---------- cores usadas no projeto inteiro ---------- */
 function coresUsadas(excetoLayer){
   const s=new Set(); const vis=el=>{ if(el===excetoLayer) return; ['cor','contorno'].forEach(k=>{ if(el[k]&&el[k]!=='papel') s.add(el[k]); }); if(el.mapa) Object.values(el.mapa).forEach(v=>{ if(v&&v!=='papel') s.add(v); }); (el.filhos||[]).forEach(vis); };
-  sincroniza(); Object.values(design.sacolas).forEach(b=>b.camadas.forEach(vis)); return s;
+  sincroniza(); const P=arte.paleta; Object.keys(design.sacolas).forEach(id=>{ if(paletaSac(id)===P) design.sacolas[id].camadas.forEach(vis); }); return s;
 }
 function limpaPaletaNaoUsada(excetoLayer){ const u=coresUsadas(excetoLayer); Object.keys(arte.paleta).forEach(k=>{ if(!u.has(k)) delete arte.paleta[k]; }); }
 function chaveNova(pantone){ const base=pantone.replace('PANTONE ','').replace(/\W+/g,'_').toLowerCase(); let k='p'+base, i=2; while(arte.paleta[k]) k='p'+base+'_'+(i++); return k; }
@@ -3024,7 +3030,7 @@ async function boasVindas(){
 // ---- 🎨 artes (visuais) ----
 function pacoteModelo(){
   sincroniza(); const usados={}; const vis=el=>{ if(el.asset && ASSETS[el.asset]) usados[el.asset]=ASSETS[el.asset]; (el.filhos||[]).forEach(vis); }; arte.camadas.forEach(vis);
-  return {versao:VERSAO, modelo:{faca:design.atual, camadas:JSON.parse(JSON.stringify(arte.camadas)), paleta:JSON.parse(JSON.stringify(design.paleta)), dados:design.dados||null, estilo:design.estilo||null, paletaPronta:design.paletaPronta||null, cliente:design.cliente}, assets:usados};
+  return {versao:VERSAO, modelo:{faca:design.atual, camadas:JSON.parse(JSON.stringify(arte.camadas)), paleta:JSON.parse(JSON.stringify(arte.paleta)), dados:design.dados||null, estilo:design.estilo||null, paletaPronta:design.paletaPronta||null, cliente:design.cliente}, assets:usados};
 }
 async function previewArte(){   // miniatura da FRENTE da sacola aberta (jpeg pequeno)
   const p=GAB.paineis.frente.partes[0], k=Math.min(30, 360/Math.max(p.w,p.h)), W=Math.round((xmax-xmin)*k), H=Math.round((ymax-ymin)*k);
@@ -3090,26 +3096,20 @@ async function aplicaArte(id, nome, ids){
   const gO=CATALOGO[M.faca] || CATALOGO[Object.keys(CATALOGO).find(k=>k.split('_')[0]===String(M.faca).split('_')[0])];
   if(!gO){ toast('⚠️ A sacola de origem desta arte não existe mais.'); return; }
   sincroniza(); const antes=hpos; Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
-  const todas = design.carrinho.every(i=>ids.includes(i));
-  let camadas = JSON.parse(JSON.stringify(M.camadas));
-  if(todas){ Object.keys(design.paleta).forEach(k=>delete design.paleta[k]); Object.assign(design.paleta, JSON.parse(JSON.stringify(M.paleta))); }
-  else {   // só algumas sacolas: junta as cores da arte às que já existem (mesmo Pantone = mesma cor; nome repetido com outra cor = renomeia)
-    const troca={};
-    Object.entries(M.paleta).forEach(([k,c])=>{ const igual=Object.keys(design.paleta).find(e=>design.paleta[e].pantone===c.pantone);
-      if(igual){ troca[k]=igual; return; } let nk=k, n=2; while(design.paleta[nk]) nk=k+'_'+(n++); design.paleta[nk]=JSON.parse(JSON.stringify(c)); troca[k]=nk; });
-    const ren=el=>{ ['cor','contorno'].forEach(q=>{ if(el[q] && troca[el[q]]) el[q]=troca[el[q]]; }); if(el.mapa) Object.keys(el.mapa).forEach(o=>{ if(troca[el.mapa[o]]) el.mapa[o]=troca[el.mapa[o]]; }); (el.filhos||[]).forEach(ren); };
-    camadas.forEach(ren);
-  }
+  const todas = design.carrinho.every(i=>ids.includes(i)), camadas = JSON.parse(JSON.stringify(M.camadas)), pal = JSON.parse(JSON.stringify(M.paleta));
+  design.paletas = design.paletas || {};
+  if(todas){ Object.keys(design.paleta).forEach(k=>delete design.paleta[k]); Object.assign(design.paleta, pal); ids.forEach(i=>delete design.sacolas[i].pal); }
+  else { const g='g'+Date.now().toString(36); design.paletas[g]=pal; ids.forEach(i=>design.sacolas[i].pal=g); }   // cores próprias: não mexe nas outras sacolas
+  { const vivos=new Set(Object.values(design.sacolas).map(b=>b.pal).filter(Boolean)); Object.keys(design.paletas).forEach(g=>{ if(!vivos.has(g)) delete design.paletas[g]; }); }
   if(M.dados) design.dados=M.dados; if(M.estilo) design.estilo=M.estilo; if(M.paletaPronta) design.paletaPronta=M.paletaPronta; if(M.cliente) design.cliente=M.cliente;
-  const gA=GAB, aA=arte; setGab(gO); arte={cliente:design.cliente, paleta:design.paleta, camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
+  const gA=GAB, aA=arte; setGab(gO); arte={cliente:design.cliente, paleta:pal, camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
   ids.forEach(i=>{ const b=design.sacolas[i]; b.camadas = CATALOGO[i]===gO ? JSON.parse(JSON.stringify(camadas)) : camadas.map(c=>adaptaCamada(c,gO,CATALOGO[i])).filter(Boolean); b.estado='auto'; b.proprio=[]; });
   setGab(gA); arte=aA; design.portaVista=true;
   fecha(); const alvo=ids.includes(design.atual)?design.atual:ids[0];
   propagando=false; abreSacola(alvo, true, true); propagando=true;   // sem sincroniza(): a arte da tela ainda é a antiga
   if(document.body.classList.contains('vloja')) vaiEditor(alvo);
-  limpaPaletaNaoUsada(); salvaHist(); renderElementos(); atualizaSacolas();
-  const nc=coresUsadas().size, max=GAB.regras.max_cores;
-  faixa(`<span>🎨 Arte <b>${esc(nome)}</b> aplicada em ${ids.length===1?esc(CATALOGO[ids[0]].nome):ids.length+' sacolas'}. Confira e aprove.${nc>max?` ⚠️ Agora o pedido usa ${nc} cores (máximo ${max}): a 🎨 Cores mostra qual trocar.`:''}</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 12000);
+  salvaHist(); renderElementos(); atualizaSacolas();
+  faixa(`<span>🎨 Arte <b>${esc(nome)}</b> aplicada em ${ids.length===1?esc(CATALOGO[ids[0]].nome):ids.length+' sacolas'}. Confira e aprove.</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 12000);
 }
 // ---- 📦 pedidos (⭐ salvos + feitos) ----
 async function salvar(){   // botão 💾 e Ctrl+S
@@ -3401,7 +3401,7 @@ function aplicaAssistente(){
   design.dados=WZ.dados; design.estilo=WZ.estilo; design.paletaPronta=WZ.pal; design.portaVista=true;
   design.cliente=WZ.dados.nome||design.cliente;
   Object.keys(design.paleta).forEach(k=>delete design.paleta[k]); Object.assign(design.paleta, pal);
-  design.carrinho.forEach(id=>{ const b=design.sacolas[id]; b.camadas=gerarArte(WZ.estilo, CATALOGO[id], WZ.dados, c1, c2); b.estado='auto'; b.proprio=[]; });
+  design.carrinho.forEach(id=>{ const b=design.sacolas[id]; delete b.pal; b.camadas=gerarArte(WZ.estilo, CATALOGO[id], WZ.dados, c1, c2); b.estado='auto'; b.proprio=[]; });
   design.confirmadas=[]; design.ultima=design.atual;
   $('mbox').classList.remove('largo'); fecha();
   propagando=false; abreSacola(design.atual, true, true); propagando=true; salvaHist(); atualizaSacolas();
