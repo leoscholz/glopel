@@ -33,7 +33,7 @@ select{cursor:pointer}
 #top #modo{width:auto;background:linear-gradient(#ffffff,#eef2f7);box-shadow:var(--sh);border-radius:10px}
 #top .grow{flex:1}
 #main{display:grid;grid-template-columns:auto auto 1fr auto auto;min-height:0}
-#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem,#main>#d-artes{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check,#main>#d-dados{grid-column:4} #main>.tabs.right{grid-column:5}
+#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem,#main>#d-artes,#main>#d-ped,#main>#d-car{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check,#main>#d-dados{grid-column:4} #main>.tabs.right{grid-column:5}
 #main>*{grid-row:1}
 .tabs{display:flex;flex-direction:column;gap:8px;padding:12px 6px;background:var(--surf2);border-right:1px solid var(--line)}
 .tabs.right{border-right:none;border-left:1px solid var(--line)}
@@ -240,6 +240,11 @@ button{user-select:none;-webkit-user-select:none}
 #mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
 #mbox .cmenu{display:flex;flex-direction:column;gap:8px} #mbox .cmenu button{text-align:left;padding:10px 14px;font-weight:700} #mbox .cmenu button span{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
 #mbox .escsac{display:flex;flex-direction:column;gap:6px} #mbox .escsac label{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fafcff;cursor:pointer} #mbox .escsac input{width:18px;height:18px;flex:0 0 auto;margin:0} #mbox .escsac b{white-space:nowrap} #mbox .escsac .st{margin-left:auto;font-size:12px;color:var(--mute)}
+#main>.tabs.left{overflow-y:auto;scrollbar-width:none}
+.glista{padding:0 12px 14px;display:flex;flex-direction:column;gap:8px} .glista .hint{font-size:12px;color:var(--mute);line-height:1.4} .glista h4{margin:6px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+.glista .gp{border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 10px;font-size:12.5px} .glista .gp b{display:block} .glista .gp .st{font-size:11.5px;color:var(--mute);margin:2px 0 6px} .glista .gp .bt{display:flex;gap:6px;flex-wrap:wrap} .glista .gp button{padding:5px 10px;font-size:12px}
+.glista .gc{display:flex;gap:8px;align-items:center} .glista .gc .ft{width:40px;flex:0 0 40px;text-align:center} .glista .gc .ft img{max-height:52px;max-width:40px} .glista .gp.on{border-color:var(--acc);box-shadow:0 0 0 2px #2f7fd033}
+.glista .step{display:flex;align-items:center;gap:6px;margin:4px 0} .glista .step button{padding:2px 9px} .glista .tot{display:flex;justify-content:space-between;font-size:14px;margin-top:4px}
 #artesLista{padding:0 12px 14px;display:flex;flex-direction:column;gap:8px} #artesLista .hint{font-size:12px;color:var(--mute);line-height:1.4}
 #artesLista .ga{border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px;display:flex;gap:10px;align-items:center}
 #artesLista .ga .im{width:58px;height:80px;flex:0 0 58px;border-radius:8px;background:#eef2f7;display:flex;align-items:center;justify-content:center;overflow:hidden} #artesLista .ga .im img{max-width:100%;max-height:100%}
@@ -311,8 +316,9 @@ button{user-select:none;-webkit-user-select:none}
   #main{grid-template-columns:1fr}
   #main>#center{grid-column:1;padding-bottom:56px}
   #main>.tabs{position:fixed;bottom:0;flex-direction:row;justify-content:space-around;gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));z-index:30;border:none;border-top:1px solid var(--line);background:var(--surf)}
-  #main>.tabs.left{left:0;right:50%} #main>.tabs.right{left:50%;right:0}
+  #main>.tabs.left{left:0;right:34%} #main>.tabs.right{left:66%;right:0}
   .tab{flex-direction:column;width:auto;flex:1;padding:4px 2px;gap:1px;font-size:17px;min-height:46px}
+  .tab span{font-size:9px!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} #main>.tabs .tab{min-width:0}
   .tab span{writing-mode:horizontal-tb;transform:none;font-size:10.5px;letter-spacing:0}
   .drawer.open{position:fixed;left:0;right:0;bottom:56px;height:58vh;width:auto!important;z-index:29;border:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(20,40,70,.18)}
   #tools,#tools.vert,#tools.moved{left:6px!important;right:6px;top:auto!important;bottom:6px;transform:none!important;flex-direction:row!important;overflow-x:auto;max-width:none;padding:5px;gap:4px}
@@ -408,7 +414,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
 <path d="M22 96 Q70 92 104 60" fill="none" stroke="url(#gsE)" stroke-width="5" stroke-linecap="round"/></svg> <b>GloboEditor</b> <small style="color:var(--mute);font-weight:600">α 0.1</small></span>
     <div id="prodwrap"><button id="prodbtn" title="Trocar de sacola"></button><div id="prodmenu"></div></div>
     <span id="salvo" class="salvo ok">✓ Salvo</span>
-    <button id="nuvemSalvar" class="so-nuvem" title="Salvar na nuvem (Ctrl+S)">💾<span class="lbl"> Salvar</span></button>
+    <button id="nuvemSalvar" class="so-nuvem" title="Salvar na nuvem (Ctrl+S)">💾<span class="lbl"> Salvar arte</span></button>
     <span id="nuvemNome" class="so-nuvem" style="font-size:12px;color:var(--mute);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
     <span class="grow"></span>
     <button id="undo" class="ic" title="Desfazer (Ctrl+Z)">↶<span class="lbl"> Desfazer</span></button>
@@ -425,6 +431,8 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <button class="tab" data-d="d-cores" title="Cores e gabarito">🎨<span>Cores</span></button>
       <button class="tab" data-d="d-elem" title="Elementos e imagens">🧩<span>Elementos</span></button>
       <button class="tab so-nuvem" data-d="d-artes" title="Minhas artes salvas">🗂️<span>Artes</span></button>
+      <button class="tab so-nuvem" data-d="d-ped" title="Pedidos salvos e pedidos feitos">📦<span>Pedidos</span></button>
+      <button class="tab" data-d="d-car" title="Carrinho">🛒<span>Carrinho</span><i id="b-car" class="badge" style="background:var(--acc)"></i></button>
     </nav>
     <aside id="d-camadas" class="drawer left">
       <div class="dh">📚 Camadas <button class="fecha" title="Fechar">×</button></div>
@@ -444,6 +452,14 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <aside id="d-artes" class="drawer left">
       <div class="dh">🗂️ Minhas artes <button class="fecha" title="Fechar">×</button></div>
       <div id="artesLista"></div>
+    </aside>
+    <aside id="d-ped" class="drawer left">
+      <div class="dh">📦 Meus pedidos <button class="fecha" title="Fechar">×</button></div>
+      <div id="pedLista" class="glista"></div>
+    </aside>
+    <aside id="d-car" class="drawer left">
+      <div class="dh">🛒 Carrinho <button class="fecha" title="Fechar">×</button></div>
+      <div id="carGav" class="glista"></div>
     </aside>
     <section id="center">
       <div id="sacbar"><div id="sacolas"></div><button id="verProduto" title="Ver a sacola pronta em 3D, com comida de verdade">📸 Ver produto final</button><button id="conferir" class="pri" title="Aprovar a arte desta sacola para impressão">✅ Aprovar esta arte</button></div>
@@ -2313,6 +2329,7 @@ function infoGab(){ return `${esc(GAB.nome)}${GAB.fonte?` <span style="opacity:.
 const ST = {nenhum:['⚪','Falta criar','#b9b0a5'], auto:['🟡','Falta aprovar','#d9a400'], conferida:['✅','Aprovada','#2f6b3f']};
 function miniSacola(g, cor){ const w=g.paineis.frente.w, h=g.paineis.frente.h, k=38/h; return `<svg width="${Math.max(16,w*k)}" height="38" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="0.6" fill="${cor}" stroke="rgba(0,0,0,.18)" stroke-width="0.3"/><path d="M0 0.8 ${Array.from({length:Math.floor(w/1.2)},(_,i)=>`L${i*1.2+0.6} 0 L${i*1.2+1.2} 0.8`).join(' ')}" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="0.25"/></svg>`; }
 function atualizaSacolas(){
+  setTimeout(()=>{ if($('d-car') && $('d-car').classList.contains('open')) gavetaCarrinho(); if($('b-car')) $('b-car').textContent=design.carrinho.length||''; },0);
   const S=$('sacolas'); S.innerHTML='';
   design.carrinho.forEach(id=>{ const b0=design.sacolas[id]; if(b0 && !b0.camadas.length && b0.estado!=='nenhum') b0.estado='nenhum'; });
   design.carrinho.forEach(id=>{
@@ -2348,12 +2365,13 @@ function pronto(){
     return `<div class="pr${ok?' conf':''}" data-id="${id}">${miniSacola(g, COR_PAPEL[g.papel])}<div class="nm"><b>${esc(g.nome)}</b><div class="st" style="color:${cor}">${ic} ${txt}</div></div>${acao}</div>`; }).join('');
   $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Tudo pronto?</h3>
     <div style="color:var(--mute);margin-bottom:10px">${falta.length ? `Falta aprovar ${falta.length===1?'1 sacola':falta.length+' sacolas'}. Abra cada uma, confira e clique <b>✅ Aprovar esta arte</b>.` : 'Todas as artes estão aprovadas.'}</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
-    ${!falta.length && design.carrinho.length ? '<div class="fim">🎉 Tudo aprovado! <button id="irCar" class="pri" style="margin-left:8px">🛒 Ir para o carrinho e finalizar</button></div>' : ''}
+    ${!falta.length && design.carrinho.length ? '<div class="fim">🎉 Tudo aprovado! <button id="irCar" class="pri" style="margin-left:8px">🛒 Ir para o carrinho e finalizar</button>'+(NUVEM?'<button id="salvPed" style="margin-left:6px">⭐ Salvar pedido</button>':'')+'</div>' : ''}
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">${design.carrinho.length?'<button id="kitBtn" class="kitbtn" title="Só para funcionários da Embalagens Globo">🔒 Kit</button>':''}<button id="fx">Voltar a editar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
   if($('kitBtn')) $('kitBtn').onclick=()=>senhaKit(()=>baixarKit());
   if($('irCar')) $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); };
+  if($('salvPed')) $('salvPed').onclick=()=>{ $('modal').style.display='none'; salvarPedido(false); };
   $('mbox').querySelectorAll('.pr button[data-a]').forEach(bt=>bt.onclick=()=>{
     const id=bt.closest('.pr').dataset.id, a=bt.dataset.a;
     if(a==='edit'){ $('modal').style.display='none'; if(id!==design.atual) abreSacola(id); }
@@ -3110,7 +3128,46 @@ async function gavetaArtes(){
   $('gaSalvar').onclick=salvarArteAtual;
   L.querySelectorAll('.ga [data-a=usar]').forEach(b=>b.onclick=()=>{ const id=b.closest('.ga').dataset.id; usarArte(id, data.find(x=>x.id===id).nome); });
 }
-const recarregaGaveta=()=>{ if($('d-artes') && $('d-artes').classList.contains('open')) gavetaArtes(); };
+async function gavetaPedidos(){
+  const L=$('pedLista'); if(!L) return;
+  if(!NUVEM){ L.innerHTML='<div class="hint">Disponível no site, com login.</div>'; return; }
+  if(!USUARIO){ L.innerHTML='<div class="hint">Entre na sua conta para ver seus pedidos.</div><button class="pri" id="gpEntrar">👤 Entrar</button>'; $('gpEntrar').onclick=()=>telaLogin(gavetaPedidos); return; }
+  L.innerHTML='<div class="hint">Carregando…</div>';
+  const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado,tipo').in('tipo',['pedido','feito']).order('atualizado',{ascending:false});
+  if(error){ L.innerHTML=`<div class="hint" style="color:var(--err)">${/tipo|preview|column/i.test(error.message)?'Falta atualizar o banco (rodar o SQL).':esc(error.message)}</div>`; return; }
+  const item=a=>`<div class="gp" data-id="${a.id}"><b>${esc(a.nome)}</b><div class="st">${esc(a.resumo||'')} · ${dtBR(a.atualizado)}</div><div class="bt"><button class="pri" data-a="rep">🔁 Repetir</button></div></div>`;
+  const sal=data.filter(r=>r.tipo==='pedido'), fei=data.filter(r=>r.tipo==='feito');
+  L.innerHTML=`<button id="gpSalvar">⭐ Salvar carrinho como pedido</button>
+    <h4>⭐ Pedidos salvos</h4>${sal.length?sal.map(item).join(''):'<div class="hint">Nenhum ainda.</div>'}
+    <h4>🧾 Pedidos feitos</h4>${fei.length?fei.map(item).join(''):'<div class="hint">Nenhum ainda.</div>'}
+    <div class="hint">Repetir = trocar o carrinho por esse pedido. Para renomear, apagar ou fixar: 👤 › Meus pedidos.</div>`;
+  $('gpSalvar').onclick=()=>salvarPedido(false);
+  L.querySelectorAll('[data-a=rep]').forEach(b=>b.onclick=()=>abrePedido(b.closest('.gp').dataset.id));
+}
+function gavetaCarrinho(){
+  const L=$('carGav'); if(!L) return; sincroniza();
+  if(!design.carrinho.length){ L.innerHTML='<div class="hint">O carrinho está vazio.</div><button class="pri" id="gcLoja">🛍️ Escolher sacolas na loja</button>'; $('gcLoja').onclick=()=>vaiLoja(); return; }
+  let tot=0;
+  const itens=design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id), f=facaDe(id); tot+=q*PRECO[id];
+    return `<div class="gp gc${id===design.atual?' on':''}" data-id="${id}"><div class="ft">${FOTOS[f.fonte]?`<img class="foto ${g.papel}" src="${FOTOS[f.fonte]}">`:''}</div><div style="flex:1;min-width:0"><b>${esc(g.nome)}</b><div class="st" style="color:${cor};margin:1px 0">${ic} ${txt}</div>
+      <div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span class="st" style="margin:0">milh. · ${brl(q*PRECO[id])}</span></div>
+      <div class="bt">${id===design.atual?'':'<button data-a="abr">Abrir</button>'}<button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+  const pend=design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
+  L.innerHTML=`${itens}<button id="gcMais">＋ Adicionar outra sacola</button>
+    <div class="tot"><span>Total</span><b>${brl(tot)}</b></div>
+    <div class="hint">${pend.length?`Falta aprovar ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão ✅ Aprovar esta arte).`:'✅ Todas as artes aprovadas.'}</div>
+    <button class="pri" id="gcFin" ${pend.length?'disabled':''}>Finalizar compra</button>${NUVEM?'<button id="gcSalv">⭐ Salvar pedido</button>':''}`;
+  $('gcMais').onclick=()=>vaiLoja(); if($('gcSalv')) $('gcSalv').onclick=()=>salvarPedido(false);
+  $('gcFin').onclick=()=>{ vaiLoja(true); $('finalizar').click(); };
+  L.querySelectorAll('.gc').forEach(c=>{ const id=c.dataset.id; c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{ const q=design.qtd[id]||1, a=bt.dataset.a;
+    if(a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); gavetaCarrinho(); }
+    if(a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); gavetaCarrinho(); }
+    if(a==='abr'){ abreSacola(id); gavetaCarrinho(); }
+    if(a==='rem'){ if(design.carrinho.length===1 && !confirm('Tirar a última sacola do carrinho?')) return;
+      remCarrinho(id); novaHistoria(); if(!design.carrinho.length){ vaiLoja(); return; } if(design.atual===id) abreSacola(design.carrinho[0], false, true); atualizaSacolas(); gavetaCarrinho(); }
+  }); });
+}
+const recarregaGaveta=()=>{ if($('d-artes') && $('d-artes').classList.contains('open')) gavetaArtes(); if($('d-ped') && $('d-ped').classList.contains('open')) gavetaPedidos(); };
 async function usarArte(id, nome){
   if(!design.carrinho.length){ fecha(); vaiLoja(true); toast('Primeiro escolha os tamanhos na loja (coloque no carrinho). Depois use a arte.', 7000); return; }
   sincroniza();
@@ -3170,7 +3227,7 @@ async function salvarPedido(comoNovo){
       if(mesmo && mesmo.length){ ({error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoPedido(), atualizado:new Date().toISOString()}).eq('id',mesmo[0].id)); data={id:mesmo[0].id}; }
       else ({data,error}=await SB.from('artes').insert({tipo:'pedido', nome, dados:pacoteArte(), resumo:resumoPedido()}).select('id').single());
       if(error){ erroBanco(error); return; }
-      ARTE_ID=data.id; ARTE_NOME=nome; marcaNuvem(); lembraArte(); fecha(); atualizaConta(); seloSalvo(); toast(`⭐ Pedido <b>${esc(nome)}</b> salvo.`); };
+      ARTE_ID=data.id; ARTE_NOME=nome; marcaNuvem(); lembraArte(); fecha(); atualizaConta(); seloSalvo(); recarregaGaveta(); toast(`⭐ Pedido <b>${esc(nome)}</b> salvo.`); };
     return;
   }
   const {error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoPedido(), atualizado:new Date().toISOString()}).eq('id',ARTE_ID);
@@ -3485,7 +3542,7 @@ function toggleDrawer(id, forcar){
   document.querySelectorAll('.tabs.'+lado+' .tab').forEach(x=>x.classList.remove('on'));
   if(abrir){ d.classList.add('open'); document.querySelector(`.tab[data-d="${id}"]`).classList.add('on'); }
 }
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ toggleDrawer(t.dataset.d); if(t.dataset.d==='d-artes' && $('d-artes').classList.contains('open')) gavetaArtes(); if(t.dataset.d==='d-dados' && $('d-dados').classList.contains('open')) painelDados(); });
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ toggleDrawer(t.dataset.d); if(t.dataset.d==='d-artes' && $('d-artes').classList.contains('open')) gavetaArtes(); if(t.dataset.d==='d-dados' && $('d-dados').classList.contains('open')) painelDados(); if(t.dataset.d==='d-ped' && $('d-ped').classList.contains('open')) gavetaPedidos(); if(t.dataset.d==='d-car' && $('d-car').classList.contains('open')) gavetaCarrinho(); });
 document.querySelectorAll('.fecha').forEach(b=>b.onclick=()=>toggleDrawer(b.closest('.drawer').id, false));
 // zoom
 function zoomBy(f){ const cx=view.x+view.w/2, cy=view.y+view.h/2; view.w*=f; view.h*=f; view.x=cx-view.w/2; view.y=cy-view.h/2; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); }
