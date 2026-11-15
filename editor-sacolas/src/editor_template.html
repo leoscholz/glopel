@@ -33,7 +33,7 @@ select{cursor:pointer}
 #top #modo{width:auto;background:linear-gradient(#ffffff,#eef2f7);box-shadow:var(--sh);border-radius:10px}
 #top .grow{flex:1}
 #main{display:grid;grid-template-columns:auto auto 1fr auto auto;min-height:0}
-#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem,#main>#d-artes,#main>#d-ped,#main>#d-car{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check,#main>#d-dados{grid-column:4} #main>.tabs.right{grid-column:5}
+#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem,#main>#d-artes{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check,#main>#d-dados,#main>#d-ped,#main>#d-car{grid-column:4} #main>.tabs.right{grid-column:5}
 #main>*{grid-row:1}
 .tabs{display:flex;flex-direction:column;gap:8px;padding:12px 6px;background:var(--surf2);border-right:1px solid var(--line)}
 .tabs.right{border-right:none;border-left:1px solid var(--line)}
@@ -240,7 +240,7 @@ button{user-select:none;-webkit-user-select:none}
 #mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
 #mbox .cmenu{display:flex;flex-direction:column;gap:8px} #mbox .cmenu button{text-align:left;padding:10px 14px;font-weight:700} #mbox .cmenu button span{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
 #mbox .escsac{display:flex;flex-direction:column;gap:6px} #mbox .escsac label{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fafcff;cursor:pointer} #mbox .escsac input{width:18px;height:18px;flex:0 0 auto;margin:0} #mbox .escsac b{white-space:nowrap} #mbox .escsac .st{margin-left:auto;font-size:12px;color:var(--mute)}
-#main>.tabs.left{overflow-y:auto;scrollbar-width:none}
+#main>.tabs.left,#main>.tabs.right{overflow-y:auto;scrollbar-width:none}
 .glista{padding:0 12px 14px;display:flex;flex-direction:column;gap:8px} .glista .hint{font-size:12px;color:var(--mute);line-height:1.4} .glista h4{margin:6px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
 .glista .gp{border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 10px;font-size:12.5px} .glista .gp b{display:block} .glista .gp .st{font-size:11.5px;color:var(--mute);margin:2px 0 6px} .glista .gp .bt{display:flex;gap:6px;flex-wrap:wrap} .glista .gp button{padding:5px 10px;font-size:12px}
 .glista .gc{display:flex;gap:8px;align-items:center} .glista .gc .ft{width:40px;flex:0 0 40px;text-align:center} .glista .gc .ft img{max-height:52px;max-width:40px} .glista .gp.on{border-color:var(--acc);box-shadow:0 0 0 2px #2f7fd033}
@@ -316,7 +316,7 @@ button{user-select:none;-webkit-user-select:none}
   #main{grid-template-columns:1fr}
   #main>#center{grid-column:1;padding-bottom:56px}
   #main>.tabs{position:fixed;bottom:0;flex-direction:row;justify-content:space-around;gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));z-index:30;border:none;border-top:1px solid var(--line);background:var(--surf)}
-  #main>.tabs.left{left:0;right:34%} #main>.tabs.right{left:66%;right:0}
+  #main>.tabs.left{left:0;right:55%} #main>.tabs.right{left:45%;right:0}
   .tab{flex-direction:column;width:auto;flex:1;padding:4px 2px;gap:1px;font-size:17px;min-height:46px}
   .tab span{font-size:9px!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} #main>.tabs .tab{min-width:0}
   .tab span{writing-mode:horizontal-tb;transform:none;font-size:10.5px;letter-spacing:0}
@@ -430,9 +430,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <button class="tab" data-d="d-camadas" title="Camadas">📚<span>Camadas</span></button>
       <button class="tab" data-d="d-cores" title="Cores e gabarito">🎨<span>Cores</span></button>
       <button class="tab" data-d="d-elem" title="Elementos e imagens">🧩<span>Elementos</span></button>
-      <button class="tab so-nuvem" data-d="d-artes" title="Minhas artes salvas">🗂️<span>Artes</span></button>
-      <button class="tab so-nuvem" data-d="d-ped" title="Pedidos salvos e pedidos feitos">📦<span>Pedidos</span></button>
-      <button class="tab" data-d="d-car" title="Carrinho">🛒<span>Carrinho</span><i id="b-car" class="badge" style="background:var(--acc)"></i></button>
+      <button class="tab so-nuvem" data-d="d-artes" title="Artes salvas">🗂️<span>Artes Salvas</span></button>
     </nav>
     <aside id="d-camadas" class="drawer left">
       <div class="dh">📚 Camadas <button class="fecha" title="Fechar">×</button></div>
@@ -450,14 +448,14 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <div id="elementos"></div>
     </aside>
     <aside id="d-artes" class="drawer left">
-      <div class="dh">🗂️ Minhas artes <button class="fecha" title="Fechar">×</button></div>
+      <div class="dh">🗂️ Artes Salvas <button class="fecha" title="Fechar">×</button></div>
       <div id="artesLista"></div>
     </aside>
-    <aside id="d-ped" class="drawer left">
+    <aside id="d-ped" class="drawer right">
       <div class="dh">📦 Meus pedidos <button class="fecha" title="Fechar">×</button></div>
       <div id="pedLista" class="glista"></div>
     </aside>
-    <aside id="d-car" class="drawer left">
+    <aside id="d-car" class="drawer right">
       <div class="dh">🛒 Carrinho <button class="fecha" title="Fechar">×</button></div>
       <div id="carGav" class="glista"></div>
     </aside>
@@ -519,6 +517,8 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <button class="tab" data-d="d-ajustes" title="Ajustes do item selecionado">✏️<span>Ajustes</span><i id="b-aj" class="badge" style="background:var(--sel)"></i></button>
       <button class="tab" data-d="d-check" title="Checagem p/ clicheria">✅<span>Checagem</span><i id="b-ck" class="badge"></i></button>
       <button class="tab" data-d="d-dados" title="Nome, telefone, Instagram… em todas as sacolas">📝<span>Dados</span></button>
+      <button class="tab so-nuvem" data-d="d-ped" title="Pedidos salvos e pedidos feitos">📦<span>Pedidos</span></button>
+      <button class="tab" data-d="d-car" title="Carrinho">🛒<span>Carrinho</span><i id="b-car" class="badge" style="background:var(--acc)"></i></button>
     </nav>
   </div>
 </div>
@@ -3090,7 +3090,7 @@ async function salvarArteAtual(){
     if(mesmo && mesmo.length && !confirm(`Já existe uma arte chamada "${nome}".\n\nOK = substituir · Cancelar = escolher outro nome`)){ $('arNome').focus(); return; }
     const reg={tipo:'arte', nome, dados:pacoteModelo(), resumo:`feita no ${CATALOGO[design.atual].nome}`, preview:prev, atualizado:new Date().toISOString()};
     const {error}= mesmo && mesmo.length ? await SB.from('artes').update(reg).eq('id',mesmo[0].id) : await SB.from('artes').insert(reg);
-    if(error){ erroBanco(error); return; } fecha(); recarregaGaveta(); toast(`🎨 Arte <b>${esc(nome)}</b> salva. Ela aparece em 🗂️ Artes.`); };
+    if(error){ erroBanco(error); return; } fecha(); recarregaGaveta(); toast(`🎨 Arte <b>${esc(nome)}</b> salva. Ela aparece em 🗂️ Artes Salvas.`); };
 }
 async function minhasArtes(){
   if(!NUVEM) return; if(!USUARIO){ telaLogin(minhasArtes); return; }
