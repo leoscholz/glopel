@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 15-11-2026 09:10)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 15-11-2026 09:30)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -45,7 +45,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 
 ## Nuvem (login + Minhas artes)
 - Supabase projeto `dzfelcufnsltutxeidow` (URL e chave publishable no template, `nuvem.js`). Tabela `public.artes` (id, dono, nome, dados jsonb {versao, design, assets}, resumo, criado, atualizado) com RLS "dono = auth.uid()".
-- Login: usuário sem @ vira `<usuario>@globoeditor.app`. Provisório: **admin / admin**. Demo: **TrigoDeOuro / trigodeouro** (criado pelo SQL `src/sql/usuario_trigodeouro.sql`, que o Leo cola no SQL Editor — o signup pela API recusa o domínio `@globoeditor.app`) com 2 artes: "Sacos de pão (feito pelo cliente no site)" = exemplo em 1/2, 1 e 2 kg kraft; "Lanches e delivery (feito pelo vendedor, pedido por telefone)" = assistente estilo Faixas, paleta Café, em Hambúrguer branco, Batatinha 120 g e Envelope 17×21. Nunca colocar a chave service_role no front.
+- Login: usuário sem @ vira `<usuario>@globoeditor.app`. Provisório: **admin / admin**. Demo: **TrigoDeOuro / trigodeouro** (criado pelo SQL `src/sql/artes_pedidos_e_trigodeouro.sql`, que o Leo cola no SQL Editor — o signup pela API recusa o domínio `@globoeditor.app`): artes "Clássico vermelho" (exemplo, 1 kg) e "Delivery (faixas café)" (assistente, 2 kg); pedidos salvos "Pedido do mês — sacos de pão" e "Pedido delivery — lanches"; pedido feito GL-DEMO01. Nunca colocar a chave service_role no front.
 - Só no build do GitHub (`__NUVEM__=true`); no artifact fica escondido (CSP bloqueia outros hosts).
 - **Artes × pedidos (15-11, decisões do Leo):** coluna `artes.tipo` = `arte` (visual de UMA sacola: `dados.modelo` {faca, camadas, paleta, dados, estilo} + miniatura jpeg da frente em `preview`), `pedido` (⭐ carrinho salvo, recorrente) ou `feito` (registrado ao finalizar, `registraPedidoFeito()`). Menu 👤: 🎨 Minhas artes (grade com prévias; **Usar** = `usarArte()` adapta o modelo para cada sacola do carrinho com `adaptaCamada`, troca paleta/dados, NÃO mexe no carrinho, confirma se já há arte, ↶ Desfazer) · 💾 Salvar arte atual (`salvarArteAtual()`) · 📦 Meus pedidos (⭐ salvos em cima com 🔁 Repetir/✏️/🗑; feitos embaixo com 🔁 Repetir e ⭐ Fixar = copia como pedido salvo) · 🧹 Começar do zero · Sair. Repetir (`abrePedido()`) troca o carrinho (pergunta) e volta aprovadas para 🟡. Botão 💾/Ctrl+S (`salvar()`): sem pedido salvo aberto → salva a arte; com pedido aberto → escolhe entre atualizar o pedido ou salvar a arte. Depois do login, `boasVindas()` oferece as artes/pedidos da conta. Porta de entrada ganhou "🎨 Usar uma arte salva" e "📦 Repetir um pedido". Testado com Supabase falso (stub de `supabase-js`) — o real depende do SQL.
 - **Testado ponta a ponta em 13-11** (login → salvar → abrir → apagar) e RLS conferido via REST (anônimo vê 0 linhas). SQL de criação está no histórico da sessão; reproduzível: tabela + policy + usuário admin inserido em `auth.users`/`auth.identities` com `extensions.crypt`.
@@ -87,4 +87,4 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 4. Kit para a gráfica feito (15-11): falta a clicheria validar o PDF (cores especiais, faca, retícula, sangria — hoje sem sangria).
 5. **Contas reais de clientes** (cadastro por e-mail, 1 conta por padaria) e trocar/remover admin/admin antes de divulgar.
 6. Upload PDF/AI/EPS; editar item dentro de pasta; fotos reais do papel branco (envelope kraft hoje é foto tingida).
-7. Ligar "Pronto"/Finalizar à nuvem (pedido com artes aprovadas gravado no Supabase para a Glopel ver).
+7. Finalizar já grava o pedido (`tipo='feito'`) na conta do cliente; falta a Glopel ver TODOS os pedidos (painel interno, outra policy/tabela).
