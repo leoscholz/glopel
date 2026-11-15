@@ -172,6 +172,7 @@ button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-de
 #carfoot{padding:12px 16px 16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 #carfoot .tot{display:flex;justify-content:space-between;font-size:16px} #carmsg{font-size:12.5px;color:var(--mute);line-height:1.4}
 #finalizar[disabled]{opacity:.5;cursor:not-allowed}
+#toast.show{pointer-events:auto}
 #toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#1c2b3f;color:#fff;padding:10px 16px;border-radius:12px;z-index:50;transition:all .2s;font-size:13.5px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #voltaloja{padding:7px 11px}
@@ -2103,7 +2104,9 @@ function carregaDesign(){
 }
 let SYNC_OFF=0;   // >0 enquanto a tela mostra uma arte emprestada (medição): sincroniza() não pode gravar isso em nenhuma sacola
 function sincroniza(){ if(!design || SYNC_OFF) return; design.paleta = arte.paleta; design.sacolas[design.atual].camadas = arte.camadas; design.cliente = arte.cliente; }
-function migraAprovacao(d){ if(!d || d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
+function migraAprovacao(d){ if(!d) return d;
+  if(!d.limpaFora){ const no=new Set(d.carrinho||[]); Object.keys(d.sacolas||{}).forEach(id=>{ if(!no.has(id) && d.sacolas[id].camadas && d.sacolas[id].camadas.length) d.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}; }); d.limpaFora=true; }   // arte só vive em sacola que está no carrinho
+  if(d.aprov2) return d; Object.keys(d.sacolas||{}).forEach(id=>{ const b=d.sacolas[id]; if(b.estado==='conferida' && !(d.confirmadas||[]).includes(id)) b.estado='auto'; }); d.aprov2=true; return d; }
 function apontaArte(){ const b=design.sacolas[design.atual]; arte = {cliente:design.cliente, paleta:design.paleta, camadas:b.camadas}; }
 
 /* ---------- adaptação automática entre tamanhos ---------- */
@@ -2331,7 +2334,7 @@ function pronto(){
     const id=bt.closest('.pr').dataset.id, a=bt.dataset.a;
     if(a==='edit'){ $('modal').style.display='none'; if(id!==design.atual) abreSacola(id); }
     if(a==='rem'){ sincroniza(); remCarrinho(id); novaHistoria();
-      if(!design.carrinho.length){ $('modal').style.display='none'; vaiLoja(); toast('Carrinho vazio.'); return; }
+      if(!design.carrinho.length){ $('modal').style.display='none'; vaiLoja(); return; }
       if(design.atual===id) abreSacola(design.carrinho[0], false, true); atualizaSacolas(); pronto(); }
   });
 }
@@ -2400,9 +2403,22 @@ function addCarrinho(id, qtd){
   if(!noCarrinho(id)) design.carrinho.push(id);
   design.qtd[id] = Math.max(1, (qtd||design.qtd[id]||1));
 }
+// Tirar do carrinho também apaga a arte daquela sacola (senão, ao pôr de novo, voltava com a arte antiga).
+// Fica um "↶ Desfazer" no aviso por alguns segundos.
+let DESFAZ_REM=null;
 function remCarrinho(id){
+  if(design.atual===id) sincroniza();
+  const pos=design.carrinho.indexOf(id), antes=design.sacolas[id];
   design.carrinho = design.carrinho.filter(x=>x!==id);
   design.confirmadas = (design.confirmadas||[]).filter(x=>x!==id);
+  if(antes && antes.camadas && antes.camadas.length){
+    design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]};
+    if(design.atual===id) apontaArte();
+    DESFAZ_REM=()=>{ design.sacolas[id]=antes; if(!design.carrinho.includes(id)) design.carrinho.splice(Math.max(0,Math.min(pos,design.carrinho.length)),0,id); if(design.atual===id) apontaArte();
+      DESFAZ_REM=null; novaHistoria(); agendaSalvar(); if(document.body.classList.contains('vloja')){ renderLoja(); renderCarrinho(); } else atualizaSacolas(); toast('↶ Sacola de volta, com a arte.'); };
+    setTimeout(()=>toast(`${esc(CATALOGO[id].nome)} saiu do carrinho e a arte dela foi apagada. <button class="lnk" onclick="DESFAZ_REM&&DESFAZ_REM()" style="color:#fff;text-decoration:underline;margin-left:6px">↶ Desfazer</button>`, 8000), 0);
+  }
+  agendaSalvar();
 }
 function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); clearTimeout(d._t); d._t=setTimeout(()=>d.classList.remove('show'), ms||2600); }
 
@@ -2465,7 +2481,7 @@ function renderCarrinho(){
       const q=design.qtd[id]||1;
       if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
       if(bt.dataset.a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); renderLoja(); }
-      if(bt.dataset.a==='rem'){ remCarrinho(id); novaHistoria(); renderLoja(); toast('Removida do carrinho.'); }
+      if(bt.dataset.a==='rem'){ const tinha=design.sacolas[id]&&design.sacolas[id].camadas.length; remCarrinho(id); novaHistoria(); renderLoja(); if(!tinha) toast('Removida do carrinho.'); }
       if(bt.dataset.a==='pers'){ vaiEditor(id); }
     }); });
 }
