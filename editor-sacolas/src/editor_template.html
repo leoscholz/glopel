@@ -124,7 +124,7 @@ body.vloja, body.vloja #loja{background:#f4f6f9}
 #selos{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 26px}
 #selos div{background:#fff;border:1px solid #e3e8ee;border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:34px 1fr;font-size:20px;align-items:center}
 #selos b{font-size:13.5px} #selos span{grid-column:2;font-size:12px;color:#6b7480}
-#cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+#cats{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 14px}
 #loja #cats button{border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px}
 #loja #cats button.on{background:var(--azul);color:#fff;border-color:var(--azul)}
 #cats i{font-style:normal;font-size:11px;background:rgba(0,0,0,.08);border-radius:999px;padding:1px 7px;margin-left:4px}
@@ -235,6 +235,10 @@ button{user-select:none;-webkit-user-select:none}
 #verProduto{background:linear-gradient(135deg,#ffb347,#ff7a59);color:#fff;border:none;font-weight:700;padding:8px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(255,122,89,.45);white-space:nowrap}
 #verProduto:hover{filter:brightness(1.05)}
 #verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
+#kitprog{position:fixed;inset:0;background:rgba(20,30,45,.45);z-index:9999;display:flex;align-items:center;justify-content:center}
+#kitprog .kp-box{background:#fff;border-radius:14px;padding:20px 24px;width:min(420px,90vw);box-shadow:0 10px 40px #0004;font-size:14px}
+#kitprog .kp-t{margin:10px 0 8px;color:#334}#kitprog .kp-bar{height:10px;background:#e6edf5;border-radius:6px;overflow:hidden}
+#kitprog .kp-bar i{display:block;height:100%;width:0;background:var(--acc,#2f7fd0);transition:width .3s}#kitprog .kp-h{margin-top:10px;font-size:12px;color:#778}
 #prodmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(247,249,252,.9);padding:10px 16px;border-radius:12px;font-weight:600;color:var(--mute)}
 #prodctl{left:50%;bottom:14px;transform:translateX(-50%)}
 #prodctl button{padding:6px 12px}
@@ -357,11 +361,6 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <button id="conta" class="cartbtn so-nuvem">👤 Entrar</button>
     <button id="vercar" class="cartbtn">🛒 <span>Carrinho</span> <i id="carcount">0</i></button></header>
   <div id="lmain">
-    <div id="hero"><div class="ht"><span class="kicker">SACOS DE PAPEL PERSONALIZADOS</span><h1>A embalagem com a cara da sua padaria</h1>
-      <p>Escolha o tamanho, crie a arte aqui mesmo em minutos e receba pronto para impressão — kraft ou branco, até 3 cores.</p>
-      <div class="hcta"><a href="#vitrine" class="hbtn">Ver tamanhos</a><span class="ilus">Loja de demonstração — preços ilustrativos.</span></div></div>
-      <div class="hi" id="herosacos"></div></div>
-    <div id="selos"><div>🎨<b>Editor online</b><span>Monte a arte sem designer</span></div><div>🖨️<b>Flexografia</b><span>Até 3 cores Pantone</span></div><div>🌱<b>Papel reciclável</b><span>Kraft natural ou branco</span></div><div>🚚<b>Entrega</b><span>Para todo o Brasil</span></div></div>
     <div id="cats"></div>
     <div class="sech"><h2 id="sechT">Escolha o tamanho</h2><span id="sechN"></span></div>
     <div id="vitrine"></div>
@@ -560,6 +559,7 @@ function elSVG(el, top){
     const F = FONTES[el.fonte]||FONTES["Inter"], tam=(el.tamanho_pt||12)*PT_CM, lh=(el.entrelinha||1.2)*tam;
     const anc = {esquerda:'start', centro:'middle', direita:'end'}[el.alinhamento||'esquerda'];
     const linhas = String(el.texto||'').split('\n');
+    if(CURVAS) body = `<path d="${textoEmCurvas(el, linhas, tam, lh, anc)}" fill="${fill}" ${st}/>`; else
     body = `<text font-family="${esc(F.f)}" font-weight="${F.w}" font-style="${F.s}" font-size="${tam}" text-anchor="${anc}" letter-spacing="${(el.espacamento||0)/1000*tam}" fill="${fill}" ${st}>` +
       linhas.map((l,i)=>`<tspan x="0" y="${i*lh}">${esc(l)||' '}</tspan>`).join('') + `</text>`;
   }
@@ -1379,6 +1379,7 @@ $('export').onclick=()=>{
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button id="cp">Copiar JSON</button><button id="fx" class="pri">Fechar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
+  if($('kitBtn')) $('kitBtn').onclick=()=>{ $('modal').style.display='none'; baixarKit(); };
   $('cp').onclick=async()=>{ try{ await navigator.clipboard.writeText(json); $('cp').textContent='Copiado ✓'; }catch(_){ $('cp').textContent='Bloqueado — selecione o texto'; } };
 };
 
@@ -2314,7 +2315,7 @@ function pronto(){
   $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Tudo pronto?</h3>
     <div style="color:var(--mute);margin-bottom:10px">${falta.length ? `Falta aprovar ${falta.length===1?'1 sacola':falta.length+' sacolas'}. Abra cada uma, confira e clique <b>✅ Aprovar esta arte</b>.` : 'Todas as artes estão aprovadas.'}</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
     ${!falta.length && design.carrinho.length ? '<div class="fim">🎉 Tudo aprovado! <button id="irCar" class="pri" style="margin-left:8px">🛒 Ir para o carrinho e finalizar</button></div>' : ''}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="fx">Voltar a editar</button></div>`;
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">${design.carrinho.length?'<button id="kitBtn" title="PDF da arte-final (Pantone, 1:1, texto em curvas) + prévias 3D, em um ZIP">📦 Baixar kit para a gráfica</button>':''}<button id="fx">Voltar a editar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
   if($('irCar')) $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); };
@@ -2549,7 +2550,8 @@ function svgDoVetor(el, comCores){
   const vb=el.vb, h=el.w*vb[3]/vb[2], troca=(m,o,c)=>m.split(`fill="${o}"`).join(`fill="${c}"`).split(`stroke="${o}"`).join(`stroke="${c}"`);
   let m=el.svg, mk=el.svg, temFuro=false;
   if(comCores!==false){ for(const o in (el.mapa||{})){ const k=el.mapa[o];
-    if(k==='papel'){ temFuro=true; m=troca(m,o,'none'); mk=troca(mk,o,'#000'); }
+    if(k==='papel' && CURVAS){ m=troca(m,o, cor('papel')+'" data-furo="1'); }   // kit: furo vira recorte (o PDF não tem máscara) — ver resolveFuros()
+    else if(k==='papel'){ temFuro=true; m=troca(m,o,'none'); mk=troca(mk,o,'#000'); }
     else { m=troca(m,o,cor(k, el.tinta||100)); mk=troca(mk,o,'#fff'); } } }
   let defs='', attr='';
   if(temFuro){ const id='vm'+(++_vetMask); defs=`<mask id="${id}" maskUnits="userSpaceOnUse" x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}"><rect x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}" fill="#000"/>${mk}</mask>`; attr=` mask="url(#${id})"`; }
@@ -3306,6 +3308,7 @@ new ResizeObserver(()=>{
   view.w=r.width*k; view.h=r.height*k; view.x=cx-view.w/2; view.y=cy-view.h/2; ultimoTam=r;
   svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); desenhaSel();
 }).observe($('stage'));
+/*__KIT_JS__*/
 $('export').onclick=pronto; $('ajuda').onclick=menuAjuda; renderElementos();
 nuvemInit(); $('wzBtn').onclick=assistente; $('dadosBtn').onclick=()=> design.dados ? painelDados() : assistente(); $('conta').onclick=menuConta; $('conta2').onclick=menuConta; $('nuvemSalvar').onclick=()=>salvarNuvem(false);
 document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvarNuvem(false); } });
@@ -3314,16 +3317,19 @@ $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').
 $('finalizar').onclick=()=>{
   sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
   design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens});
+  const aprovadas=itens.filter(i=>design.sacolas[i.id]&&design.sacolas[i.id].estado==='conferida').map(i=>i.id);
   itens.forEach(i=>{ const b=design.sacolas[i.id]; if(b && b.estado==='conferida') b.estado='auto'; });   // arte fica guardada; num novo pedido, aprova de novo
   design.carrinho=[]; novaHistoria(); agendaSalvar(); renderLoja();
   $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🎉 Pedido <b>${num}</b> enviado</h3>
     <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>`).join('<br>')}</div>
     <div style="color:var(--mute);line-height:1.5">Guarde o número do pedido. Sua arte continua salva para o próximo pedido.<br><i>(Demonstração: no site real vem o pagamento e as artes aprovadas vão para a gráfica.)</i></div>
-    <div style="text-align:right;margin-top:12px"><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="kitPed">📦 Baixar kit para a gráfica</button><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
+  $('kitPed').onclick=()=>{ $('modal').style.display='none'; baixarKit({ids:itens.map(i=>i.id), num, aprovadas}); };
   $('modal').style.display='flex'; };
 if(location.hash==='#editor' && design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
 document.fonts && document.fonts.ready.then(()=>render());
 render();
 </script>
+<script type="text/plain" id="lib-svg2pdf">__SVG2PDF__</script>
 </body>
 </html>

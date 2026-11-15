@@ -11,6 +11,12 @@ a = json.load(open(os.path.join(AQUI, 'exemplo_padaria.json')))
 import base64, glob
 fotos = {os.path.basename(f)[:-5]+'.pdf': 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos','*.webp')))}
 t = t.replace('__FOTOS__', json.dumps(fotos))
+fontes = {os.path.basename(f)[:-5]: base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fontes','*.woff')))}
+kit = open(os.path.join(AQUI,'kit.js'), encoding='utf-8').read().replace('__FONTES_CURVA__', json.dumps(fontes))
+t = t.replace('/*__KIT_JS__*/', kit)
+s2p = open(os.path.join(AQUI,'vendor','svg2pdf.umd.min.js'), encoding='utf-8').read().replace('</script', '<\\/script').replace('</SCRIPT', '<\\/SCRIPT')
+assert '</script' not in s2p.lower()
+t = t.replace('__SVG2PDF__', s2p)
 full_t = t
 full = t.replace('__NUVEM__','false').replace('__GABARITO__', json.dumps(g, ensure_ascii=False)).replace('__ARTE__', json.dumps(a, ensure_ascii=False))
 GANCHO = '(async()=>{ try{ SAMPLE = await claude.use("sample"); }catch(_){ SAMPLE=null; }'
