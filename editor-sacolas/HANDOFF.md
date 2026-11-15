@@ -13,7 +13,7 @@ Objetivo de negócio: o cliente (padaria) monta a arte sozinho e a Glopel manda 
 | Fonte única | `src/editor_template.html` (HTML+CSS+JS num arquivo) |
 | Build | `python3 src/build.py` → `../index.html` (GitHub: `__NUVEM__=true`, Claude desligado) e `src/dist/artifact.html` (artifact: `__NUVEM__=false`, Claude ligado); embute fotos (`__FOTOS__`), gabarito e exemplo; checa sintaxe JS com node |
 | Facas OHDE (PDF 1:1) | `src/facas/*.pdf` (21) · originais em `~/Desktop/GABARITOS` no Mac · medidas com `src/facas/extrai_medidas.py` |
-| Fotos dos produtos | `editor-sacolas/fotos/*.webp` (extraídas dos PDFs com `src/facas/extrai_fotos.py`; embutidas no build como base64; versão "branco" = filtro CSS) |
+| Fotos dos produtos | `editor-sacolas/fotos/*.webp` (extraídas dos PDFs com `src/facas/extrai_fotos.py`; embutidas no build como base64; versão "branco" = filtro CSS sobre a kraft). Envelopes vinham do PDF quase transparentes (só bordas/sombra) e apareciam brancos no kraft: refeitos 15-11 como kraft opaco (fecho convexo da silhueta + sombreamento do original + sombra suave) |
 | Motor de PDF p/ clicheria (v1, Python/reportlab) | `src/motor_pdf_render.py` — ainda NÃO lê vetor enviado nem retícula |
 
 Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.html`). Artifact = `publish_files` com `src/dist/artifact.html` como `index.html`, mode patch, base_version = versão viva (`get_artifact`).
@@ -82,5 +82,5 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 3. Dados reais da loja (pedido mínimo, atendimento, pagamento).
 4. **PDF real no "Pronto"**: portar o motor (vetor enviado, retícula, várias facas) — passo que torna isto produção.
 5. **Contas reais de clientes** (cadastro por e-mail, 1 conta por padaria) e trocar/remover admin/admin antes de divulgar.
-6. Upload PDF/AI/EPS; editar item dentro de pasta; fotos reais do papel branco e do envelope kraft.
+6. Upload PDF/AI/EPS; editar item dentro de pasta; fotos reais do papel branco (envelope kraft hoje é foto tingida).
 7. Ligar "Pronto"/Finalizar à nuvem (pedido com artes aprovadas gravado no Supabase para a Glopel ver).
