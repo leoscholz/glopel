@@ -170,6 +170,7 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 .cil{width:64px;display:flex;justify-content:center} .cim{flex:1;display:flex;flex-direction:column;gap:5px} .cist{font-size:12.5px;font-weight:700}
 .ciacts{display:flex;gap:8px;align-items:center} .ciacts button{padding:5px 10px;font-size:12.5px}
 button.lnk{background:none;border:none;box-shadow:none;color:var(--mute);text-decoration:underline;font-weight:500}
+#carlista .clc,.glista .clc{font-size:11.5px;color:var(--mute);margin:3px 0 5px;line-height:1.35} #carlista .clc.novo,.glista .clc.novo{color:#9a5b00} #carlista .clc.ok,.glista .clc.ok{color:#2e7d32}
 #carfoot{padding:12px 16px 16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 #carfoot .tot{display:flex;justify-content:space-between;font-size:16px} #carmsg{font-size:12.5px;color:var(--mute);line-height:1.4}
 #finalizar[disabled]{opacity:.5;cursor:not-allowed}
@@ -2426,6 +2427,45 @@ function recomeca(){
 const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
 const facaDe = id=>FACAS.find(f=>id.startsWith(f.faca+'_'));
 const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm${f.g?` · sanfona ${String(f.g).replace('.',',')} cm`:''}. ${f.uso}.`; }});
+/* ---- Clichê (simulação de cobrança, preço ilustrativo) ----
+   Cada cor de cada sacola precisa de um clichê (a chapa de borracha). Ele é reaproveitado quando o mesmo tamanho volta
+   a ser pedido com a MESMA arte. Cobra-se clichê novo no 1º pedido de um tamanho ou quando a arte mudou.
+   "Mesma arte" = assinatura das camadas com as cores pelo nome do Pantone (ignora ids e nomes de camada).
+   Conhecidos: design.cliches (pedidos finalizados neste navegador) + pedidos feitos da conta (CLICHES_NUVEM). */
+const CLICHE_CM2 = 0.16, CLICHE_MIN = 90;   // R$ por cm² da folha aberta, por cor · mínimo por cor
+let CLICHES_NUVEM = {};
+function hashStr(t){ let h=5381; for(let i=0;i<t.length;i++) h=((h<<5)+h+t.charCodeAt(i))|0; return (h>>>0).toString(36); }
+function paletaDoDesign(d, id){ const b=d.sacolas[id]||{}; return (b.pal && d.paletas && d.paletas[b.pal]) || d.paleta || {}; }
+function assinaturaArte(camadas, paleta){
+  const P=k=>(paleta[k]&&paleta[k].pantone)||k;
+  const lim=o=>{ if(Array.isArray(o)) return o.map(lim);
+    if(o && typeof o==='object'){ const r={}; Object.keys(o).sort().forEach(k=>{ if(k==='id'||k==='nome'||k==='campo'||k==='aberto'||k==='bloqueado'||k[0]==='_') return; let v=o[k];
+      if((k==='cor'||k==='contorno') && typeof v==='string') v=P(v); if(k==='mapa' && v) v=Object.fromEntries(Object.entries(v).map(([a,b])=>[a,P(b)])); r[k]=lim(v); }); return r; }
+    return typeof o==='number' ? Math.round(o*100)/100 : o; };
+  return hashStr(JSON.stringify(lim(camadas||[])));
+}
+function coresDaSacola(id){ const s=new Set(), vis=el=>{ if(el.visivel===false) return; ['cor','contorno'].forEach(k=>{ if(el[k] && el[k]!=='papel') s.add(el[k]); }); if(el.mapa) Object.values(el.mapa).forEach(v=>{ if(v && v!=='papel') s.add(v); }); (el.filhos||[]).forEach(vis); };
+  (design.sacolas[id].camadas||[]).forEach(vis); return s; }
+const xminDe=g=>Math.min(...g.contorno.map(p=>p[0])), xmaxDe=g=>Math.max(...g.contorno.map(p=>p[0])), yminDe=g=>Math.min(...g.contorno.map(p=>p[1])), ymaxDe=g=>Math.max(...g.contorno.map(p=>p[1]));
+function cliche(id){
+  if(design.atual===id && typeof arte!=='undefined' && arte) sincroniza();
+  const b=design.sacolas[id], g=CATALOGO[id]; if(!b || !b.camadas || !b.camadas.length) return {pend:true};
+  const h=assinaturaArte(b.camadas, paletaSac(id)), conhecidos=new Set([...((design.cliches||{})[id]||[]), ...(CLICHES_NUVEM[id]||[])]);
+  if(conhecidos.has(h)) return {novo:false, h};
+  const n=Math.max(1, coresDaSacola(id).size), area=(xmaxDe(g)-xminDe(g))*(ymaxDe(g)-yminDe(g)), uma=Math.max(CLICHE_MIN, Math.round(area*CLICHE_CM2/5)*5);
+  return {novo:true, h, cores:n, valor:n*uma, uma, motivo: conhecidos.size ? 'a arte mudou desde o último pedido' : 'primeiro pedido deste tamanho'};
+}
+function linhaCliche(id){ const c=cliche(id);
+  if(c.pend) return `<div class="clc">🧩 Clichê: calculado quando a arte ficar pronta</div>`;
+  if(!c.novo) return `<div class="clc ok">✓ Clichê já existe: sem custo</div>`;
+  return `<div class="clc novo" title="Clichê é a chapa de impressão de cada cor. Paga uma vez; nos próximos pedidos desta arte e tamanho ele é reaproveitado.">🆕 Clichê novo (${c.motivo}): ${c.cores} cor${c.cores>1?'es':''} × ${brl(c.uma)} = <b>${brl(c.valor)}</b></div>`; }
+function totalCliches(){ return design.carrinho.reduce((t,id)=>{ const c=cliche(id); return t+(c.novo?c.valor:0); },0); }
+async function carregaClichesNuvem(){
+  if(!NUVEM || !SB || !USUARIO){ CLICHES_NUVEM={}; return; }
+  const {data,error}=await SB.from('artes').select('d:dados->design').eq('tipo','feito'); if(error || !data) return;
+  const m={}; data.forEach(r=>{ const d=r.d; if(!d || !d.sacolas) return; (d.carrinho||[]).forEach(id=>{ const b=d.sacolas[id]; if(!b || !b.camadas || !b.camadas.length) return; (m[id]=m[id]||new Set()).add(assinaturaArte(b.camadas, paletaDoDesign(d,id))); }); });
+  CLICHES_NUVEM=m; if(document.body.classList.contains('vloja')) renderCarrinho(); if($('d-car') && $('d-car').classList.contains('open')) gavetaCarrinho();
+}
 const brl = v => 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
 function sacolaIlustra(id, alt=150){
   const g=CATALOGO[id], w=g.paineis.frente.w, h=g.paineis.frente.h, s=g.paineis.sanfona_esq.w, cor=COR_PAPEL[g.papel];
@@ -2516,9 +2556,9 @@ function renderCarrinho(){
     const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
     return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id); return FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
       <div class="cim"><b>${esc(g.nome)}</b><div class="cist" style="color:${cor}">${ic} ${txt}</div>
-        <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>
+        <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>${linhaCliche(id)}
         <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
-  $('cartotal').textContent=brl(tot);
+  const tc=totalCliches(); $('cartotal').innerHTML=brl(tot+tc)+(tc?`<small style="display:block;font-weight:400;font-size:11.5px;color:var(--mute);text-align:right">sacolas ${brl(tot)} + clichês ${brl(tc)}</small>`:'');
   const pend = design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
   $('finalizar').disabled = !!pend.length;
   $('carmsg').innerHTML = pend.length ? `Para finalizar, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : '✅ Todas as artes aprovadas.';
@@ -2992,8 +3032,8 @@ function nuvemInit(){
   if(!NUVEM){ document.querySelectorAll('.so-nuvem').forEach(e=>e.style.display='none'); return; }
   const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
   sc.onload=async()=>{ SB=window.supabase.createClient(SB_URL, SB_KEY);
-    const {data}=await SB.auth.getSession(); USUARIO=data.session?data.session.user:null; atualizaConta();
-    SB.auth.onAuthStateChange((_e,s)=>{ USUARIO=s?s.user:null; atualizaConta(); recarregaGaveta(); }); };
+    const {data}=await SB.auth.getSession(); USUARIO=data.session?data.session.user:null; atualizaConta(); carregaClichesNuvem();
+    SB.auth.onAuthStateChange((_e,s)=>{ USUARIO=s?s.user:null; atualizaConta(); recarregaGaveta(); carregaClichesNuvem(); }); };
   sc.onerror=()=>{ document.querySelectorAll('.so-nuvem').forEach(e=>e.style.display='none'); };
   document.head.appendChild(sc);
   try{ const m=JSON.parse(localStorage.getItem('glopel_arte_atual')||'null'); if(m){ ARTE_ID=m.id; ARTE_NOME=m.nome; } }catch(_){}
@@ -3155,10 +3195,10 @@ function gavetaCarrinho(){
   const itens=design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id), f=facaDe(id); tot+=q*PRECO[id];
     return `<div class="gp gc${id===design.atual?' on':''}" data-id="${id}"><div class="ft">${FOTOS[f.fonte]?`<img class="foto ${g.papel}" src="${FOTOS[f.fonte]}">`:''}</div><div style="flex:1;min-width:0"><b>${esc(g.nome)}</b><div class="st" style="color:${cor};margin:1px 0">${ic} ${txt}</div>
       <div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span class="st" style="margin:0">milh. · ${brl(q*PRECO[id])}</span></div>
-      <div class="bt">${id===design.atual?'':'<button data-a="abr">Abrir</button>'}<button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+      ${linhaCliche(id)}<div class="bt">${id===design.atual?'':'<button data-a="abr">Abrir</button>'}<button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   const pend=design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
   L.innerHTML=`${itens}<button id="gcMais">＋ Adicionar outra sacola</button>
-    <div class="tot"><span>Total</span><b>${brl(tot)}</b></div>
+    ${(()=>{ const tc=totalCliches(); return tc?`<div class="tot" style="font-size:12.5px"><span>Sacolas</span><span>${brl(tot)}</span></div><div class="tot" style="font-size:12.5px"><span>Clichês novos</span><span>${brl(tc)}</span></div><div class="tot"><span>Total</span><b>${brl(tot+tc)}</b></div>`:`<div class="tot"><span>Total</span><b>${brl(tot)}</b></div>`; })()}
     <div class="hint">${pend.length?`Falta aprovar ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão ✅ Aprovar esta arte).`:'✅ Todas as artes aprovadas.'}</div>
     <button class="pri" id="gcFin" ${pend.length?'disabled':''}>Finalizar compra</button>${NUVEM?'<button id="gcSalv">⭐ Salvar pedido</button>':''}`;
   $('gcMais').onclick=()=>vaiLoja(); if($('gcSalv')) $('gcSalv').onclick=()=>salvarPedido(false);
@@ -3278,7 +3318,7 @@ async function abrePedido(id){
 }
 async function registraPedidoFeito(num, pacote, resumo){
   if(!NUVEM || !USUARIO || !SB) return;
-  const {error}=await SB.from('artes').insert({tipo:'feito', nome:'Pedido '+num, dados:pacote, resumo}); if(error) toast('⚠️ O pedido foi feito, mas não entrou em 📦 Meus pedidos: '+esc(error.message), 7000);
+  const {error}=await SB.from('artes').insert({tipo:'feito', nome:'Pedido '+num, dados:pacote, resumo}); if(error) toast('⚠️ O pedido foi feito, mas não entrou em 📦 Meus pedidos: '+esc(error.message), 7000); else carregaClichesNuvem();
 }
 
 /* =====================================================================
@@ -3831,13 +3871,15 @@ $('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').oncli
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
 $('finalizar').onclick=()=>{
   sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
-  design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens});
+  const clis=Object.fromEntries(itens.map(i=>[i.id, cliche(i.id)])), tcli=Object.values(clis).reduce((t,c)=>t+(c.novo?c.valor:0),0);
+  design.cliches=design.cliches||{}; itens.forEach(i=>{ const c=clis[i.id]; if(c && c.h){ const l=design.cliches[i.id]=design.cliches[i.id]||[]; if(!l.includes(c.h)) l.push(c.h); } });
+  design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens, cliches:tcli});
   registraPedidoFeito(num, pacoteArte(), itens.map(i=>`${i.qtd} mil × ${i.nome}`).join(' · '));
   const aprovadas=itens.filter(i=>design.sacolas[i.id]&&design.sacolas[i.id].estado==='conferida').map(i=>i.id);
   itens.forEach(i=>{ const b=design.sacolas[i.id]; if(b && b.estado==='conferida') b.estado='auto'; });   // arte fica guardada; num novo pedido, aprova de novo
   design.carrinho=[]; novaHistoria(); agendaSalvar(); renderLoja();
   $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🎉 Pedido <b>${num}</b> enviado</h3>
-    <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>`).join('<br>')}</div>
+    <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>${clis[i.id]&&clis[i.id].novo?` <span style="color:var(--mute)">+ clichê novo ${brl(clis[i.id].valor)}</span>`:''}`).join('<br>')}${tcli?`<div style="margin-top:6px">Clichês novos: <b>${brl(tcli)}</b> (nos próximos pedidos destas artes, sem custo).</div>`:''}</div>
     <div style="color:var(--mute);line-height:1.5">Guarde o número do pedido. Sua arte continua salva para o próximo pedido.<br><i>(Demonstração: no site real vem o pagamento e as artes aprovadas vão para a gráfica.)</i></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="kitPed" class="kitbtn" title="Só para funcionários da Embalagens Globo">🔒 Kit</button><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
   $('kitPed').onclick=()=>senhaKit(()=>baixarKit({ids:itens.map(i=>i.id), num, aprovadas}));
