@@ -60,7 +60,8 @@ h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 #gabinfo{padding:0 14px 14px;color:var(--mute);font-size:12.5px;line-height:1.55}
 #elementos .upl{padding:4px 14px 6px} #elementos .upl button{width:100%}
 .hint{font-size:11.5px;color:var(--mute);line-height:1.4}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 12px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 12px}
+.tiles.lista{grid-template-columns:minmax(0,1fr)} .tiles.lista .tile{flex-direction:row;gap:10px;padding:5px 8px;font-size:12px;text-align:left} .tiles.lista .tile .ti{width:64px;height:44px;flex:0 0 64px} .tiles.lista .tile .tn{flex:1;min-width:0}
 .tile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;font-size:10.5px;font-weight:500}
 .tile .ti{width:100%;height:52px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:7px;background:#eef2f8}
 .tile .ti img{max-width:100%;max-height:100%} .tile .tn{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2800,8 +2801,8 @@ function renderElementos(){
   const imgs = Object.entries(ASSETS).filter(([,a])=>a.tipo==='img').map(([k,a])=>[k, `<img src="${a.data}" alt="">`, a.nome, 'img']);
   E.innerHTML = `<div class="upl"><button id="elUp" class="pri">⬆ Enviar arquivo</button><div class="hint">SVG (vetor) ou PNG/JPG (foto → retícula)</div></div>
     <h3>Banco de elementos</h3><div class="tiles">${tiles(banco)}</div>
-    <h3>Meus vetores</h3><div class="tiles">${vets.length?tiles(vets):'<div class="empty">Nenhum ainda.</div>'}</div>
-    <h3>Minhas imagens</h3><div class="tiles">${imgs.length?tiles(imgs):'<div class="empty">Nenhuma ainda.</div>'}</div>
+    <h3>Meus vetores</h3><div class="tiles lista">${vets.length?tiles(vets):'<div class="empty">Nenhum ainda.</div>'}</div>
+    <h3>Minhas imagens</h3><div class="tiles lista">${imgs.length?tiles(imgs):'<div class="empty">Nenhuma ainda.</div>'}</div>
     <div class="hint" style="padding:6px 14px 14px">Clique para pôr na sacola. Na arte, <b>duplo clique</b> num vetor ajusta as cores; numa foto abre a retícula.</div>`;
   $('elUp').onclick=()=>$('file').click();
   E.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{ const k=t.dataset.k, tp=t.dataset.t;
