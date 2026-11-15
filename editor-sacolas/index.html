@@ -235,6 +235,7 @@ button{user-select:none;-webkit-user-select:none}
 #verProduto{background:linear-gradient(135deg,#ffb347,#ff7a59);color:#fff;border:none;font-weight:700;padding:8px 14px;border-radius:12px;box-shadow:0 4px 14px rgba(255,122,89,.45);white-space:nowrap}
 #verProduto:hover{filter:brightness(1.05)}
 #verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
+#mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
 #kitprog{position:fixed;inset:0;background:rgba(20,30,45,.45);z-index:9999;display:flex;align-items:center;justify-content:center}
 #kitprog .kp-box{background:#fff;border-radius:14px;padding:20px 24px;width:min(420px,90vw);box-shadow:0 10px 40px #0004;font-size:14px}
 #kitprog .kp-t{margin:10px 0 8px;color:#334}#kitprog .kp-bar{height:10px;background:#e6edf5;border-radius:6px;overflow:hidden}
@@ -1383,7 +1384,6 @@ $('export').onclick=()=>{
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button id="cp">Copiar JSON</button><button id="fx" class="pri">Fechar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
-  if($('kitBtn')) $('kitBtn').onclick=()=>{ $('modal').style.display='none'; baixarKit(); };
   $('cp').onclick=async()=>{ try{ await navigator.clipboard.writeText(json); $('cp').textContent='Copiado ✓'; }catch(_){ $('cp').textContent='Bloqueado — selecione o texto'; } };
 };
 
@@ -2319,9 +2319,10 @@ function pronto(){
   $('mbox').innerHTML = `<h3 style="margin:0 0 4px;color:var(--ink);font-size:16px;text-transform:none;letter-spacing:0">Tudo pronto?</h3>
     <div style="color:var(--mute);margin-bottom:10px">${falta.length ? `Falta aprovar ${falta.length===1?'1 sacola':falta.length+' sacolas'}. Abra cada uma, confira e clique <b>✅ Aprovar esta arte</b>.` : 'Todas as artes estão aprovadas.'}</div>${linhas||'<div class="empty">O carrinho está vazio.</div>'}
     ${!falta.length && design.carrinho.length ? '<div class="fim">🎉 Tudo aprovado! <button id="irCar" class="pri" style="margin-left:8px">🛒 Ir para o carrinho e finalizar</button></div>' : ''}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">${design.carrinho.length?'<button id="kitBtn" title="PDF da arte-final (Pantone, 1:1, texto em curvas) + prévias 3D, em um ZIP">📦 Baixar kit para a gráfica</button>':''}<button id="fx">Voltar a editar</button></div>`;
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">${design.carrinho.length?'<button id="kitBtn" class="kitbtn" title="Só para funcionários da Embalagens Globo">🔒 Kit</button>':''}<button id="fx">Voltar a editar</button></div>`;
   $('modal').style.display='flex';
   $('fx').onclick=()=>$('modal').style.display='none';
+  if($('kitBtn')) $('kitBtn').onclick=()=>senhaKit(()=>baixarKit());
   if($('irCar')) $('irCar').onclick=()=>{ $('modal').style.display='none'; vaiLoja(true); };
   $('mbox').querySelectorAll('.pr button[data-a]').forEach(bt=>bt.onclick=()=>{
     const id=bt.closest('.pr').dataset.id, a=bt.dataset.a;
@@ -3484,6 +3485,16 @@ function vistas3D(){ const W=GAB.paineis.frente.w, D=GAB.paineis.sanfona_esq.w||
 function progressoKit(txt, pct){ let o=$('kitprog'); if(!o){ o=document.createElement('div'); o.id='kitprog'; o.innerHTML='<div class="kp-box"><b>📦 Montando o kit para a gráfica</b><div class="kp-t"></div><div class="kp-bar"><i></i></div><div class="kp-h">Não feche esta aba. A tela vai trocar de sacola e de vista sozinha.</div></div>'; document.body.appendChild(o); }
   if(txt===null){ o.remove(); return; } o.querySelector('.kp-t').textContent=txt; o.querySelector('.kp-bar i').style.width=Math.round(pct*100)+'%'; }
 
+// "🔒 Kit" é para funcionário da Globo (mandar à clicheria), não para o cliente. Por ora QUALQUER senha passa.
+function senhaKit(acao){
+  modal(`<h3 style="margin:0 0 4px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🔒 Kit para a gráfica</h3>
+    <div class="hint" style="margin-bottom:10px">Área da equipe Embalagens Globo. Digite a senha de funcionário.</div>
+    <form id="fKit"><div class="row"><label>Senha</label><input id="kitSenha" type="password" autocomplete="off"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="kitX">Cancelar</button><button class="pri">Gerar kit</button></div></form>`);
+  setTimeout(()=>$('kitSenha').focus(), 30);
+  $('kitX').onclick=fecha;
+  $('fKit').onsubmit=e=>{ e.preventDefault(); /* TODO: conferir senha de funcionário */ fecha(); acao(); };
+}
 async function baixarKit(op={}){
   sincroniza();
   const ids=(op.ids||design.carrinho.slice()).filter(i=>design.sacolas[i]&&design.sacolas[i].camadas&&design.sacolas[i].camadas.length), aprov=new Set(op.aprovadas||ids.filter(i=>design.sacolas[i]&&design.sacolas[i].estado==='conferida'));
@@ -3572,8 +3583,8 @@ $('finalizar').onclick=()=>{
   $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🎉 Pedido <b>${num}</b> enviado</h3>
     <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>`).join('<br>')}</div>
     <div style="color:var(--mute);line-height:1.5">Guarde o número do pedido. Sua arte continua salva para o próximo pedido.<br><i>(Demonstração: no site real vem o pagamento e as artes aprovadas vão para a gráfica.)</i></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="kitPed">📦 Baixar kit para a gráfica</button><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
-  $('kitPed').onclick=()=>{ $('modal').style.display='none'; baixarKit({ids:itens.map(i=>i.id), num, aprovadas}); };
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="kitPed" class="kitbtn" title="Só para funcionários da Embalagens Globo">🔒 Kit</button><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
+  $('kitPed').onclick=()=>senhaKit(()=>baixarKit({ids:itens.map(i=>i.id), num, aprovadas}));
   $('modal').style.display='flex'; };
 if(location.hash==='#editor' && design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
 document.fonts && document.fonts.ready.then(()=>render());

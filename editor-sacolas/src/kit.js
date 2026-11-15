@@ -170,6 +170,16 @@ function vistas3D(){ const W=GAB.paineis.frente.w, D=GAB.paineis.sanfona_esq.w||
 function progressoKit(txt, pct){ let o=$('kitprog'); if(!o){ o=document.createElement('div'); o.id='kitprog'; o.innerHTML='<div class="kp-box"><b>📦 Montando o kit para a gráfica</b><div class="kp-t"></div><div class="kp-bar"><i></i></div><div class="kp-h">Não feche esta aba. A tela vai trocar de sacola e de vista sozinha.</div></div>'; document.body.appendChild(o); }
   if(txt===null){ o.remove(); return; } o.querySelector('.kp-t').textContent=txt; o.querySelector('.kp-bar i').style.width=Math.round(pct*100)+'%'; }
 
+// "🔒 Kit" é para funcionário da Globo (mandar à clicheria), não para o cliente. Por ora QUALQUER senha passa.
+function senhaKit(acao){
+  modal(`<h3 style="margin:0 0 4px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🔒 Kit para a gráfica</h3>
+    <div class="hint" style="margin-bottom:10px">Área da equipe Embalagens Globo. Digite a senha de funcionário.</div>
+    <form id="fKit"><div class="row"><label>Senha</label><input id="kitSenha" type="password" autocomplete="off"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="kitX">Cancelar</button><button class="pri">Gerar kit</button></div></form>`);
+  setTimeout(()=>$('kitSenha').focus(), 30);
+  $('kitX').onclick=fecha;
+  $('fKit').onsubmit=e=>{ e.preventDefault(); /* TODO: conferir senha de funcionário */ fecha(); acao(); };
+}
 async function baixarKit(op={}){
   sincroniza();
   const ids=(op.ids||design.carrinho.slice()).filter(i=>design.sacolas[i]&&design.sacolas[i].camadas&&design.sacolas[i].camadas.length), aprov=new Set(op.aprovadas||ids.filter(i=>design.sacolas[i]&&design.sacolas[i].estado==='conferida'));
