@@ -238,6 +238,7 @@ button{user-select:none;-webkit-user-select:none}
 #verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
 #mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
 #mbox .cmenu{display:flex;flex-direction:column;gap:8px} #mbox .cmenu button{text-align:left;padding:10px 14px;font-weight:700} #mbox .cmenu button span{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
+#mbox .escsac{display:flex;flex-direction:column;gap:6px} #mbox .escsac label{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fafcff;cursor:pointer} #mbox .escsac input{width:18px;height:18px;flex:0 0 auto;margin:0} #mbox .escsac b{white-space:nowrap} #mbox .escsac .st{margin-left:auto;font-size:12px;color:var(--mute)}
 #mbox .sech2{font-weight:700;font-size:13px;color:var(--ink);margin:4px 0 2px}
 #mbox .artgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;max-height:60vh;overflow:auto}
 #mbox .artc{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fafcff;display:flex;flex-direction:column;gap:6px}
@@ -3060,7 +3061,7 @@ async function minhasArtes(){
   const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado,preview').eq('tipo','arte').order('atualizado',{ascending:false});
   if(error){ erroBanco(error); return; }
   $('mbox').classList.add('largo');
-  modal(`${H3('🎨 Minhas artes')}<div class="hint" style="margin:-4px 0 10px">Clique em <b>Usar</b> para aplicar o visual em todas as sacolas que estão no carrinho (${design.carrinho.length}). O carrinho não muda.</div>
+  modal(`${H3('🎨 Minhas artes')}<div class="hint" style="margin:-4px 0 10px">Clique em <b>Usar</b> e escolha em quais sacolas do carrinho aplicar. O carrinho não muda.</div>
     ${data.length?`<div class="artgrid">${data.map(a=>`<div class="artc" data-id="${a.id}"><div class="artim">${a.preview?`<img src="${a.preview}">`:'🎨'}</div>
       <div class="nm"><b>${esc(a.nome)}</b><div class="st">${esc(a.resumo||'')} · ${dtBR(a.atualizado)}</div></div>
       <div class="artb"><button data-a="usar" class="pri">Usar</button><button data-a="ren" title="Renomear">✏️</button><button data-a="del" title="Apagar">🗑</button></div></div>`).join('')}</div>`
@@ -3077,22 +3078,42 @@ async function minhasArtes(){
 }
 async function usarArte(id, nome){
   if(!design.carrinho.length){ fecha(); vaiLoja(true); toast('Primeiro escolha os tamanhos na loja (coloque no carrinho). Depois use a arte.', 7000); return; }
-  const com=design.carrinho.filter(i=>design.sacolas[i] && design.sacolas[i].camadas.length);
-  if(com.length && !confirm(`${com.length===1?'1 sacola do carrinho já tem arte':com.length+' sacolas do carrinho já têm arte'}. Trocar pela arte "${nome}"?\n\n(Dá para desfazer depois.)`)) return;
+  sincroniza();
+  const naTela=document.body.classList.contains('veditor') && design.carrinho.includes(design.atual);
+  const marcado=i=> naTela ? i===design.atual : !design.sacolas[i].camadas.length || design.carrinho.every(k=>design.sacolas[k].camadas.length);
+  modal(`${H3('🎨 Usar "'+esc(nome)+'" em quais sacolas?')}
+    <div class="escsac">${design.carrinho.map(i=>{ const tem=design.sacolas[i].camadas.length; return `<label><input type="checkbox" value="${i}"${marcado(i)?' checked':''}> <b>${esc(CATALOGO[i].nome)}</b>${i===design.atual&&naTela?' <span class="tag">aberta</span>':''}<span class="st">${tem?'⚠️ já tem arte: vai ser trocada':'vazia'}</span></label>`; }).join('')}</div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><button id="uaT" class="lnk">Marcar todas</button><span><button id="uaX">Cancelar</button> <button id="uaOk" class="pri">Aplicar</button></span></div>`);
+  const cks=()=>[...$('mbox').querySelectorAll('.escsac input')];
+  $('uaT').onclick=()=>cks().forEach(c=>c.checked=true); $('uaX').onclick=fecha;
+  $('uaOk').onclick=()=>{ const ids=cks().filter(c=>c.checked).map(c=>c.value); if(!ids.length){ toast('Marque pelo menos uma sacola.'); return; } aplicaArte(id, nome, ids); };
+}
+async function aplicaArte(id, nome, ids){
   const {data:row,error}=await SB.from('artes').select('dados').eq('id',id).single(); if(error){ erroBanco(error); return; }
   const M=row.dados.modelo; if(!M){ toast('⚠️ Esta arte está num formato antigo.'); return; }
-  sincroniza(); const antes=hpos; Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
   const gO=CATALOGO[M.faca] || CATALOGO[Object.keys(CATALOGO).find(k=>k.split('_')[0]===String(M.faca).split('_')[0])];
   if(!gO){ toast('⚠️ A sacola de origem desta arte não existe mais.'); return; }
-  design.paleta=JSON.parse(JSON.stringify(M.paleta)); if(M.dados) design.dados=M.dados; if(M.estilo) design.estilo=M.estilo; if(M.paletaPronta) design.paletaPronta=M.paletaPronta; if(M.cliente) design.cliente=M.cliente;
-  const gA=GAB, aA=arte; setGab(gO); arte={cliente:design.cliente, paleta:design.paleta, camadas:M.camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
-  design.carrinho.forEach(i=>{ const b=design.sacolas[i]; b.camadas = CATALOGO[i]===gO ? JSON.parse(JSON.stringify(M.camadas)) : M.camadas.map(c=>adaptaCamada(c,gO,CATALOGO[i])).filter(Boolean); b.estado='auto'; b.proprio=[]; });
+  sincroniza(); const antes=hpos; Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
+  const todas = design.carrinho.every(i=>ids.includes(i));
+  let camadas = JSON.parse(JSON.stringify(M.camadas));
+  if(todas){ Object.keys(design.paleta).forEach(k=>delete design.paleta[k]); Object.assign(design.paleta, JSON.parse(JSON.stringify(M.paleta))); }
+  else {   // só algumas sacolas: junta as cores da arte às que já existem (mesmo Pantone = mesma cor; nome repetido com outra cor = renomeia)
+    const troca={};
+    Object.entries(M.paleta).forEach(([k,c])=>{ const igual=Object.keys(design.paleta).find(e=>design.paleta[e].pantone===c.pantone);
+      if(igual){ troca[k]=igual; return; } let nk=k, n=2; while(design.paleta[nk]) nk=k+'_'+(n++); design.paleta[nk]=JSON.parse(JSON.stringify(c)); troca[k]=nk; });
+    const ren=el=>{ ['cor','contorno'].forEach(q=>{ if(el[q] && troca[el[q]]) el[q]=troca[el[q]]; }); if(el.mapa) Object.keys(el.mapa).forEach(o=>{ if(troca[el.mapa[o]]) el.mapa[o]=troca[el.mapa[o]]; }); (el.filhos||[]).forEach(ren); };
+    camadas.forEach(ren);
+  }
+  if(M.dados) design.dados=M.dados; if(M.estilo) design.estilo=M.estilo; if(M.paletaPronta) design.paletaPronta=M.paletaPronta; if(M.cliente) design.cliente=M.cliente;
+  const gA=GAB, aA=arte; setGab(gO); arte={cliente:design.cliente, paleta:design.paleta, camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
+  ids.forEach(i=>{ const b=design.sacolas[i]; b.camadas = CATALOGO[i]===gO ? JSON.parse(JSON.stringify(camadas)) : camadas.map(c=>adaptaCamada(c,gO,CATALOGO[i])).filter(Boolean); b.estado='auto'; b.proprio=[]; });
   setGab(gA); arte=aA; design.portaVista=true;
-  fecha(); const alvo=design.carrinho.includes(design.atual)?design.atual:design.carrinho[0];
+  fecha(); const alvo=ids.includes(design.atual)?design.atual:ids[0];
   propagando=false; abreSacola(alvo, true, true); propagando=true;   // sem sincroniza(): a arte da tela ainda é a antiga
   if(document.body.classList.contains('vloja')) vaiEditor(alvo);
-  salvaHist(); renderElementos(); atualizaSacolas();
-  faixa(`🎨 Arte <b>${esc(nome)}</b> aplicada em ${design.carrinho.length} sacola${design.carrinho.length>1?'s':''}. Confira cada uma (🟡) e aprove.`, [['↶ Desfazer', ()=>restaura(antes)]], 12000);
+  limpaPaletaNaoUsada(); salvaHist(); renderElementos(); atualizaSacolas();
+  const nc=coresUsadas().size, max=GAB.regras.max_cores;
+  faixa(`<span>🎨 Arte <b>${esc(nome)}</b> aplicada em ${ids.length===1?esc(CATALOGO[ids[0]].nome):ids.length+' sacolas'}. Confira e aprove.${nc>max?` ⚠️ Agora o pedido usa ${nc} cores (máximo ${max}): a 🎨 Cores mostra qual trocar.`:''}</span>`, [['↶ Desfazer', ()=>restaura(antes)]], 12000);
 }
 // ---- 📦 pedidos (⭐ salvos + feitos) ----
 async function salvar(){   // botão 💾 e Ctrl+S
