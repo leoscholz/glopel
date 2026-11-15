@@ -213,10 +213,17 @@ async function baixarKit(op={}){
     zip.file('dados_do_pedido.json', JSON.stringify({cliente:ped.cliente, pedido:ped.num, gerado:agora.toISOString(), gerador:'GloboEditor (Embalagens Globo)', sacolas:resumo}, null, 2));
     progressoKit('Compactando…', 0.97);
     const blob=await zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Kit-grafica_${nomeArq(ped.cliente)}_${agora.toISOString().slice(0,10)}.zip`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
-    toast('📦 Kit baixado.', 5000);
+    progressoKit(null); await salvaArquivo(`Kit-grafica_${nomeArq(ped.cliente)}_${agora.toISOString().slice(0,10)}.zip`, blob);
   }catch(e){ console.error(e); toast('⚠️ Não consegui montar o kit: '+esc(e.message||String(e)), 9000); }
   finally{ progressoKit(null); if(volta.id && design.sacolas[volta.id] && design.atual!==volta.id) abreSacola(volta.id, true); modo=volta.modo==='produto'?'previa':volta.modo; $('modo').value=modo; render(); }
+}
+// dentro do Claude (artifact) o download passa pela capability "downloads"; no site, link normal
+async function salvaArquivo(nome, blob){
+  let dl=null; if(!NUVEM && window.claude && claude.use){ try{ dl=await claude.use('downloads'); }catch(_){ dl=null; } }
+  if(dl){ try{ await dl.save({filename:nome, data:blob}); toast('📦 Kit salvo.', 5000); }
+    catch(e){ toast(e&&e.code==='declined' ? 'Download cancelado.' : '⚠️ Não consegui salvar o kit aqui ('+esc((e&&e.code)||'erro')+'). Use a versão do site.', 7000); } return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  toast('📦 Kit baixado.', 5000);
 }
 function leiaMe(ped, resumo){ return [
 `KIT PARA A GRÁFICA — Embalagens Globo (GloboEditor)`,
