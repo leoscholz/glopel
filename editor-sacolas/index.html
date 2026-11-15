@@ -236,6 +236,13 @@ button{user-select:none;-webkit-user-select:none}
 #verProduto:hover{filter:brightness(1.05)}
 #verProduto.voltar{background:linear-gradient(135deg,#5b8fd6,#2f7fd0);box-shadow:0 4px 14px rgba(47,127,208,.4)}
 #mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
+#mbox .cmenu{display:flex;flex-direction:column;gap:8px} #mbox .cmenu button{text-align:left;padding:10px 14px;font-weight:700} #mbox .cmenu button span{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
+#mbox .sech2{font-weight:700;font-size:13px;color:var(--ink);margin:4px 0 2px}
+#mbox .artgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;max-height:60vh;overflow:auto}
+#mbox .artc{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fafcff;display:flex;flex-direction:column;gap:6px}
+#mbox .artim{height:150px;display:flex;align-items:center;justify-content:center;background:#eef2f7;border-radius:8px;font-size:40px;overflow:hidden} #mbox .artim img{max-height:100%;max-width:100%}
+#mbox .artc .st{font-size:11.5px;color:var(--mute)} #mbox .artb{display:flex;gap:6px} #mbox .artb .pri{flex:1}
+#carfoot .carsav{display:flex;gap:6px} #carfoot .carsav button{flex:1;font-size:12px;padding:7px 6px}
 #kitprog{position:fixed;inset:0;background:rgba(20,30,45,.45);z-index:9999;display:flex;align-items:center;justify-content:center}
 #kitprog .kp-box{background:#fff;border-radius:14px;padding:20px 24px;width:min(420px,90vw);box-shadow:0 10px 40px #0004;font-size:14px}
 #kitprog .kp-t{margin:10px 0 8px;color:#334}#kitprog .kp-bar{height:10px;background:#e6edf5;border-radius:6px;overflow:hidden}
@@ -373,7 +380,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
   <div id="veu"></div>
   <aside id="carrinho"><div class="dh">🛒 Seu carrinho <button id="fechacar" title="Fechar">×</button></div>
     <div id="carlista"></div>
-    <div id="carfoot"><div class="tot"><span>Total</span><b id="cartotal">R$ 0,00</b></div><div id="carmsg"></div><button id="finalizar" class="pri" disabled>Finalizar compra</button></div></aside>
+    <div id="carfoot"><div class="tot"><span>Total</span><b id="cartotal">R$ 0,00</b></div><div id="carmsg"></div><button id="finalizar" class="pri" disabled>Finalizar compra</button><div class="carsav so-nuvem"><button id="carLoad">📦 Carregar pedido salvo</button><button id="carSave">⭐ Salvar carrinho como pedido</button></div></div></aside>
 </div>
 <div id="toast"></div>
 <div id="app">
@@ -2435,7 +2442,9 @@ function renderLoja(){
       if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
       if(bt.dataset.a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); renderLoja(); }
       if(bt.dataset.a==='add'){ if(noCarrinho(id)){ abreCarrinho(); return; } addCarrinho(id,q); novaHistoria(); renderLoja(); toast(`🛒 <b>${esc(CATALOGO[id].nome)}</b> adicionada ao carrinho.`); }
-      if(bt.dataset.a==='pers'){ const era=noCarrinho(id); addCarrinho(id,q); novaHistoria(); if(!era) toast(`🛒 Adicionada ao carrinho para você personalizar.`); vaiEditor(id); }
+      if(bt.dataset.a==='pers'){ const vai=()=>{ addCarrinho(id,q); novaHistoria(); vaiEditor(id); };
+        if(noCarrinho(id)) vai(); else { modal(`${H3('🎨 Personalizar '+esc(CATALOGO[id].nome)+'?')}<div style="margin-bottom:12px">Para criar a arte, a sacola entra no carrinho com <b>${q} milheiro${q>1?'s':''}</b>. Você pode mudar a quantidade ou tirar depois.</div>
+          <div style="display:flex;justify-content:flex-end;gap:8px"><button id="psX">Cancelar</button><button id="psOk" class="pri">🛒 Colocar no carrinho e personalizar</button></div>`); $('psX').onclick=fecha; $('psOk').onclick=()=>{ fecha(); vai(); }; } }
     });
   });
   const n=design.carrinho.length; $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
@@ -2956,13 +2965,6 @@ function telaLogin(depois){
     if(error){ $('lgErr').textContent = /invalid/i.test(error.message)?'Usuário ou senha incorretos.':error.message; return; }
     fecha(); toast(`👋 Olá, <b>${esc(nomeDe(USUARIO&&USUARIO.email))}</b>!`); if(depois) depois(); };
 }
-function menuConta(){
-  if(!USUARIO){ telaLogin(); return; }
-  modal(`<h3 style="margin:0 0 10px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">👤 ${esc(nomeDe(USUARIO.email))}</h3>
-    <div style="display:flex;flex-direction:column;gap:8px"><button class="pri" id="cmA">📂 Minhas artes</button><button id="cmS">Sair</button><button id="cmX">Fechar</button></div>`);
-  $('cmA').onclick=minhasArtes; $('cmX').onclick=fecha;
-  $('cmS').onclick=async()=>{ await SB.auth.signOut(); ARTE_ID=null; lembraArte(); fecha(); atualizaConta(); toast('Você saiu.'); };
-}
 function pacoteArte(){
   sincroniza();
   const usados={}; const vis=el=>{ if(el.asset && ASSETS[el.asset]) usados[el.asset]=ASSETS[el.asset]; (el.filhos||[]).forEach(vis); };
@@ -2978,57 +2980,178 @@ function seloSalvo(){ const s=$('salvo'); if(!s) return; if(NUVEM && USUARIO && 
   else { s.className='salvo ok'; s.textContent='✓ Salvo neste computador'; s.title='Fica guardado neste navegador. Para abrir em outro computador, entre e salve na nuvem.'; } }
 function confirmaPerda(acao){ if(!NUVEM || !USUARIO || !mudouDesdeNuvem()) return true;
   return confirm(`A arte aberta tem mudanças que não estão salvas na sua conta. ${acao} agora faz você perder essas mudanças.\n\nOK = continuar mesmo assim · Cancelar = voltar e salvar antes`); }
-async function salvarNuvem(comoNova){
-  if(!NUVEM){ toast('Salvar na nuvem só funciona no site (GitHub).'); return; }
-  if(!USUARIO){ telaLogin(()=>salvarNuvem(comoNova)); return; }
-  if(!design.carrinho.length){ toast('Não há nenhuma sacola para salvar.'); return; }
-  if(!ARTE_ID || comoNova){
-    modal(`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">💾 Salvar arte</h3>
-      <form id="fNome"><div class="row"><label>Nome</label><input id="anNome" value="${esc(comoNova&&ARTE_NOME?ARTE_NOME+' (cópia)':((design.dados&&design.dados.nome)||(design.cliente&&design.cliente!=='Minha padaria'?design.cliente:'')))}" placeholder="Ex.: Padaria Bom Dia — Natal"></div>
-      <div class="hint">Salva todas as sacolas do carrinho, as cores e as imagens.</div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="anX">Cancelar</button><button class="pri">Salvar</button></div></form>`);
-    $('anNome').focus(); $('anNome').select(); $('anX').onclick=fecha;
-    $('fNome').onsubmit=async e=>{ e.preventDefault(); const nome=$('anNome').value.trim()||'Sem nome';
-      const {data:mesmo}=await SB.from('artes').select('id').eq('nome',nome).limit(1);
-      if(mesmo && mesmo.length && !confirm(`Já existe uma arte chamada "${nome}".\n\nOK = substituir a que existe · Cancelar = escolher outro nome`)){ $('anNome').focus(); $('anNome').select(); return; }
-      let data, error;
-      if(mesmo && mesmo.length){ ({error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoArte(), atualizado:new Date().toISOString()}).eq('id',mesmo[0].id)); data={id:mesmo[0].id}; }
-      else ({data,error}=await SB.from('artes').insert({nome, dados:pacoteArte(), resumo:resumoArte()}).select('id').single());
-      if(error){ toast('⚠️ Não salvou: '+esc(error.message)); return; }
-      ARTE_ID=data.id; ARTE_NOME=nome; marcaNuvem(); lembraArte(); fecha(); atualizaConta(); seloSalvo(); toast(`☁️ <b>${esc(nome)}</b> salva na nuvem.`); };
-    return;
-  }
-  const {error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoArte(), atualizado:new Date().toISOString()}).eq('id',ARTE_ID);
-  if(error){ toast('⚠️ Não salvou: '+esc(error.message)); return; }
-  marcaNuvem(); seloSalvo(); toast(`☁️ <b>${esc(ARTE_NOME)}</b> atualizada.`);
+/* ---------- Conta: 🎨 Minhas artes (visuais) · 💾 Salvar arte atual · 📦 Meus pedidos (⭐ salvos + feitos) ----------
+   Tabela artes.tipo: 'arte' = visual de UMA sacola, aplicável a qualquer tamanho (não mexe no carrinho);
+   'pedido' = carrinho inteiro salvo (⭐ recorrente); 'feito' = pedido finalizado (histórico). */
+const H3 = t=>`<h3 style="margin:0 0 10px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">${t}</h3>`;
+const dtBR = s=>new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+function erroBanco(error){ const falta=/tipo|preview|column/i.test((error&&error.message)||'');
+  modal(`${H3('⚠️ Não consegui ler sua conta')}<div style="color:var(--err)">${esc(falta?'O banco ainda não foi atualizado para artes e pedidos separados (falta rodar o SQL no Supabase).':error.message)}</div><div style="text-align:right;margin-top:10px"><button id="ebX">Fechar</button></div>`); $('ebX').onclick=fecha; }
+function menuConta(){
+  if(!USUARIO){ telaLogin(boasVindas); return; }
+  modal(`${H3('👤 '+esc(nomeDe(USUARIO.email)))}
+    <div class="cmenu"><button class="pri" id="cmA">🎨 Minhas artes<span>Visuais salvos, para usar em qualquer tamanho</span></button>
+      <button id="cmSa">💾 Salvar arte atual<span>Guarda o visual da sacola aberta</span></button>
+      <button id="cmP">📦 Meus pedidos<span>⭐ Pedidos salvos e pedidos já feitos</span></button></div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button id="cmZ">🧹 Começar do zero</button><span style="flex:1"></span><button id="cmS">Sair</button><button id="cmX">Fechar</button></div>`);
+  $('cmA').onclick=minhasArtes; $('cmSa').onclick=salvarArteAtual; $('cmP').onclick=meusPedidos; $('cmX').onclick=fecha;
+  $('cmZ').onclick=()=>{ if(design.carrinho.length && !(NUVEM&&USUARIO&&ARTE_ID&&!mudouDesdeNuvem()) && !confirm('Começar do zero? O carrinho e as artes saem da tela'+(USUARIO?' (o que está salvo na sua conta continua lá).':'.'))) return;
+    NUVEM_SNAP=null; fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); setGab(CATALOGO[design.atual]); apontaArte(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Tudo limpo: escolha as sacolas.'); };
+  $('cmS').onclick=async()=>{ await SB.auth.signOut(); ARTE_ID=null; lembraArte(); fecha(); atualizaConta(); toast('Você saiu.'); };
+}
+async function boasVindas(){
+  if(!SB||!USUARIO) return; const {data,error}=await SB.from('artes').select('tipo'); if(error||!data||!data.length) return;
+  const n=t=>data.filter(r=>r.tipo===t).length, a=n('arte'), p=n('pedido'), f=n('feito'); if(!a && !p && !f) return;
+  const partes=[a?`<b>${a}</b> arte${a>1?'s':''}`:'', p?`<b>${p}</b> pedido${p>1?'s':''} salvo${p>1?'s':''}`:'', f?`<b>${f}</b> pedido${f>1?'s':''} feito${f>1?'s':''}`:''].filter(Boolean);
+  modal(`${H3(`👋 Olá, ${esc(nomeDe(USUARIO.email))}!`)}<div style="margin-bottom:12px">Você tem ${partes.join(', ').replace(/, ([^,]*)$/,' e $1')} na sua conta.</div>
+    <div class="cmenu">${a?`<button class="pri" id="bvA">🎨 Ver minhas artes<span>Aplicar um visual nas sacolas do carrinho</span></button>`:''}${p||f?`<button id="bvP">📦 Ver meus pedidos<span>Repetir um pedido</span></button>`:''}
+    <button id="bvX">Continuar com o que está na tela</button></div>`);
+  if($('bvA')) $('bvA').onclick=minhasArtes; if($('bvP')) $('bvP').onclick=meusPedidos; $('bvX').onclick=fecha;
+}
+// ---- 🎨 artes (visuais) ----
+function pacoteModelo(){
+  sincroniza(); const usados={}; const vis=el=>{ if(el.asset && ASSETS[el.asset]) usados[el.asset]=ASSETS[el.asset]; (el.filhos||[]).forEach(vis); }; arte.camadas.forEach(vis);
+  return {versao:VERSAO, modelo:{faca:design.atual, camadas:JSON.parse(JSON.stringify(arte.camadas)), paleta:JSON.parse(JSON.stringify(design.paleta)), dados:design.dados||null, estilo:design.estilo||null, paletaPronta:design.paletaPronta||null, cliente:design.cliente}, assets:usados};
+}
+async function previewArte(){   // miniatura da FRENTE da sacola aberta (jpeg pequeno)
+  const p=GAB.paineis.frente.partes[0], k=Math.min(30, 360/Math.max(p.w,p.h)), W=Math.round((xmax-xmin)*k), H=Math.round((ymax-ymin)*k);
+  const cv=await svgCanvas(marcaSheet({px:k, papel:COR_PAPEL[GAB.papel]||'#c89a62'}), W, H);
+  const o=document.createElement('canvas'); o.width=Math.round(p.w*k); o.height=Math.round(p.h*k);
+  o.getContext('2d').drawImage(cv, Math.round((p.x-xmin)*k), Math.round((ymax-(p.y+p.h))*k), o.width, o.height, 0, 0, o.width, o.height);
+  return o.toDataURL('image/jpeg', 0.82);
+}
+async function salvarArteAtual(){
+  if(!NUVEM){ toast('Salvar na conta só funciona no site.'); return; }
+  if(!USUARIO){ telaLogin(salvarArteAtual); return; }
+  if(!design.carrinho.includes(design.atual) || !arte.camadas.length){ toast('Abra uma sacola com arte para salvar o visual dela.'); return; }
+  const prev=await previewArte(), pao=(facaDe(design.atual)||{}).cat==='pao';
+  modal(`${H3('💾 Salvar arte atual')}
+    <div style="display:flex;gap:14px;align-items:flex-start"><img src="${prev}" style="width:110px;border-radius:8px;border:1px solid var(--line)">
+    <form id="fArte" style="flex:1"><div class="row"><label>Nome</label><input id="arNome" value="${esc(((design.dados&&design.dados.nome)||(design.cliente&&design.cliente!=='Minha padaria'?design.cliente:'Minha arte')))}" placeholder="Ex.: Padaria Bom Dia — Natal"></div>
+    <div class="hint">Guarda o visual do <b>${esc(CATALOGO[design.atual].nome)}</b> (textos, logo, cores). Depois dá para usar em qualquer tamanho, sem mexer no carrinho.${pao?'':'<br>💡 Para servir bem em todos os tamanhos, salve a partir de um saco de pão.'}</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="arX">Cancelar</button><button class="pri">Salvar arte</button></div></form></div>`);
+  $('arNome').focus(); $('arNome').select(); $('arX').onclick=fecha;
+  $('fArte').onsubmit=async e=>{ e.preventDefault(); const nome=$('arNome').value.trim()||'Minha arte';
+    const {data:mesmo,error:e0}=await SB.from('artes').select('id').eq('tipo','arte').eq('nome',nome).limit(1); if(e0){ erroBanco(e0); return; }
+    if(mesmo && mesmo.length && !confirm(`Já existe uma arte chamada "${nome}".\n\nOK = substituir · Cancelar = escolher outro nome`)){ $('arNome').focus(); return; }
+    const reg={tipo:'arte', nome, dados:pacoteModelo(), resumo:`feita no ${CATALOGO[design.atual].nome}`, preview:prev, atualizado:new Date().toISOString()};
+    const {error}= mesmo && mesmo.length ? await SB.from('artes').update(reg).eq('id',mesmo[0].id) : await SB.from('artes').insert(reg);
+    if(error){ erroBanco(error); return; } fecha(); toast(`🎨 Arte <b>${esc(nome)}</b> salva. Use em 👤 › Minhas artes.`); };
 }
 async function minhasArtes(){
   if(!NUVEM) return; if(!USUARIO){ telaLogin(minhasArtes); return; }
   modal('<div class="empty">Carregando…</div>');
-  const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado').order('atualizado',{ascending:false});
-  if(error){ modal(`<div style="color:var(--err)">${esc(error.message)}</div><div style="text-align:right;margin-top:10px"><button onclick="document.getElementById('modal').style.display='none'">Fechar</button></div>`); return; }
-  const dt = s=>new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-  modal(`<h3 style="margin:0 0 10px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">📂 Minhas artes</h3>
-    ${data.length?data.map(a=>`<div class="pr" data-id="${a.id}"><div class="nm"><b>${esc(a.nome)}</b>${a.id===ARTE_ID?' <span class="tag">aberta</span>':''}<div class="st" style="color:var(--mute)">${esc(a.resumo||'')} · ${dt(a.atualizado)}</div></div>
-      <button data-a="abrir" class="pri">Abrir</button><button data-a="ren">✏️</button><button data-a="del" title="Apagar">🗑</button></div>`).join(''):'<div class="empty">Nenhuma arte salva ainda. No editor, use 💾 Salvar.</div>'}
-    <div style="display:flex;justify-content:space-between;margin-top:12px"><button id="maNova">＋ Começar arte nova</button><button id="maX">Fechar</button></div>`);
-  $('maX').onclick=fecha;
-  $('maNova').onclick=()=>{ if(design.carrinho.length && !(NUVEM&&USUARIO&&ARTE_ID&&!mudouDesdeNuvem()) && !confirm('Começar uma arte nova? A arte atual sai da tela'+(USUARIO?' e as mudanças não salvas na sua conta se perdem.':' (ela só está guardada neste computador).'))) return; NUVEM_SNAP=null; fecha(); ARTE_ID=null; lembraArte(); design=designVazio(); setGab(CATALOGO[design.atual]); apontaArte(); novaHistoria(); atualizaConta(); vaiLoja(); toast('Arte nova: escolha as sacolas.'); };
-  $('mbox').querySelectorAll('.pr button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.pr').dataset.id, a=data.find(x=>x.id===id);
-    if(b.dataset.a==='abrir'){ if(id!==ARTE_ID && !confirmaPerda('Abrir outra arte')) return; const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ toast('⚠️ '+esc(error.message)); return; }
-      Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
-      design=migraAprovacao(row.dados.design); design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[];
-      design.carrinho=(design.carrinho||[]).filter(i=>CATALOGO[i]); Object.keys(CATALOGO).forEach(i=>{ if(!design.sacolas[i]) design.sacolas[i]={estado:'nenhum',proprio:[],camadas:[]}; });
-      if(!CATALOGO[design.atual]) design.atual=design.carrinho[0]||'f5_kraft'; if(editando){ const t=editando.ta; editando=null; t.remove(); }
-      setGab(CATALOGO[design.atual]); apontaArte();   // senão o sincroniza() seguinte grava a arte antiga da tela por cima da que veio da nuvem
-      ARTE_ID=id; ARTE_NOME=row.nome; lembraArte(); fecha(); novaHistoria(); marcaNuvem(); seloSalvo(); $('faixa').classList.remove('show'); renderElementos(); atualizaConta();
-      if(design.carrinho.length) vaiEditor(design.carrinho.includes(design.atual)?design.atual:design.carrinho[0]); else vaiLoja();
-      toast(`📂 <b>${esc(row.nome)}</b> aberta.`); }
-    if(b.dataset.a==='ren'){ const li=b.closest('.pr'); li.querySelector('.nm').innerHTML=`<input value="${esc(a.nome)}">`; const inp=li.querySelector('input'); inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') b.click(); if(e.key==='Escape') minhasArtes(); };
-      b.textContent='✓'; b.onclick=async()=>{ const nome=inp.value.trim()||a.nome; await SB.from('artes').update({nome}).eq('id',id); if(id===ARTE_ID){ ARTE_NOME=nome; lembraArte(); atualizaConta(); } minhasArtes(); }; }
-    if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; }
-      await SB.from('artes').delete().eq('id',id); if(id===ARTE_ID){ ARTE_ID=null; lembraArte(); atualizaConta(); } minhasArtes(); }
+  const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado,preview').eq('tipo','arte').order('atualizado',{ascending:false});
+  if(error){ erroBanco(error); return; }
+  $('mbox').classList.add('largo');
+  modal(`${H3('🎨 Minhas artes')}<div class="hint" style="margin:-4px 0 10px">Clique em <b>Usar</b> para aplicar o visual em todas as sacolas que estão no carrinho (${design.carrinho.length}). O carrinho não muda.</div>
+    ${data.length?`<div class="artgrid">${data.map(a=>`<div class="artc" data-id="${a.id}"><div class="artim">${a.preview?`<img src="${a.preview}">`:'🎨'}</div>
+      <div class="nm"><b>${esc(a.nome)}</b><div class="st">${esc(a.resumo||'')} · ${dtBR(a.atualizado)}</div></div>
+      <div class="artb"><button data-a="usar" class="pri">Usar</button><button data-a="ren" title="Renomear">✏️</button><button data-a="del" title="Apagar">🗑</button></div></div>`).join('')}</div>`
+      :'<div class="empty">Nenhuma arte salva ainda. Abra uma sacola pronta e use 💾 Salvar arte atual.</div>'}
+    <div style="display:flex;justify-content:space-between;margin-top:12px"><button id="maS">💾 Salvar arte atual</button><button id="maX">Fechar</button></div>`);
+  const sai=()=>{ $('mbox').classList.remove('largo'); };
+  $('maX').onclick=()=>{ sai(); fecha(); }; $('maS').onclick=()=>{ sai(); salvarArteAtual(); };
+  $('mbox').querySelectorAll('.artc button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.artc').dataset.id, a=data.find(x=>x.id===id);
+    if(b.dataset.a==='usar'){ sai(); usarArte(id, a.nome); }
+    if(b.dataset.a==='ren'){ const nm=b.closest('.artc').querySelector('.nm'); nm.innerHTML=`<input value="${esc(a.nome)}">`; const inp=nm.querySelector('input'); inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') b.click(); if(e.key==='Escape') minhasArtes(); };
+      b.textContent='✓'; b.onclick=async()=>{ await SB.from('artes').update({nome:inp.value.trim()||a.nome}).eq('id',id); minhasArtes(); }; }
+    if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; } await SB.from('artes').delete().eq('id',id); minhasArtes(); }
   });
+}
+async function usarArte(id, nome){
+  if(!design.carrinho.length){ fecha(); vaiLoja(true); toast('Primeiro escolha os tamanhos na loja (coloque no carrinho). Depois use a arte.', 7000); return; }
+  const com=design.carrinho.filter(i=>design.sacolas[i] && design.sacolas[i].camadas.length);
+  if(com.length && !confirm(`${com.length===1?'1 sacola do carrinho já tem arte':com.length+' sacolas do carrinho já têm arte'}. Trocar pela arte "${nome}"?\n\n(Dá para desfazer depois.)`)) return;
+  const {data:row,error}=await SB.from('artes').select('dados').eq('id',id).single(); if(error){ erroBanco(error); return; }
+  const M=row.dados.modelo; if(!M){ toast('⚠️ Esta arte está num formato antigo.'); return; }
+  sincroniza(); const antes=hpos; Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
+  const gO=CATALOGO[M.faca] || CATALOGO[Object.keys(CATALOGO).find(k=>k.split('_')[0]===String(M.faca).split('_')[0])];
+  if(!gO){ toast('⚠️ A sacola de origem desta arte não existe mais.'); return; }
+  design.paleta=JSON.parse(JSON.stringify(M.paleta)); if(M.dados) design.dados=M.dados; if(M.estilo) design.estilo=M.estilo; if(M.paletaPronta) design.paletaPronta=M.paletaPronta; if(M.cliente) design.cliente=M.cliente;
+  const gA=GAB, aA=arte; setGab(gO); arte={cliente:design.cliente, paleta:design.paleta, camadas:M.camadas}; SYNC_OFF++; try{ render(); }finally{ SYNC_OFF--; }
+  design.carrinho.forEach(i=>{ const b=design.sacolas[i]; b.camadas = CATALOGO[i]===gO ? JSON.parse(JSON.stringify(M.camadas)) : M.camadas.map(c=>adaptaCamada(c,gO,CATALOGO[i])).filter(Boolean); b.estado='auto'; b.proprio=[]; });
+  setGab(gA); arte=aA; design.portaVista=true;
+  fecha(); const alvo=design.carrinho.includes(design.atual)?design.atual:design.carrinho[0];
+  propagando=false; abreSacola(alvo, true, true); propagando=true;   // sem sincroniza(): a arte da tela ainda é a antiga
+  if(document.body.classList.contains('vloja')) vaiEditor(alvo);
+  salvaHist(); renderElementos(); atualizaSacolas();
+  faixa(`🎨 Arte <b>${esc(nome)}</b> aplicada em ${design.carrinho.length} sacola${design.carrinho.length>1?'s':''}. Confira cada uma (🟡) e aprove.`, [['↶ Desfazer', ()=>restaura(antes)]], 12000);
+}
+// ---- 📦 pedidos (⭐ salvos + feitos) ----
+async function salvar(){   // botão 💾 e Ctrl+S
+  if(!NUVEM){ toast('Salvar na conta só funciona no site.'); return; }
+  if(!USUARIO){ telaLogin(salvar); return; }
+  if(!ARTE_ID){ salvarArteAtual(); return; }
+  modal(`${H3('💾 Salvar')}<div class="cmenu"><button class="pri" id="svP">⭐ Atualizar o pedido salvo<span>${esc(ARTE_NOME)}: todas as sacolas do carrinho</span></button>
+    <button id="svA">🎨 Salvar arte atual<span>Só o visual da sacola aberta, para usar em outros tamanhos</span></button><button id="svX">Cancelar</button></div>`);
+  $('svP').onclick=()=>{ fecha(); salvarPedido(false); }; $('svA').onclick=salvarArteAtual; $('svX').onclick=fecha;
+}
+async function salvarPedido(comoNovo){
+  if(!NUVEM){ toast('Salvar na conta só funciona no site.'); return; }
+  if(!USUARIO){ telaLogin(()=>salvarPedido(comoNovo)); return; }
+  if(!design.carrinho.length){ toast('O carrinho está vazio.'); return; }
+  if(!ARTE_ID || comoNovo){
+    modal(`${H3('⭐ Salvar carrinho como pedido')}
+      <form id="fNome"><div class="row"><label>Nome</label><input id="anNome" value="${esc(comoNovo&&ARTE_NOME?ARTE_NOME+' (cópia)':'Pedido de '+((design.dados&&design.dados.nome)||(design.cliente&&design.cliente!=='Minha padaria'?design.cliente:'sempre')))}" placeholder="Ex.: Pedido do mês"></div>
+      <div class="hint">Guarda as ${design.carrinho.length} sacolas, as quantidades e as artes. Para repetir, é só abrir em 📦 Meus pedidos.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" id="anX">Cancelar</button><button class="pri">Salvar pedido</button></div></form>`);
+    $('anNome').focus(); $('anNome').select(); $('anX').onclick=fecha;
+    $('fNome').onsubmit=async e=>{ e.preventDefault(); const nome=$('anNome').value.trim()||'Meu pedido';
+      const {data:mesmo,error:e0}=await SB.from('artes').select('id').eq('tipo','pedido').eq('nome',nome).limit(1); if(e0){ erroBanco(e0); return; }
+      if(mesmo && mesmo.length && !confirm(`Já existe um pedido salvo chamado "${nome}".\n\nOK = substituir · Cancelar = escolher outro nome`)){ $('anNome').focus(); $('anNome').select(); return; }
+      let data, error;
+      if(mesmo && mesmo.length){ ({error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoPedido(), atualizado:new Date().toISOString()}).eq('id',mesmo[0].id)); data={id:mesmo[0].id}; }
+      else ({data,error}=await SB.from('artes').insert({tipo:'pedido', nome, dados:pacoteArte(), resumo:resumoPedido()}).select('id').single());
+      if(error){ erroBanco(error); return; }
+      ARTE_ID=data.id; ARTE_NOME=nome; marcaNuvem(); lembraArte(); fecha(); atualizaConta(); seloSalvo(); toast(`⭐ Pedido <b>${esc(nome)}</b> salvo.`); };
+    return;
+  }
+  const {error}=await SB.from('artes').update({dados:pacoteArte(), resumo:resumoPedido(), atualizado:new Date().toISOString()}).eq('id',ARTE_ID);
+  if(error){ erroBanco(error); return; }
+  marcaNuvem(); seloSalvo(); toast(`⭐ Pedido <b>${esc(ARTE_NOME)}</b> atualizado.`);
+}
+const resumoPedido = ()=> design.carrinho.map(id=>`${(design.qtd&&design.qtd[id])||1} mil × ${CATALOGO[id]?CATALOGO[id].nome:id}`).join(' · ');
+async function meusPedidos(){
+  if(!NUVEM) return; if(!USUARIO){ telaLogin(meusPedidos); return; }
+  modal('<div class="empty">Carregando…</div>');
+  const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado,criado,tipo').in('tipo',['pedido','feito']).order('atualizado',{ascending:false});
+  if(error){ erroBanco(error); return; }
+  const sal=data.filter(r=>r.tipo==='pedido'), fei=data.filter(r=>r.tipo==='feito');
+  const linha=(a,bts)=>`<div class="pr" data-id="${a.id}"><div class="nm"><b>${esc(a.nome)}</b>${a.id===ARTE_ID?' <span class="tag">aberto</span>':''}<div class="st" style="color:var(--mute)">${esc(a.resumo||'')} · ${dtBR(a.atualizado)}</div></div>${bts}</div>`;
+  modal(`${H3('📦 Meus pedidos')}
+    <div class="sech2">⭐ Pedidos salvos</div>${sal.length?sal.map(a=>linha(a,'<button data-a="rep" class="pri">🔁 Repetir</button><button data-a="ren" title="Renomear">✏️</button><button data-a="del" title="Apagar">🗑</button>')).join(''):'<div class="empty" style="padding:8px">Nenhum ainda. No carrinho, use ⭐ Salvar carrinho como pedido, ou fixe um pedido feito.</div>'}
+    <div class="sech2" style="margin-top:12px">🧾 Pedidos feitos</div>${fei.length?fei.map(a=>linha(a,'<button data-a="rep">🔁 Repetir</button><button data-a="fix" title="Guardar como pedido salvo, para repetir sempre">⭐ Fixar</button>')).join(''):'<div class="empty" style="padding:8px">Nenhum pedido finalizado com esta conta ainda.</div>'}
+    <div style="text-align:right;margin-top:12px"><button id="mpX">Fechar</button></div>`);
+  $('mpX').onclick=fecha;
+  $('mbox').querySelectorAll('.pr button').forEach(b=>b.onclick=async()=>{ const id=b.closest('.pr').dataset.id, a=data.find(x=>x.id===id);
+    if(b.dataset.a==='rep') abrePedido(id);
+    if(b.dataset.a==='fix'){ const {data:row,error}=await SB.from('artes').select('dados,resumo').eq('id',id).single(); if(error){ erroBanco(error); return; }
+      const nome=prompt('Nome do pedido salvo:', a.nome.replace(/^Pedido /,'Pedido recorrente ')); if(!nome) return;
+      const {error:e2}=await SB.from('artes').insert({tipo:'pedido', nome, dados:row.dados, resumo:row.resumo}); if(e2){ erroBanco(e2); return; } toast(`⭐ <b>${esc(nome)}</b> virou pedido salvo.`); meusPedidos(); }
+    if(b.dataset.a==='ren'){ const li=b.closest('.pr'); li.querySelector('.nm').innerHTML=`<input value="${esc(a.nome)}">`; const inp=li.querySelector('input'); inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') b.click(); if(e.key==='Escape') meusPedidos(); };
+      b.textContent='✓'; b.onclick=async()=>{ const nome=inp.value.trim()||a.nome; await SB.from('artes').update({nome}).eq('id',id); if(id===ARTE_ID){ ARTE_NOME=nome; lembraArte(); atualizaConta(); } meusPedidos(); }; }
+    if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; }
+      await SB.from('artes').delete().eq('id',id); if(id===ARTE_ID){ ARTE_ID=null; lembraArte(); atualizaConta(); } meusPedidos(); }
+  });
+}
+async function abrePedido(id){
+  if(id!==ARTE_ID && !confirmaPerda('Abrir outro pedido')) return;
+  if(design.carrinho.length && !confirm('Repetir este pedido? O carrinho atual é trocado por ele.')) return;
+  const {data:row,error}=await SB.from('artes').select('*').eq('id',id).single(); if(error){ erroBanco(error); return; }
+  Object.assign(ASSETS, row.dados.assets||{}); salvaAssets();
+  design=migraAprovacao(row.dados.design); design.qtd=design.qtd||{}; design.confirmadas=design.confirmadas||[]; design.portaVista=true;
+  design.carrinho=(design.carrinho||[]).filter(i=>CATALOGO[i]); Object.keys(CATALOGO).forEach(i=>{ if(!design.sacolas[i]) design.sacolas[i]={estado:'nenhum',proprio:[],camadas:[]}; });
+  design.carrinho.forEach(i=>{ if(design.sacolas[i].estado==='conferida') design.sacolas[i].estado='auto'; });   // num pedido novo, aprova de novo
+  if(!CATALOGO[design.atual]) design.atual=design.carrinho[0]||'f5_kraft'; if(editando){ const t=editando.ta; editando=null; t.remove(); }
+  setGab(CATALOGO[design.atual]); apontaArte();   // senão o sincroniza() seguinte grava a arte antiga da tela por cima da que veio da nuvem
+  ARTE_ID = row.tipo==='pedido' ? id : null; ARTE_NOME = row.tipo==='pedido' ? row.nome : ''; lembraArte(); fecha(); novaHistoria(); marcaNuvem(); seloSalvo(); $('faixa').classList.remove('show'); renderElementos(); atualizaConta();
+  vaiLoja(true); renderCarrinho(); abreCarrinho();
+  toast(`🔁 <b>${esc(row.nome)}</b> no carrinho. Confira as artes (🟡) e finalize.`, 6000);
+}
+async function registraPedidoFeito(num, pacote, resumo){
+  if(!NUVEM || !USUARIO || !SB) return;
+  const {error}=await SB.from('artes').insert({tipo:'feito', nome:'Pedido '+num, dados:pacote, resumo}); if(error) toast('⚠️ O pedido foi feito, mas não entrou em 📦 Meus pedidos: '+esc(error.message), 7000);
 }
 
 /* =====================================================================
@@ -3184,9 +3307,10 @@ function abrePorta(){
     <div class="hint" style="margin-bottom:14px">Dá para mudar tudo depois, nas duas opções.</div>
     <div class="porta"><button id="ptAj" class="pri"><b>✨ Criar com ajuda</b><span>Responda 4 perguntas e a arte fica pronta em todas as sacolas</span></button>
     <button id="ptZero"><b>Começar do zero</b><span>Folha em branco para montar do seu jeito</span></button>
-    ${NUVEM?'<button id="ptAbrir"><b>📂 Abrir arte salva</b><span>Continuar uma arte que você salvou na sua conta</span></button>':''}</div>`);
+    ${NUVEM?'<button id="ptAbrir"><b>🎨 Usar uma arte salva</b><span>Aplicar um visual que você salvou na sua conta</span></button><button id="ptPed"><b>📦 Repetir um pedido</b><span>Carregar um pedido salvo ou já feito</span></button>':''}</div>`);
   $('ptAj').onclick=()=>assistente(); $('ptZero').onclick=()=>{ design.portaVista=true; agendaSalvar(); fecha(); };
   if($('ptAbrir')) $('ptAbrir').onclick=()=>{ design.portaVista=true; fecha(); minhasArtes(); };
+  if($('ptPed')) $('ptPed').onclick=()=>{ design.portaVista=true; fecha(); meusPedidos(); };
   const sai=()=>{ design.portaVista=true; agendaSalvar(); fecha(); $('modal').removeEventListener('click',fora); document.removeEventListener('keydown',esc_); };
   const fora=e=>{ if(e.target===$('modal')) sai(); }, esc_=e=>{ if(e.key==='Escape' && $('modal').style.display==='flex') sai(); };
   $('modal').addEventListener('click',fora); document.addEventListener('keydown',esc_);
@@ -3570,13 +3694,15 @@ function leiaMe(ped, resumo){ return [
 `  - Dúvidas: fale com a Embalagens Globo antes de gravar as chapas.`, ``].join('\r\n'); }
 
 $('export').onclick=pronto; $('ajuda').onclick=menuAjuda; renderElementos();
-nuvemInit(); $('wzBtn').onclick=assistente; $('dadosBtn').onclick=()=> design.dados ? painelDados() : assistente(); $('conta').onclick=menuConta; $('conta2').onclick=menuConta; $('nuvemSalvar').onclick=()=>salvarNuvem(false);
-document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvarNuvem(false); } });
+nuvemInit(); $('wzBtn').onclick=assistente; $('dadosBtn').onclick=()=> design.dados ? painelDados() : assistente(); $('conta').onclick=menuConta; $('conta2').onclick=menuConta; $('nuvemSalvar').onclick=salvar;
+document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvar(); } });
 $('voltaloja').onclick=()=>vaiLoja(true);
+$('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').onclick=()=>{ fechaCarrinho(); salvarPedido(false); };
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
 $('finalizar').onclick=()=>{
   sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
   design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens});
+  registraPedidoFeito(num, pacoteArte(), itens.map(i=>`${i.qtd} mil × ${i.nome}`).join(' · '));
   const aprovadas=itens.filter(i=>design.sacolas[i.id]&&design.sacolas[i.id].estado==='conferida').map(i=>i.id);
   itens.forEach(i=>{ const b=design.sacolas[i.id]; if(b && b.estado==='conferida') b.estado='auto'; });   // arte fica guardada; num novo pedido, aprova de novo
   design.carrinho=[]; novaHistoria(); agendaSalvar(); renderLoja();
