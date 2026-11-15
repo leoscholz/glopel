@@ -1,4 +1,4 @@
-# GloboEditor — hand-off (alpha 0.1 · atualizado 14-11-2026 22:00)
+# GloboEditor — hand-off (alpha 0.1 · atualizado 15-11-2026 09:10)
 
 ## O que é
 Editor online de arte para sacos de papel da **Embalagens Globo (Glopel)**, embutido numa loja de demonstração.
@@ -14,12 +14,14 @@ Objetivo de negócio: o cliente (padaria) monta a arte sozinho e a Glopel manda 
 | Build | `python3 src/build.py` → `../index.html` (GitHub: `__NUVEM__=true`, Claude desligado) e `src/dist/artifact.html` (artifact: `__NUVEM__=false`, Claude ligado); embute fotos (`__FOTOS__`), gabarito e exemplo; checa sintaxe JS com node |
 | Facas OHDE (PDF 1:1) | `src/facas/*.pdf` (21) · originais em `~/Desktop/GABARITOS` no Mac · medidas com `src/facas/extrai_medidas.py` |
 | Fotos dos produtos | `editor-sacolas/fotos/*.webp` (extraídas dos PDFs com `src/facas/extrai_fotos.py`; embutidas no build como base64; versão "branco" = filtro CSS sobre a kraft). Envelopes vinham do PDF quase transparentes (só bordas/sombra) e apareciam brancos no kraft: refeitos 15-11 como kraft opaco (fecho convexo da silhueta + sombreamento do original + sombra suave) |
-| Motor de PDF p/ clicheria (v1, Python/reportlab) | `src/motor_pdf_render.py` — ainda NÃO lê vetor enviado nem retícula |
+| Motor de PDF p/ clicheria (v1, Python/reportlab) | `src/motor_pdf_render.py` — legado; substituído pelo kit no navegador (`src/kit.js`) |
+| Kit para a gráfica | `src/kit.js` (inlinado no build em `/*__KIT_JS__*/`), fontes `editor-sacolas/fontes/*.woff` (OFL, embutidas como `__FONTES_CURVA__`), `src/vendor/svg2pdf.umd.min.js` (embutido em `<script type=text/plain id=lib-svg2pdf>`, não está no cdnjs) |
+| SQL de demonstração | `src/sql/usuario_trigodeouro.sql` (usuário TrigoDeOuro + 2 artes; idempotente) |
 
 Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.html`). Artifact = `publish_files` com `src/dist/artifact.html` como `index.html`, mode patch, base_version = versão viva (`get_artifact`).
 
 ## Estado (alpha 0.1)
-**Loja** — fotos reais dos produtos extraídas dos PDFs (branco = filtro CSS sobre a foto kraft); identidade Embalagens Globo (logo vetor redesenhado, azul `#1f5fae`/`#2f7fd0`); **21 facas OHDE em 4 categorias** (Sacos de pão 0,5–15 kg · Lanches e porções · Envelopes · Porta-talher) × 2 papéis (kraft, branco monolúcido); facas sem sanfona (envelope, porta-talher) suportadas; carrinho lateral; Personalizar adiciona ao carrinho sozinho; Finalizar só com todas as artes aprovadas. Preço ilustrativo (função da área).
+**Loja** — fotos reais dos produtos extraídas dos PDFs (branco = filtro CSS sobre a foto kraft); identidade Embalagens Globo (logo vetor redesenhado, azul `#1f5fae`/`#2f7fd0`); **21 facas OHDE em 4 categorias** (Sacos de pão 0,5–15 kg · Lanches e porções · Envelopes · Porta-talher) × 2 papéis (kraft, branco monolúcido); facas sem sanfona (envelope, porta-talher) suportadas; carrinho lateral; Personalizar adiciona ao carrinho sozinho; bloco de destaque azul (hero) e faixa de selos removidos da loja (15-11, pedido do Leo) — a página abre direto nas categorias; Finalizar só com todas as artes aprovadas. Preço ilustrativo (função da área).
 
 **Editor**
 - Várias sacolas do carrinho; faixa de miniaturas com status ⚪ falta criar · 🟡 falta aprovar · ✅ aprovada · ✏️ mudança só nesta.
@@ -43,7 +45,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 
 ## Nuvem (login + Minhas artes)
 - Supabase projeto `dzfelcufnsltutxeidow` (URL e chave publishable no template, `nuvem.js`). Tabela `public.artes` (id, dono, nome, dados jsonb {versao, design, assets}, resumo, criado, atualizado) com RLS "dono = auth.uid()".
-- Login: usuário sem @ vira `<usuario>@globoeditor.app`. Provisório: **admin / admin**. Nunca colocar a chave service_role no front.
+- Login: usuário sem @ vira `<usuario>@globoeditor.app`. Provisório: **admin / admin**. Demo: **TrigoDeOuro / trigodeouro** (criado pelo SQL `src/sql/usuario_trigodeouro.sql`, que o Leo cola no SQL Editor — o signup pela API recusa o domínio `@globoeditor.app`) com 2 artes: "Sacos de pão (feito pelo cliente no site)" = exemplo em 1/2, 1 e 2 kg kraft; "Lanches e delivery (feito pelo vendedor, pedido por telefone)" = assistente estilo Faixas, paleta Café, em Hambúrguer branco, Batatinha 120 g e Envelope 17×21. Nunca colocar a chave service_role no front.
 - Só no build do GitHub (`__NUVEM__=true`); no artifact fica escondido (CSP bloqueia outros hosts).
 - Editor: 💾 Salvar (Ctrl+S) cria/atualiza; 👤 › Minhas artes abre/renomeia/apaga; "Começar arte nova".
 - **Testado ponta a ponta em 13-11** (login → salvar → abrir → apagar) e RLS conferido via REST (anônimo vê 0 linhas). SQL de criação está no histórico da sessão; reproduzível: tabela + policy + usuário admin inserido em `auth.users`/`auth.identities` com `extensions.crypt`.
@@ -72,6 +74,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 - **Ajustes simplificado (14-11 noite):** parte de cima para leigo — "Fica no" (Frente/Verso/Lateral), texto grande + "Quebrar em 2 linhas/Juntar" + alinhamento em ícones + Letra, Tamanho A−/A+ (±10% pelo centro, mostra altura das letras em mm ou medida em cm), Posição (Meio largura respeitando emenda, Meio altura, Girar 90°), Cor em bolinhas da paleta + papel + Nova cor, Ordem (cima/baixo), Duplicar/Apagar. Campos técnicos (Nome, X/Y, Escala, Rotação, Corpo pt, Entrelinha, Largura, Contorno) em `<details class="avanc">` "⚙️ Mais opções" (estado lembrado em `AJ_AVANC`). Ajustes abre sozinho ao clicar num item (só > 700 px e se nenhuma gaveta direita estiver aberta).
 - **Rodadas de teste 1 e 2 (14-11)**: ver `TESTE-UX-2026-11-14.md` (comparativo, tudo que foi corrigido, o que segue aberto). Destaques técnicos da rodada 2: `SYNC_OFF` (renders de medição não podem `sincroniza()`), aplicar-nas-outras relativo (`b.layoutAntes`), `NUVEM_SNAP`/`seloSalvo()`/`confirmaPerda()`, `commit` chama `atualizaSacolas()`, `toggleDrawer` preserva a posição da arte na tela, build checa JS com `node --check`.
 - **Checagem com Corrigir (15-11):** cada problema tem código (5º campo do `valida()`: cor, textomin, traco, semcor, escondido, borda, dobra, sobre, cores3, semuso) e botão de correção determinística, sem IA (`corrigeProblema()`): cor que saiu da lista → 1ª cor da paleta; letra/traço → mínimo; escondido → mostrar; borda/dobra → `encaixaNaFaixa()` (faixa livre entre dobras/emendas com margem; diminui se não cabe, sem passar do mínimo de letra, e empurra para dentro); sobreposição → afasta na vertical (tenta o outro lado se não couber); cor sem uso → tira. "🪄 Corrigir tudo" roda até 4 voltas. Clicar no aviso → `focaItem()`: volta à Prévia se estiver no 3D/mockup, seleciona, centraliza a vista e pisca o item. Mensagens em linguagem leiga (`NOME_PAINEL` = "da frente"…). ⚠️ `encaixa()` já existe no Assistente — não reutilizar o nome.
+- **Kit para a gráfica (15-11):** botão **📦 Baixar kit para a gráfica** no "Tudo pronto?" e no aviso de pedido enviado (`baixarKit({ids,num,aprovadas})`; sacolas sem arte ficam de fora; avisa se há sacola não aprovada). Gera ZIP com uma pasta por sacola: `ARTE-FINAL_*.pdf` (pág. 1 arte 1:1 com cada Pantone como cor especial Separation + alternativa CMYK, texto em curvas via opentype.js, faca em cor especial "FACA - NAO IMPRIMIR", marcas de registro em "All", bloco de informações; uma pág. por chapa em preto; ficha técnica A4 com medidas, cores e onde são usadas, retículas, fontes, status e prévias), `previa_planificada.png`, `chapas/*.png`, `3d/*.png` (frente, ¾ esq./dir., costas, lateral, de cima — sem comida — e um ambientado com comida), `originais/`, `LEIA-ME.txt`, `dados_do_pedido.json`. Libs sob demanda do cdnjs (jsPDF 2.5.1, JSZip 3.10.1, opentype 1.3.4). Truques: cores-sentinela no SVG (`corOverride`) + `setFillColor/setDrawColor` interceptados escrevendo `/CSn cs 1 scn`; jsPDF 2.5.1 não tem evento de recursos → o `/ColorSpace` entra fechando o `/XObject` no evento `putXobjectDict` (inscrito por último, antes do `output`). svg2pdf ignora `<mask>`: no kit, "papel" dentro de vetor vira recorte na cor do papel e as camadas de trás são redesenhadas recortadas no formato do furo (`resolveFuros()`, flag global `CURVAS`). No artifact o download usa a capability `downloads` (declarada junto com `sample`). Validado com pikepdf/pdftoppm (4 separações nomeadas, sem `rg`).
 - Testar em tela larga (≥1680 px) e estreita (≤1100 px) sempre que mexer em layout; Playwright com viewport 1260, 1680, 2520.
 - Decisão aberta do Leo: barra do topo azul escura como a da loja?
 
@@ -81,7 +84,7 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 1. Ficha técnica da clicheria: formato, nº máx. de cores, lineatura máx., ponto mínimo, traço/texto mínimos.
 2. Confirmar com a Glopel: cola no verso (1/2, 1 kg); verso do Hamburgão (5,2+8,2=13,4 vs frente 13,5); quais facas existem em papel branco.
 3. Dados reais da loja (pedido mínimo, atendimento, pagamento).
-4. **PDF real no "Pronto"**: portar o motor (vetor enviado, retícula, várias facas) — passo que torna isto produção.
+4. Kit para a gráfica feito (15-11): falta a clicheria validar o PDF (cores especiais, faca, retícula, sangria — hoje sem sangria).
 5. **Contas reais de clientes** (cadastro por e-mail, 1 conta por padaria) e trocar/remover admin/admin antes de divulgar.
 6. Upload PDF/AI/EPS; editar item dentro de pasta; fotos reais do papel branco (envelope kraft hoje é foto tingida).
 7. Ligar "Pronto"/Finalizar à nuvem (pedido com artes aprovadas gravado no Supabase para a Glopel ver).
