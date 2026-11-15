@@ -33,7 +33,7 @@ select{cursor:pointer}
 #top #modo{width:auto;background:linear-gradient(#ffffff,#eef2f7);box-shadow:var(--sh);border-radius:10px}
 #top .grow{flex:1}
 #main{display:grid;grid-template-columns:auto auto 1fr auto auto;min-height:0}
-#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check{grid-column:4} #main>.tabs.right{grid-column:5}
+#main>.tabs.left{grid-column:1} #main>#d-camadas,#main>#d-cores,#main>#d-elem,#main>#d-artes{grid-column:2} #main>#center{grid-column:3;min-width:0} #main>#d-ajustes,#main>#d-check,#main>#d-dados{grid-column:4} #main>.tabs.right{grid-column:5}
 #main>*{grid-row:1}
 .tabs{display:flex;flex-direction:column;gap:8px;padding:12px 6px;background:var(--surf2);border-right:1px solid var(--line)}
 .tabs.right{border-right:none;border-left:1px solid var(--line)}
@@ -240,6 +240,13 @@ button{user-select:none;-webkit-user-select:none}
 #mbox .kitbtn{font-size:12px;opacity:.75;margin-right:auto}
 #mbox .cmenu{display:flex;flex-direction:column;gap:8px} #mbox .cmenu button{text-align:left;padding:10px 14px;font-weight:700} #mbox .cmenu button span{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
 #mbox .escsac{display:flex;flex-direction:column;gap:6px} #mbox .escsac label{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fafcff;cursor:pointer} #mbox .escsac input{width:18px;height:18px;flex:0 0 auto;margin:0} #mbox .escsac b{white-space:nowrap} #mbox .escsac .st{margin-left:auto;font-size:12px;color:var(--mute)}
+#artesLista{padding:0 12px 14px;display:flex;flex-direction:column;gap:8px} #artesLista .hint{font-size:12px;color:var(--mute);line-height:1.4}
+#artesLista .ga{border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px;display:flex;gap:10px;align-items:center}
+#artesLista .ga .im{width:58px;height:80px;flex:0 0 58px;border-radius:8px;background:#eef2f7;display:flex;align-items:center;justify-content:center;overflow:hidden} #artesLista .ga .im img{max-width:100%;max-height:100%}
+#artesLista .ga .nm{flex:1;min-width:0;font-size:12.5px} #artesLista .ga .nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} #artesLista .ga .st{font-size:11px;color:var(--mute)}
+#artesLista .ga button{margin-top:6px;padding:5px 12px;font-size:12px}
+#dadosForm .dform{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px} #dadosForm .hint{font-size:12px;color:var(--mute);line-height:1.4}
+#dadosForm label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:var(--ink)} #dadosForm input{font-weight:400;font-size:13px;padding:7px 9px}
 #mbox .sech2{font-weight:700;font-size:13px;color:var(--ink);margin:4px 0 2px}
 #mbox .artgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;max-height:60vh;overflow:auto}
 #mbox .artc{border:1px solid var(--line);border-radius:12px;padding:8px;background:#fafcff;display:flex;flex-direction:column;gap:6px}
@@ -408,7 +415,6 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <button id="redo" class="ic" title="Refazer (Ctrl+Shift+Z)">↷</button>
     <select id="modo" title="Como ver a arte"></select>
     <button id="wzBtn" class="ic" title="Criar a arte com ajuda">✨<span class="lbl"> Assistente</span></button>
-    <button id="dadosBtn" class="ic" title="Nome, telefone, Instagram… em todas as sacolas">📝<span class="lbl"> Dados</span></button>
     <button id="conta2" class="ic so-nuvem">👤 Entrar</button>
     <button id="ajuda" class="ic" title="Ajuda, exemplo e recomeçar">❓</button>
     <button id="export" class="pri">✅ Pronto</button>
@@ -418,6 +424,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <button class="tab" data-d="d-camadas" title="Camadas">📚<span>Camadas</span></button>
       <button class="tab" data-d="d-cores" title="Cores e gabarito">🎨<span>Cores</span></button>
       <button class="tab" data-d="d-elem" title="Elementos e imagens">🧩<span>Elementos</span></button>
+      <button class="tab so-nuvem" data-d="d-artes" title="Minhas artes salvas">🗂️<span>Artes</span></button>
     </nav>
     <aside id="d-camadas" class="drawer left">
       <div class="dh">📚 Camadas <button class="fecha" title="Fechar">×</button></div>
@@ -433,6 +440,10 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <aside id="d-elem" class="drawer left">
       <div class="dh">🧩 Elementos <button class="fecha" title="Fechar">×</button></div>
       <div id="elementos"></div>
+    </aside>
+    <aside id="d-artes" class="drawer left">
+      <div class="dh">🗂️ Minhas artes <button class="fecha" title="Fechar">×</button></div>
+      <div id="artesLista"></div>
     </aside>
     <section id="center">
       <div id="sacbar"><div id="sacolas"></div><button id="verProduto" title="Ver a sacola pronta em 3D, com comida de verdade">📸 Ver produto final</button><button id="conferir" class="pri" title="Aprovar a arte desta sacola para impressão">✅ Aprovar esta arte</button></div>
@@ -484,9 +495,14 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
       <div style="padding:0 14px 6px;color:var(--mute);font-size:12.5px">O que a clicheria vai conferir. Clique num item para achar na arte.</div>
       <div id="val"></div>
     </aside>
+    <aside id="d-dados" class="drawer right">
+      <div class="dh">📝 Dados do cliente <button class="fecha" title="Fechar">×</button></div>
+      <div id="dadosForm"></div>
+    </aside>
     <nav class="tabs right">
       <button class="tab" data-d="d-ajustes" title="Ajustes do item selecionado">✏️<span>Ajustes</span><i id="b-aj" class="badge" style="background:var(--sel)"></i></button>
       <button class="tab" data-d="d-check" title="Checagem p/ clicheria">✅<span>Checagem</span><i id="b-ck" class="badge"></i></button>
+      <button class="tab" data-d="d-dados" title="Nome, telefone, Instagram… em todas as sacolas">📝<span>Dados</span></button>
     </nav>
   </div>
 </div>
@@ -2959,7 +2975,7 @@ function nuvemInit(){
   const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
   sc.onload=async()=>{ SB=window.supabase.createClient(SB_URL, SB_KEY);
     const {data}=await SB.auth.getSession(); USUARIO=data.session?data.session.user:null; atualizaConta();
-    SB.auth.onAuthStateChange((_e,s)=>{ USUARIO=s?s.user:null; atualizaConta(); }); };
+    SB.auth.onAuthStateChange((_e,s)=>{ USUARIO=s?s.user:null; atualizaConta(); recarregaGaveta(); }); };
   sc.onerror=()=>{ document.querySelectorAll('.so-nuvem').forEach(e=>e.style.display='none'); };
   document.head.appendChild(sc);
   try{ const m=JSON.parse(localStorage.getItem('glopel_arte_atual')||'null'); if(m){ ARTE_ID=m.id; ARTE_NOME=m.nome; } }catch(_){}
@@ -3060,7 +3076,7 @@ async function salvarArteAtual(){
     if(mesmo && mesmo.length && !confirm(`Já existe uma arte chamada "${nome}".\n\nOK = substituir · Cancelar = escolher outro nome`)){ $('arNome').focus(); return; }
     const reg={tipo:'arte', nome, dados:pacoteModelo(), resumo:`feita no ${CATALOGO[design.atual].nome}`, preview:prev, atualizado:new Date().toISOString()};
     const {error}= mesmo && mesmo.length ? await SB.from('artes').update(reg).eq('id',mesmo[0].id) : await SB.from('artes').insert(reg);
-    if(error){ erroBanco(error); return; } fecha(); toast(`🎨 Arte <b>${esc(nome)}</b> salva. Use em 👤 › Minhas artes.`); };
+    if(error){ erroBanco(error); return; } fecha(); recarregaGaveta(); toast(`🎨 Arte <b>${esc(nome)}</b> salva. Ela aparece em 🗂️ Artes.`); };
 }
 async function minhasArtes(){
   if(!NUVEM) return; if(!USUARIO){ telaLogin(minhasArtes); return; }
@@ -3080,9 +3096,25 @@ async function minhasArtes(){
     if(b.dataset.a==='usar'){ sai(); usarArte(id, a.nome); }
     if(b.dataset.a==='ren'){ const nm=b.closest('.artc').querySelector('.nm'); nm.innerHTML=`<input value="${esc(a.nome)}">`; const inp=nm.querySelector('input'); inp.focus(); inp.select(); inp.onkeydown=e=>{ if(e.key==='Enter') b.click(); if(e.key==='Escape') minhasArtes(); };
       b.textContent='✓'; b.onclick=async()=>{ await SB.from('artes').update({nome:inp.value.trim()||a.nome}).eq('id',id); minhasArtes(); }; }
-    if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; } await SB.from('artes').delete().eq('id',id); minhasArtes(); }
+    if(b.dataset.a==='del'){ if(b.dataset.ok!=='1'){ b.dataset.ok='1'; b.textContent='Apagar?'; b.style.color='var(--err)'; return; } await SB.from('artes').delete().eq('id',id); recarregaGaveta(); minhasArtes(); }
   });
 }
+// ---- gaveta lateral 🗂️ Artes (mesmas artes do menu, sempre à mão no editor) ----
+async function gavetaArtes(){
+  const L=$('artesLista'); if(!L) return;
+  if(!NUVEM){ L.innerHTML='<div class="hint">Disponível no site, com login.</div>'; return; }
+  if(!USUARIO){ L.innerHTML='<div class="hint">Entre na sua conta para ver e usar as artes que você salvou.</div><button class="pri" id="gaEntrar">👤 Entrar</button>'; $('gaEntrar').onclick=()=>telaLogin(gavetaArtes); return; }
+  L.innerHTML='<div class="hint">Carregando…</div>';
+  const {data,error}=await SB.from('artes').select('id,nome,resumo,atualizado,preview').eq('tipo','arte').order('atualizado',{ascending:false});
+  if(error){ L.innerHTML=`<div class="hint" style="color:var(--err)">${/tipo|preview|column/i.test(error.message)?'Falta atualizar o banco (rodar o SQL).':esc(error.message)}</div>`; return; }
+  L.innerHTML=`<button id="gaSalvar">💾 Salvar arte desta sacola</button>
+    ${data.length?data.map(a=>`<div class="ga" data-id="${a.id}"><div class="im">${a.preview?`<img src="${a.preview}">`:'🎨'}</div><div class="nm"><b title="${esc(a.nome)}">${esc(a.nome)}</b><div class="st">${esc(a.resumo||'')}</div><button class="pri" data-a="usar">Usar</button></div></div>`).join('')
+      :'<div class="hint">Nenhuma arte salva ainda. Deixe uma sacola do jeito que gosta e clique em 💾 Salvar arte desta sacola.</div>'}
+    <div class="hint">Usar = aplicar o visual nas sacolas que você escolher. Para renomear ou apagar: 👤 › Minhas artes.</div>`;
+  $('gaSalvar').onclick=salvarArteAtual;
+  L.querySelectorAll('.ga [data-a=usar]').forEach(b=>b.onclick=()=>{ const id=b.closest('.ga').dataset.id; usarArte(id, data.find(x=>x.id===id).nome); });
+}
+const recarregaGaveta=()=>{ if($('d-artes') && $('d-artes').classList.contains('open')) gavetaArtes(); };
 async function usarArte(id, nome){
   if(!design.carrinho.length){ fecha(); vaiLoja(true); toast('Primeiro escolha os tamanhos na loja (coloque no carrinho). Depois use a arte.', 7000); return; }
   sincroniza();
@@ -3415,20 +3447,23 @@ function aplicaAssistente(){
 
 /* ---------- 📝 Dados da padaria (muda o texto em todas as sacolas) ---------- */
 function painelDados(){
-  const d=design.dados||{};
-  modal(`<h3 style="margin:0 0 4px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">📝 Dados da padaria</h3>
-    <div class="hint" style="margin-bottom:10px">Mudou algo aqui? Muda em <b>todas as sacolas</b>, sem desfazer seus ajustes de posição.</div>
-    ${CAMPOS.map(([k,l,ph])=>`<div class="row"><label>${l}</label><input data-c="${k}" value="${esc(d[k]||'')}" placeholder="${esc(ph)}"></div>`).join('')}
-    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><button id="dtEst">🎨 Trocar estilo…</button><span><button id="dtX">Cancelar</button> <button id="dtOk" class="pri">Aplicar</button></span></div>`);
-  $('dtX').onclick=fecha; $('dtEst').onclick=()=>{ fecha(); assistente(); WZ.passo=2; passoWZ(); };
-  $('dtOk').onclick=()=>{ sincroniza(); const novo=Object.assign({}, d); $('mbox').querySelectorAll('input[data-c]').forEach(i=>novo[i.dataset.c]=i.value.trim());
+  const F=$('dadosForm'); if(!F) return; const d=design.dados||{};
+  F.innerHTML=`<div class="dform"><div class="hint">Mudou algo aqui? Muda em <b>todas as sacolas</b>, sem desfazer seus ajustes de posição.</div>
+    ${CAMPOS.map(([k,l,ph])=>`<label>${l}<input data-c="${k}" value="${esc(d[k]||'')}" placeholder="${esc(ph)}"></label>`).join('')}
+    <button id="dtOk" class="pri">Aplicar nas sacolas</button>
+    <button id="dtEst">✨ ${design.dados?'Trocar estilo…':'Criar a arte com estes dados'}</button>
+    ${design.dados?'':'<div class="hint">Os textos ficam ligados a estes campos quando a arte é criada pelo ✨ Assistente.</div>'}</div>`;
+  const lidos=()=>{ const novo=Object.assign({}, d); F.querySelectorAll('input[data-c]').forEach(i=>novo[i.dataset.c]=i.value.trim()); return novo; };
+  F.querySelectorAll('input[data-c]').forEach(i=>i.onkeydown=e=>{ if(e.key==='Enter') $('dtOk').click(); });
+  $('dtEst').onclick=()=>{ design.dados=lidos(); assistente(); WZ.passo=design.carrinho.some(i=>design.sacolas[i].camadas.length)?2:0; passoWZ(); };
+  $('dtOk').onclick=()=>{ sincroniza(); const novo=lidos();
     let n=0; const faltam=[];
     design.carrinho.forEach(id=>{ const vis=c=>{ if(c.campo && c.tipo==='texto' && c.campo in novo){ const v=novo[c.campo]; if(v){ if(c.texto!==v){ c.texto=v; n++; } c.visivel=true; } else if(c.visivel!==false){ c.visivel=false; n++; } } (c.filhos||[]).forEach(vis); };
       design.sacolas[id].camadas.forEach(vis); });
     CAMPOS.forEach(([k,l])=>{ if(novo[k] && !d[k]) faltam.push(l); });
     design.dados=novo; if(novo.nome) design.cliente=novo.nome;
-    fecha(); propagando=false; abreSacola(design.atual, true, true); propagando=true; salvaHist(); atualizaSacolas();
-    toast(`📝 ${n} texto${n===1?'':'s'} atualizado${n===1?'':'s'} nas sacolas.${faltam.length?` Para incluir ${faltam.join(', ')}, use 🎨 Trocar estilo.`:''}`); };
+    propagando=false; abreSacola(design.atual, true, true); propagando=true; salvaHist(); atualizaSacolas(); painelDados();
+    toast(`📝 ${n} texto${n===1?'':'s'} atualizado${n===1?'':'s'} nas sacolas.${faltam.length?` Para incluir ${faltam.join(', ')}, use ✨ Trocar estilo.`:''}`, 6000); };
 }
 
 /* ---------- init ---------- */
@@ -3454,7 +3489,7 @@ function toggleDrawer(id, forcar){
   document.querySelectorAll('.tabs.'+lado+' .tab').forEach(x=>x.classList.remove('on'));
   if(abrir){ d.classList.add('open'); document.querySelector(`.tab[data-d="${id}"]`).classList.add('on'); }
 }
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>toggleDrawer(t.dataset.d));
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ toggleDrawer(t.dataset.d); if(t.dataset.d==='d-artes' && $('d-artes').classList.contains('open')) gavetaArtes(); if(t.dataset.d==='d-dados' && $('d-dados').classList.contains('open')) painelDados(); });
 document.querySelectorAll('.fecha').forEach(b=>b.onclick=()=>toggleDrawer(b.closest('.drawer').id, false));
 // zoom
 function zoomBy(f){ const cx=view.x+view.w/2, cy=view.y+view.h/2; view.w*=f; view.h*=f; view.x=cx-view.w/2; view.y=cy-view.h/2; svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`); }
@@ -3732,7 +3767,7 @@ function leiaMe(ped, resumo){ return [
 `  - Dúvidas: fale com a Embalagens Globo antes de gravar as chapas.`, ``].join('\r\n'); }
 
 $('export').onclick=pronto; $('ajuda').onclick=menuAjuda; renderElementos();
-nuvemInit(); $('wzBtn').onclick=assistente; $('dadosBtn').onclick=()=> design.dados ? painelDados() : assistente(); $('conta').onclick=menuConta; $('conta2').onclick=menuConta; $('nuvemSalvar').onclick=salvar;
+nuvemInit(); $('wzBtn').onclick=assistente;  $('conta').onclick=menuConta; $('conta2').onclick=menuConta; $('nuvemSalvar').onclick=salvar;
 document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvar(); } });
 $('voltaloja').onclick=()=>vaiLoja(true);
 $('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').onclick=()=>{ fechaCarrinho(); salvarPedido(false); };
