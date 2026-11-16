@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Globo (α 0.1) — Glopel</title>
+<style>
+:root{
+  --bg:#f5f5f2;--panel:#fff;--ink:#1f2328;--mute:#6b7078;--line:#e3e3de;
+  --side:#1e2a24;--side2:#2b3a32;--acc:#2f7d4f;--acc2:#e8f3ec;
+  --bad:#c0392b;--bad2:#fdecea;--warn:#b7791f;--warn2:#fdf3e1;--ok:#2f7d4f;--ok2:#e8f3ec;--grey2:#f0f0ec;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;min-height:100vh}
+button,input,select{font:inherit}
+a{color:var(--acc)}
+/* lateral */
+nav.side{width:220px;flex:none;background:var(--side);color:#dfe7e2;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{padding:18px 16px 14px;border-bottom:1px solid var(--side2)}
+.brand b{display:block;font-size:17px;letter-spacing:.2px}
+.brand span{font-size:12px;color:#9fb3a7}
+.menu{flex:1;overflow-y:auto;padding:8px 0}
+.menu button{white-space:nowrap;display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:#cfdad3;text-align:left;padding:9px 16px;cursor:pointer}
+.menu button:hover{background:var(--side2)}
+.menu button.on{background:var(--acc);color:#fff}
+.menu .tag{margin-left:auto;font-size:9px;white-space:nowrap;background:#ffffff22;padding:1px 6px;border-radius:8px}
+.menu .on .tag{background:#ffffff33}
+.menu hr{border:0;border-top:1px solid var(--side2);margin:8px 0}
+.sidefoot{padding:12px 16px;font-size:11px;color:#8ea598;border-top:1px solid var(--side2)}
+/* conteúdo */
+main{flex:1;min-width:0;padding:22px 28px 60px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.top h1{font-size:22px;margin:0;font-weight:600}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--grey2);color:var(--mute)}
+.badge.demo{background:var(--warn2);color:var(--warn)}
+.badge.real{background:var(--ok2);color:var(--ok)}
+.sp{flex:1}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:#bbb}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px}
+.kpi .v{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--mute);font-size:12px}
+.kpi.bad .v{color:var(--bad)} .kpi.warn .v{color:var(--warn)}
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:4px 0 14px;overflow-x:auto}
+.subtabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;color:var(--mute);white-space:nowrap}
+.subtabs button.on{border-bottom-color:var(--acc);color:var(--ink);font-weight:600}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--mute);font-weight:600;background:#fafaf8;position:sticky;top:0}
+td.n,th.n{text-align:right}
+tr:hover td{background:#fafaf6}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;font-weight:600}
+.pill.bad{background:var(--bad2);color:var(--bad)}
+.pill.warn{background:var(--warn2);color:var(--warn)}
+.pill.ok{background:var(--ok2);color:var(--ok)}
+.pill.grey{background:var(--grey2);color:var(--mute)}
+.mut{color:var(--mute)}
+.note{color:var(--mute);font-size:12px;margin:8px 0 0}
+.banner{background:var(--warn2);border:1px solid #f1dcae;color:#7a5a12;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px}
+.banner.ok{background:var(--ok2);border-color:#c7e3d1;color:#235c3a}
+.ph{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.ph h3{margin:0 0 8px;font-size:15px}
+.ph ul{margin:0;padding-left:18px;color:var(--mute)}
+.ph li{margin:3px 0}
+.ph .src{font-size:12px;margin-top:10px;color:var(--mute)}
+.ph .src b{color:var(--ink)}
+.empty{border:2px dashed var(--line);border-radius:10px;padding:26px;text-align:center;color:var(--mute);margin-bottom:16px}
+.empty .ic{font-size:34px}
+form.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+form.inline label{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:3px}
+form.inline input,form.inline select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff;min-width:110px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:160px;padding-top:18px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--mute)}
+.bars .b i{display:block;width:100%;max-width:46px;background:var(--acc);border-radius:4px 4px 0 0;position:relative}
+.bars .b i span{position:absolute;top:-16px;left:0;right:0;text-align:center;color:var(--ink);font-style:normal}
+.hbar{display:grid;grid-template-columns:90px 1fr 30px;gap:8px;align-items:center;margin:4px 0;font-size:13px}
+.hbar i{display:block;height:14px;background:var(--acc);border-radius:3px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px}
+.burger{display:none}
+@media (max-width:800px){
+  nav.side{position:fixed;left:-240px;z-index:10;transition:left .2s}
+  nav.side.open{left:0}
+  .burger{display:inline-block}
+  main{padding:16px}
+}
+</style>
+</head>
+<body>
+<nav class="side" id="side">
+  <div class="brand"><b>Sistema Globo</b><span>Glopel · protótipo α 0.1</span></div>
+  <div class="menu" id="menu"></div>
+  <div class="sidefoot">Protótipo. Só a aba <b>Bobinas</b> funciona; o resto é esboço do que vem.<br>Dados de exemplo — nada sai do navegador.</div>
+</nav>
+<main>
+  <div class="top">
+    <button class="btn burger" onclick="document.getElementById('side').classList.toggle('open')">☰</button>
+    <h1 id="title">—</h1>
+    <span class="badge" id="badge"></span>
+    <span class="sp"></span>
+    <span id="topActions"></span>
+  </div>
+  <div id="view"></div>
+</main>
+
+<input type="file" id="fileIn" accept=".xlsx" hidden>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+/* =========================================================
+   Módulos
+   ========================================================= */
+const MODS = [
+  {id:'inicio', ic:'🏠', nome:'Início'},
+  {id:'pedidos', ic:'🧾', nome:'Pedidos', ph:true},
+  {id:'clientes', ic:'👥', nome:'Clientes', ph:true},
+  {id:'producao', ic:'🏭', nome:'Produção', ph:true},
+  {id:'bobinas', ic:'🧻', nome:'Bobinas', tag:'ativo'},
+  {id:'fornecedores', ic:'🚚', nome:'Fornecedores', ph:true},
+  {sep:true},
+  {id:'financeiro', ic:'💰', nome:'Financeiro', ph:true},
+  {id:'artes', ic:'🎨', nome:'Artes/clichês', ph:true},
+  {id:'produtos', ic:'📦', nome:'Produtos', ph:true},
+  {id:'fiscal', ic:'📑', nome:'Fiscal', ph:true},
+  {sep:true},
+  {id:'config', ic:'⚙️', nome:'Configurações', ph:true},
+];
+
+const PH = {
+  pedidos:{intro:'Todo pedido entra aqui, venha do cliente (site / WhatsApp) ou do vendedor, já com a arte certa anexada.', hoje:'Sage Start (Pedidos de Venda) + papéis na caixa da Daiane', blocos:[
+    ['Lista de pedidos',['Status: orçamento → aprovado → em produção → pronto → entregue → faturado','Filtro por cliente, vendedor, data, status','Prazo prometido × prazo real']],
+    ['Novo pedido',['Cliente, produto (faca + papel + cores), quantidade','Arte do GloboEditor ou da biblioteca do cliente','Preço pela tabela + condição de pagamento']],
+    ['Ligações',['Gera a ordem de produção (aba Produção)','Gera as parcelas a receber (aba Financeiro)','Consome bobina prevista (aba Bobinas)']],
+  ]},
+  clientes:{intro:'Cadastro único de clientes com histórico de compra, artes e ciclo de recompra.', hoje:'Sage Start (cadastro) + base de leads (Receita / ACP)', blocos:[
+    ['Cadastro',['CNPJ/CPF, contato, endereço de entrega','Vendedor responsável e comissão','Condição de pagamento padrão']],
+    ['Histórico',['Pedidos, valores, frequência','Artes e clichês do cliente','Atrasos e inadimplência']],
+    ['Radar de recompra',['Ciclo médio de compra por cliente','Lista semanal de quem passou do ciclo','Leads parecidos com os melhores clientes']],
+  ]},
+  producao:{intro:'O que cada máquina está rodando, fila de ordens e produtividade — alimentado pelo grupo PRODUÇÃO GLOBO.', hoje:'WhatsApp PRODUÇÃO GLOBO → planilha da Secretaria (aba Máquinas agora)', blocos:[
+    ['Máquinas agora',['Status por máquina: rodando / parada / livre','Serviço atual e há quanto tempo','Alerta de serviço sem “finalizado”']],
+    ['Fila de produção',['Ordens geradas pelos pedidos','Ordem sugerida por máquina (largura de bobina, cores)','Arrastar para reordenar']],
+    ['Indicadores',['Sacos por hora por máquina','Tempo de setup entre serviços','Refugo e reclamações de cor']],
+  ]},
+  fornecedores:{intro:'Quem fornece o quê, prazos reais e histórico de preço.', hoje:'Contatos soltos + notas fiscais de compra', blocos:[
+    ['Cadastro',['Papel: Irani, Lutepel, Videira…','Tinta, clicheria, frete','Contato e condição de pagamento']],
+    ['Prazos e preços',['Lead time real (pedido → chegada), medido pelas entradas de bobina','Histórico de R$/kg por tipo de papel','Comparativo entre fornecedores']],
+    ['Compras',['Pedido de compra gerado pela aba Bobinas','Acompanhamento até a chegada','Conferência com a NF de entrada']],
+  ]},
+  financeiro:{intro:'Contas a receber e a pagar, conciliação bancária e fluxo de caixa.', hoje:'Sage Start + Itaú/C6 — Conferidor e Espelho já existem como protótipos', blocos:[
+    ['A receber',['Parcelas por pedido (boleto Itaú, Pix, dinheiro)','Baixa automática pelo Conferidor','Régua de atrasados 30/60/90+']],
+    ['A pagar',['Bobinas, tinta, clichês, folha, impostos','Vencimentos da semana','Parcelamento com a Receita']],
+    ['Caixa',['Saldo por banco','Fluxo previsto 30/60/90 dias','Resumo semanal']],
+  ], links:[['Espelho do Start','../espelho/']]},
+  artes:{intro:'Biblioteca de artes por cliente e controle de clichês.', hoje:'Artes ficam com a clicheria; GloboEditor em teste', blocos:[
+    ['Biblioteca',['Arte vetorial por cliente e por faca','Versões e aprovação do cliente','Pantones / cores de cada chapa']],
+    ['Clichês',['Onde está cada clichê e em que estado','Custo por cm² e quem paga','Pedido à clicheria com o PDF pronto']],
+    ['Editor',['GloboEditor integrado ao pedido','Prova digital para o cliente aprovar']],
+  ], links:[['GloboEditor','../editor-sacolas/']]},
+  produtos:{intro:'Catálogo de produtos: facas, papéis, cores e tabela de preço.', hoje:'Sage Start (produtos) + conhecimento da fábrica', blocos:[
+    ['Facas',['1/2 kg, 1 kg, Hamburgão, 3 kg, 5 kg, 10 kg, porta-talher…','Medidas e largura de bobina usada','Máquinas que rodam cada faca']],
+    ['Papéis',['Kraft natural, kraft branco, MG, Strong, greaseproof','Gramaturas e larguras (liga com Bobinas)']],
+    ['Preço',['Tabela por faca × papel × cores × quantidade','Custo estimado de papel por milheiro']],
+  ]},
+  fiscal:{intro:'Fica fora do sistema: emissão de NF-e por serviço especializado, o contador continua responsável.', hoje:'Emissor atual + contador', blocos:[
+    ['Integração (último passo)',['Pedido faturado → NF-e via Focus NFe','XML e DANFE guardados no Drive','Nada de emissor próprio']],
+  ]},
+  config:{intro:'Usuários, permissões e conexões.', hoje:'—', blocos:[
+    ['Usuários',['Mãe, Daiane, vendedores, operadores','Quem vê e quem altera cada aba']],
+    ['Conexões',['Planilha da Secretaria (WhatsApp)','Drive da empresa','Bancos (consulta)']],
+  ]},
+};
+
+/* =========================================================
+   Utilidades de data / número
+   ========================================================= */
+const DAY = 86400000;
+const hoje = () => { const t = new Date(); return new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate())); };
+const iso = (d) => d.toISOString().slice(0,10);
+const addD = (s, n) => iso(new Date(new Date(s+'T00:00:00Z').getTime() + n*DAY));
+const diffD = (a, b) => Math.round((new Date(a+'T00:00:00Z') - new Date(b+'T00:00:00Z'))/DAY);
+const dmy = (s) => s ? s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4) : '—';
+const dm = (s) => s ? s.slice(8,10)+'/'+s.slice(5,7) : '—';
+const fmt = (v, d=0) => (v===null||v===undefined||v==='') ? '—' : Number(v).toLocaleString('pt-BR',{maximumFractionDigits:d, minimumFractionDigits:0});
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* =========================================================
+   Dados de exemplo (gerados relativos a hoje para a demo não envelhecer)
+   ========================================================= */
+function exemplo(){
+  const H = iso(hoje());
+  const skus = [
+    ['KN35-60','Kraft natural',35,60,'Irani',40,10],
+    ['KN35-46','Kraft natural',35,46,'Irani',40,10],
+    ['KB35-60','Kraft branco',35,60,'Irani',40,10],
+    ['KB35-46','Kraft branco',35,46,'Irani',40,10],
+    ['KB35-40','Kraft branco',35,40,'Irani',40,10],
+    ['KB30-40','Kraft branco',30,40,'Irani',40,10],
+    ['KB30-33','Kraft branco',30,33,'Irani',40,10],
+    ['MG30-35','Monolúcido',30,35,'Lutepel',35,10],
+    ['G32-33','Greaseproof',32,33,'(a definir)',45,10],
+    ['ST55-60','Strong branco',55,60,'Videira',30,10],
+  ].map(([sku,tipo,g,l,forn,lead,marg]) => ({sku,tipo,gramatura:g,largura:l,fornecedor:forn,lead,margem:marg}));
+  // ritmo semanal fictício por tipo
+  const ritmo = {'KN35-60':2.2,'KN35-46':0.6,'KB35-60':1.1,'KB35-46':0.7,'KB35-40':0.6,'KB30-40':0.5,'KB30-33':0.5,'MG30-35':1.0,'G32-33':0.3,'ST55-60':0.4};
+  const kgcm = {35:3.8,30:3.3,32:3.4,55:2.7};
+  const maqs = ['Máq. 1','Máq. 2','Máq. 3','Máq. 4','Máq. 5'];
+  let seed = 7; const rnd = () => (seed = (seed*9301+49297)%233280)/233280;
+  const saidas = [];
+  for (let d = 42; d >= 0; d--) {
+    const dia = addD(H, -d); const wd = new Date(dia+'T00:00:00Z').getUTCDay();
+    if (wd === 0 || wd === 6) continue;
+    skus.forEach(s => {
+      if (rnd() < ritmo[s.sku]/5) {
+        const sku = rnd() < 0.06 ? '' : s.sku;
+        saidas.push({data:dia, hora:String(7+Math.floor(rnd()*10)).padStart(2,'0')+':'+String(Math.floor(rnd()*60)).padStart(2,'0'), autor:maqs[Math.floor(rnd()*5)], sku, fornecedor:s.fornecedor, peso: rnd()<0.7 ? Math.round(s.largura*kgcm[s.gramatura]*(0.9+rnd()*0.2)) : null});
+      }
+    });
+  }
+  const dc = addD(H, -30);
+  // semanas de folga após a contagem: define quem aparece como OK / pedir em breve / pedir já
+  const folga = {'KN35-60':7,'KN35-46':12,'KB35-60':4,'KB35-46':3,'KB35-40':9,'KB30-40':6,'KB30-33':14,'MG30-35':5,'ST55-60':10};
+  const inv = Object.entries(folga).map(([sku,f]) => ({data:dc, sku, qtd:Math.round(ritmo[sku]*(4.3+f)), por:'Contagem exemplo'}));
+  const ent = [
+    {status:'RECEBIDO', pedido:addD(H,-55), previsao:addD(H,-14), receb:addD(H,-12), sku:'KN35-60', fornecedor:'Irani', qtd:8, peso:1760, nf:'000123'},
+    {status:'PEDIDO', pedido:addD(H,-20), previsao:addD(H,20), receb:'', sku:'KB35-60', fornecedor:'Irani', qtd:6, peso:'', nf:''},
+    {status:'PEDIDO', pedido:addD(H,-5), previsao:addD(H,30), receb:'', sku:'MG30-35', fornecedor:'Lutepel', qtd:5, peso:'', nf:''},
+  ];
+  return {fonte:'exemplo', skus, saidas, inv, ent};
+}
+
+/* =========================================================
+   Estado (exemplo ou planilha carregada; edições locais)
+   ========================================================= */
+let DB = exemplo();
+const LS = 'glopel-sistema-v1';
+try { const s = JSON.parse(localStorage.getItem(LS)||'null'); if (s && s.fonte) DB = s; } catch(e) {}
+function salvar(){ try { localStorage.setItem(LS, JSON.stringify(DB)); } catch(e) {} }
+
+/* =========================================================
+   Cálculo de estoque — mesmas regras da aba Bob_Estoque da planilha
+   ========================================================= */
+function estoque(){
+  const H = iso(hoje());
+  const ini = DB.saidas.reduce((m,s) => s.data && s.data < m ? s.data : m, H);
+  const jan0 = [addD(H,-28), ini].sort()[1];
+  const dias = Math.max(1, diffD(H, jan0));
+  return DB.skus.map(k => {
+    const cont = DB.inv.filter(i => i.sku===k.sku && i.qtd!=='' && i.qtd!==null).map(i => i.data).sort().pop() || null;
+    const qtdc = cont ? DB.inv.filter(i => i.sku===k.sku && i.data===cont).reduce((a,i)=>a+Number(i.qtd||0),0) : null;
+    const entr = DB.ent.filter(e => e.sku===k.sku && e.status==='RECEBIDO' && e.receb && (!cont || e.receb > cont)).reduce((a,e)=>a+Number(e.qtd||0),0);
+    const sai = DB.saidas.filter(s => s.sku===k.sku && s.data && (!cont || s.data > cont)).length;
+    const saldo = cont ? qtdc + entr - sai : null;
+    const trans = DB.ent.filter(e => e.sku===k.sku && e.status==='PEDIDO').reduce((a,e)=>a+Number(e.qtd||0),0);
+    const pesos = DB.saidas.filter(s => s.sku===k.sku && s.peso).map(s => Number(s.peso));
+    const pm = pesos.length ? pesos.reduce((a,b)=>a+b,0)/pesos.length : Math.round(k.largura*3.8);
+    const cons = Math.round(DB.saidas.filter(s => s.sku===k.sku && s.data >= jan0).length / dias * 7 * 100)/100;
+    const lm = Number(k.lead||40) + Number(k.margem||10);
+    let cob=null, rup=null, ate=null, st, sug=null;
+    if (saldo!==null && cons>0){ cob = Math.round(saldo/cons*10)/10; rup = addD(H, Math.round(cob*7)); ate = addD(H, Math.round((saldo+trans)/cons*7) - lm); }
+    if (saldo===null) st='SEM CONTAGEM'; else if (saldo<0) st='RECONTAR'; else if (!(cons>0)) st='SEM CONSUMO'; else if (ate <= H) st='PEDIR JÁ'; else if (ate <= addD(H,14)) st='PEDIR EM 2 SEM'; else st='OK';
+    if (saldo!==null && cons>0) sug = Math.max(0, Math.ceil(cons*(lm/7+4) - saldo - trans));
+    const ult = DB.saidas.filter(s => s.sku===k.sku).map(s=>s.data).sort().pop() || null;
+    return {...k, cont, qtdc, entr, sai, saldo, trans, kg: saldo!==null ? Math.round(saldo*pm) : null, pm, cons, cob, rup, lm, ate, st, sug, ult};
+  });
+}
+const ST = {'RECONTAR':['warn',0],'PEDIR JÁ':['bad',0],'PEDIR EM 2 SEM':['warn',1],'OK':['ok',2],'SEM CONTAGEM':['grey',3],'SEM CONSUMO':['grey',4]};
+const pill = (st) => `<span class="pill ${ST[st][0]}">${st}</span>`;
+
+/* =========================================================
+   Navegação
+   ========================================================= */
+let atual = (location.hash||'#inicio').slice(1).split('/')[0];
+let sub = (location.hash||'').split('/')[1] || 'estoque';
+function menu(){
+  document.getElementById('menu').innerHTML = MODS.map(m => m.sep ? '<hr>' :
+    `<button class="${m.id===atual?'on':''}" onclick="ir('${m.id}')"><span>${m.ic}</span>${m.nome}${m.tag?`<span class="tag">${m.tag}</span>`:(m.ph?'<span class="tag">em breve</span>':'')}</button>`).join('');
+}
+function ir(id, s){ atual = id; if (s) sub = s; location.hash = id + (id==='bobinas' ? '/'+sub : ''); document.getElementById('side').classList.remove('open'); render(); }
+window.addEventListener('hashchange', () => { const [a,b] = location.hash.slice(1).split('/'); if (a && a!==atual){ atual=a; if(b) sub=b; render(); } });
+
+function badgeFonte(){
+  const b = document.getElementById('badge');
+  b.hidden = !(atual==='bobinas' || atual==='inicio');
+  if (DB.fonte==='exemplo'){ b.className='badge demo'; b.textContent='dados de exemplo'; }
+  else { b.className='badge real'; b.textContent='planilha carregada · '+DB.fonte; }
+}
+
+function render(){
+  menu();
+  const m = MODS.find(x => x.id===atual) || MODS[0];
+  document.getElementById('title').textContent = m.ic+' '+m.nome;
+  badgeFonte();
+  document.getElementById('topActions').innerHTML = atual==='bobinas'
+    ? `<button class="btn" onclick="document.getElementById('fileIn').click()">Carregar planilha (.xlsx)…</button> <button class="btn" onclick="resetar()">Voltar ao exemplo</button>` : '';
+  const v = document.getElementById('view');
+  if (atual==='inicio') v.innerHTML = vInicio();
+  else if (atual==='bobinas') v.innerHTML = vBobinas();
+  else v.innerHTML = vPH(m);
+}
+
+/* =========================================================
+   Telas
+   ========================================================= */
+function vPH(m){
+  const p = PH[m.id] || {intro:'', hoje:'—', blocos:[]};
+  return `<div class="empty"><div class="ic">${m.ic}</div><b>${m.nome} — em construção</b><div>${esc(p.intro)}</div></div>
+  <div class="ph">${p.blocos.map(([t,itens]) => `<div class="card"><h3>${t}</h3><ul>${itens.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}</div>
+  <p class="note">Hoje isto vive em: <b>${esc(p.hoje)}</b>.${p.links?' Protótipos relacionados: '+p.links.map(([n,u])=>`<a href="${u}">${n}</a>`).join(' · '):''}</p>`;
+}
+
+function vInicio(){
+  const E = estoque();
+  const ja = E.filter(e=>e.st==='PEDIR JÁ'), br = E.filter(e=>e.st==='PEDIR EM 2 SEM');
+  const H = iso(hoje()); const s7 = DB.saidas.filter(s=>s.data>=addD(H,-6)).length;
+  const trans = DB.ent.filter(e=>e.status==='PEDIDO').reduce((a,e)=>a+Number(e.qtd||0),0);
+  const card = (ic,n,txt,id) => `<div class="card" style="cursor:pointer" onclick="ir('${id}')"><div style="font-size:22px">${ic}</div><b>${n}</b><div class="mut" style="font-size:13px;margin-top:4px">${txt}</div></div>`;
+  return `
+  <div class="grid kpis">
+    <div class="card kpi ${ja.length?'bad':''}"><div class="v">${ja.length}</div><div class="l">tipos de bobina para pedir já</div></div>
+    <div class="card kpi ${br.length?'warn':''}"><div class="v">${br.length}</div><div class="l">para pedir em 2 semanas</div></div>
+    <div class="card kpi"><div class="v">${trans}</div><div class="l">bobinas em trânsito</div></div>
+    <div class="card kpi"><div class="v">${s7}</div><div class="l">bobinas usadas nos últimos 7 dias</div></div>
+  </div>
+  ${ja.length?`<div class="banner"><b>Pedir já:</b> ${ja.map(e=>`${e.sku} (sugestão ${e.sug} bob.)`).join(' · ')}</div>`:''}
+  <div class="ph">
+    ${card('🧾','Pedidos','Pedidos do dia, atrasados e prontos para entregar.','pedidos')}
+    ${card('🏭','Produção','O que cada máquina está rodando agora.','producao')}
+    ${card('🧻','Bobinas','Estoque, consumo e quando comprar papel.','bobinas')}
+    ${card('💰','Financeiro','A receber, a pagar e caixa da semana.','financeiro')}
+    ${card('👥','Clientes','Quem passou do ciclo de recompra.','clientes')}
+    ${card('🚚','Fornecedores','Prazos reais e preço do papel.','fornecedores')}
+  </div>`;
+}
+
+function vBobinas(){
+  const tabs = [['estoque','Estoque'],['saidas','Saídas'],['entradas','Pedidos e entradas'],['inventario','Contagem'],['tipos','Tipos de bobina']];
+  const t = `<div class="subtabs">${tabs.map(([k,n])=>`<button class="${sub===k?'on':''}" onclick="ir('bobinas','${k}')">${n}</button>`).join('')}</div>`;
+  const ban = DB.fonte==='exemplo'
+    ? `<div class="banner">Dados <b>fictícios</b> para testar a tela. Para ver os reais: na planilha da Secretaria, <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>. O arquivo é lido só neste navegador — nada é enviado.</div>`
+    : `<div class="banner ok">Dados da planilha <b>${esc(DB.fonte)}</b>, lidos neste navegador. Edições feitas aqui não voltam para a planilha.</div>`;
+  const body = {estoque:bEstoque, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
+  return ban + t + body();
+}
+
+function bEstoque(){
+  const E = estoque().sort((a,b) => ST[a.st][1]-ST[b.st][1] || a.sku.localeCompare(b.sku));
+  const H = iso(hoje());
+  const n = (st) => E.filter(e=>e.st===st).length;
+  const sem = DB.saidas.filter(s=>!s.sku).length;
+  // semanas
+  const mon = (s) => { const d = new Date(s+'T00:00:00Z'); return addD(s, -((d.getUTCDay()+6)%7)); };
+  const sem7 = {}; DB.saidas.forEach(s => { if(s.data){ const k=mon(s.data); sem7[k]=(sem7[k]||0)+1; } });
+  const ks = Object.keys(sem7).sort(); const wk = [];
+  if (ks.length){ for (let k=ks[0]; k<=mon(H); k=addD(k,7)) wk.push([k, sem7[k]||0]); }
+  const mx = Math.max(1, ...wk.map(w=>w[1]));
+  const porSku = {}; DB.saidas.forEach(s => { const k = s.sku||'(sem tipo)'; porSku[k]=(porSku[k]||0)+1; });
+  const ps = Object.entries(porSku).sort((a,b)=>b[1]-a[1]); const mx2 = Math.max(1, ...ps.map(p=>p[1]));
+  return `
+  <div class="grid kpis">
+    <div class="card kpi ${n('PEDIR JÁ')?'bad':''}"><div class="v">${n('PEDIR JÁ')}</div><div class="l">pedir já</div></div>
+    <div class="card kpi ${n('PEDIR EM 2 SEM')?'warn':''}"><div class="v">${n('PEDIR EM 2 SEM')}</div><div class="l">pedir em 2 semanas</div></div>
+    <div class="card kpi"><div class="v">${n('SEM CONTAGEM')}</div><div class="l">tipos sem contagem</div></div>
+    <div class="card kpi ${sem?'warn':''}"><div class="v">${sem}</div><div class="l">saídas sem tipo</div></div>
+  </div>
+  <div class="card tw"><table>
+    <thead><tr><th>Status</th><th>Tipo</th><th class="n">Saldo (bob.)</th><th class="n">Saldo kg</th><th class="n">Em trânsito</th><th class="n">Consumo/sem.</th><th class="n">Cobertura (sem.)</th><th>Acaba em</th><th>Pedir até</th><th class="n">Sugestão (bob.)</th><th>Última saída</th></tr></thead>
+    <tbody>${E.map(e=>`<tr>
+      <td>${pill(e.st)}</td><td><b>${e.sku}</b> <span class="mut">${esc(e.tipo)}</span></td>
+      <td class="n">${e.saldo===null?'<span class="mut">sem contagem</span>':fmt(e.saldo)}</td><td class="n">${fmt(e.kg)}</td>
+      <td class="n">${fmt(e.trans)}</td><td class="n">${fmt(e.cons,2)}</td><td class="n">${fmt(e.cob,1)}</td>
+      <td>${dmy(e.rup)}</td><td>${dmy(e.ate)}</td><td class="n">${fmt(e.sug)}</td><td>${dmy(e.ult)}</td></tr>`).join('')}</tbody>
+  </table></div>
+  <p class="note">RECONTAR = saldo negativo: saiu mais bobina do que a contagem + entradas explicam (contagem errada ou entrada não registrada). Saldo = contagem + entradas recebidas − saídas depois da contagem. Consumo = saídas dos últimos 28 dias. Pedir até = hoje + (saldo + trânsito) ÷ consumo − (prazo de entrega + margem). Sugestão cobre o prazo + 4 semanas.</p>
+  <div class="two">
+    <div class="card"><b>Saídas por semana</b><div class="bars">${wk.map(([k,v])=>`<div class="b" title="Semana de ${dm(k)}: ${v}"><i style="height:${v/mx*100}%"><span>${v}</span></i>${dm(k)}</div>`).join('')}</div></div>
+    <div class="card"><b>Saídas por tipo</b><div style="margin-top:10px">${ps.map(([k,v])=>`<div class="hbar"><span>${esc(k)}</span><i style="width:${v/mx2*100}%;${k==='(sem tipo)'?'background:#bbb':''}"></i><span>${v}</span></div>`).join('')}</div></div>
+  </div>`;
+}
+
+function opcoesSku(sel){ return DB.skus.map(k=>`<option ${k.sku===sel?'selected':''}>${k.sku}</option>`).join(''); }
+
+function bSaidas(){
+  const rows = DB.saidas.slice().sort((a,b)=>(b.data+b.hora).localeCompare(a.data+a.hora));
+  return `
+  <form class="inline" onsubmit="addSaida(event)">
+    <label>Data<input type="date" name="data" value="${iso(hoje())}" required></label>
+    <label>Quem pegou<input name="autor" placeholder="Operador"></label>
+    <label>Tipo<select name="sku"><option value="">(sem tipo)</option>${opcoesSku()}</select></label>
+    <label>Peso kg<input name="peso" type="number" min="0"></label>
+    <button class="btn pri">Registrar saída</button>
+  </form>
+  <p class="note" style="margin-top:-4px;margin-bottom:10px">Na operação real as saídas chegam sozinhas pelo grupo GLOBO CONTROLE do WhatsApp. Este formulário é só para testar.</p>
+  <div class="card tw"><table>
+    <thead><tr><th>Data</th><th>Hora</th><th>Quem pegou</th><th>Tipo</th><th>Fornecedor</th><th class="n">Peso kg</th></tr></thead>
+    <tbody>${rows.map(s=>`<tr><td>${dmy(s.data)}</td><td>${esc(s.hora)}</td><td>${esc(s.autor)}</td><td>${s.sku?esc(s.sku):'<span class="pill warn">sem tipo</span>'}</td><td>${esc(s.fornecedor)||'—'}</td><td class="n">${fmt(s.peso)}</td></tr>`).join('') || '<tr><td colspan=6 class="mut">Nenhuma saída.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+function bEntradas(){
+  const rows = DB.ent.slice().sort((a,b)=>(b.pedido||'').localeCompare(a.pedido||''));
+  const stc = {PEDIDO:'warn', RECEBIDO:'ok', CANCELADO:'grey'};
+  return `
+  <form class="inline" onsubmit="addPedido(event)">
+    <label>Tipo<select name="sku" required>${opcoesSku()}</select></label>
+    <label>Bobinas<input name="qtd" type="number" min="1" required></label>
+    <label>Fornecedor<input name="fornecedor"></label>
+    <label>Pedido em<input type="date" name="pedido" value="${iso(hoje())}"></label>
+    <label>Previsão<input type="date" name="previsao"></label>
+    <button class="btn pri">Registrar pedido</button>
+  </form>
+  <div class="card tw"><table>
+    <thead><tr><th>Status</th><th>Pedido em</th><th>Previsão</th><th>Recebido em</th><th>Tipo</th><th>Fornecedor</th><th class="n">Bobinas</th><th class="n">Peso kg</th><th>NF</th><th></th></tr></thead>
+    <tbody>${rows.map((e)=>{ const i = DB.ent.indexOf(e); return `<tr><td><span class="pill ${stc[e.status]||'grey'}">${e.status}</span></td><td>${dmy(e.pedido)}</td><td>${dmy(e.previsao)}</td><td>${dmy(e.receb)}</td><td>${esc(e.sku)}</td><td>${esc(e.fornecedor)||'—'}</td><td class="n">${fmt(e.qtd)}</td><td class="n">${fmt(e.peso)}</td><td>${esc(e.nf)||'—'}</td>
+      <td>${e.status==='PEDIDO'?`<button class="btn" onclick="receber(${i})">Chegou</button>`:''}</td></tr>`; }).join('') || '<tr><td colspan=10 class="mut">Nenhum pedido.</td></tr>'}</tbody>
+  </table></div>
+  <p class="note">Pedido em aberto conta como “em trânsito” e adia o alerta de compra. Ao chegar, vira entrada e soma no saldo.</p>`;
+}
+
+function bInv(){
+  const rows = DB.inv.slice().sort((a,b)=>b.data.localeCompare(a.data)||a.sku.localeCompare(b.sku));
+  return `
+  <form class="inline" onsubmit="addInv(event)">
+    <label>Data da contagem<input type="date" name="data" value="${iso(hoje())}" required></label>
+    <label>Tipo<select name="sku" required>${opcoesSku()}</select></label>
+    <label>Bobinas<input name="qtd" type="number" min="0" required></label>
+    <label>Contado por<input name="por"></label>
+    <button class="btn pri">Registrar contagem</button>
+  </form>
+  <p class="note" style="margin-top:-4px;margin-bottom:10px">Vale a contagem mais recente de cada tipo, como fim do dia. Recontar de vez em quando corrige o que o WhatsApp deixou passar.</p>
+  <div class="card tw"><table>
+    <thead><tr><th>Data</th><th>Tipo</th><th class="n">Bobinas</th><th>Contado por</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td>${dmy(r.data)}</td><td>${esc(r.sku)}</td><td class="n">${fmt(r.qtd)}</td><td>${esc(r.por)||'—'}</td></tr>`).join('') || '<tr><td colspan=4 class="mut">Nenhuma contagem ainda.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+function bTipos(){
+  const E = estoque();
+  return `<div class="card tw"><table>
+    <thead><tr><th>Tipo</th><th>Papel</th><th class="n">Gramatura</th><th class="n">Largura cm</th><th>Fornecedor</th><th class="n">Prazo (dias)</th><th class="n">Margem (dias)</th><th class="n">Peso médio kg</th></tr></thead>
+    <tbody>${E.map(k=>`<tr><td><b>${k.sku}</b></td><td>${esc(k.tipo)}</td><td class="n">${fmt(k.gramatura)}</td><td class="n">${fmt(k.largura)}</td><td>${esc(k.fornecedor)}</td><td class="n">${fmt(k.lead)}</td><td class="n">${fmt(k.margem)}</td><td class="n">${fmt(k.pm)}</td></tr>`).join('')}</tbody>
+  </table></div>
+  <p class="note">Código = papel + gramatura + largura. KN kraft natural · KB kraft branco · MG monolúcido · G greaseproof · ST Strong.</p>`;
+}
+
+/* ações (só no navegador) */
+function fd(ev){ ev.preventDefault(); return Object.fromEntries(new FormData(ev.target)); }
+function addSaida(ev){ const f = fd(ev); const k = DB.skus.find(s=>s.sku===f.sku); const t = new Date(); DB.saidas.push({data:f.data, hora:String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'), autor:f.autor, sku:f.sku, fornecedor:k?k.fornecedor:'', peso:f.peso?Number(f.peso):null}); salvar(); render(); }
+function addPedido(ev){ const f = fd(ev); DB.ent.push({status:'PEDIDO', pedido:f.pedido, previsao:f.previsao, receb:'', sku:f.sku, fornecedor:f.fornecedor, qtd:Number(f.qtd), peso:'', nf:''}); salvar(); render(); }
+function receber(i){ DB.ent[i].status='RECEBIDO'; DB.ent[i].receb=iso(hoje()); salvar(); render(); }
+function addInv(ev){ const f = fd(ev); DB.inv.push({data:f.data, sku:f.sku, qtd:Number(f.qtd), por:f.por}); salvar(); render(); }
+function resetar(){ if (!confirm('Descartar os dados carregados e as edições e voltar ao exemplo?')) return; DB = exemplo(); try{localStorage.removeItem(LS);}catch(e){} render(); }
+
+/* =========================================================
+   Carregar a planilha da Secretaria (.xlsx) — só no navegador
+   ========================================================= */
+document.getElementById('fileIn').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), {cellDates:true});
+    const rows = (nome) => wb.Sheets[nome] ? XLSX.utils.sheet_to_json(wb.Sheets[nome], {header:1, raw:true, defval:''}).slice(1) : null;
+    const d = (v) => { if (v instanceof Date) return iso(new Date(Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()))); const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(v||'')); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+    const n = (v) => { if (typeof v==='number') return v; const x = Number(String(v||'').replace(/\./g,'').replace(',','.')); return String(v||'').trim()!=='' && isFinite(x) ? x : null; };
+    const hr = (v) => v instanceof Date ? String(v.getHours()).padStart(2,'0')+':'+String(v.getMinutes()).padStart(2,'0') : String(v||'');
+    const bob = rows('Bobinas'), sk = rows('Bob_SKU'), en = rows('Bob_Entradas'), iv = rows('Bob_Inventario');
+    if (!bob || !sk) throw new Error('Não achei as abas "Bobinas" e "Bob_SKU". É a planilha da Secretaria?');
+    DB = {
+      fonte: f.name,
+      skus: sk.filter(r=>r[0]).map(r=>({sku:String(r[0]), tipo:r[1], gramatura:n(r[2]), largura:n(r[3]), fornecedor:r[5], lead:n(r[7])??40, margem:n(r[8])??10})),
+      saidas: bob.filter(r=>r[0]).map(r=>({data:d(r[0]), hora:hr(r[1]), autor:r[2], sku:String(r[15]||''), fornecedor:r[9], peso:n(r[16])})),
+      ent: (en||[]).filter(r=>r[0]||r[4]).map(r=>({status:String(r[0]||'').toUpperCase(), pedido:d(r[1]), previsao:d(r[2]), receb:d(r[3]), sku:String(r[4]||''), fornecedor:r[5], qtd:n(r[6]), peso:n(r[7]), nf:r[8]})),
+      inv: (iv||[]).filter(r=>r[0] && r[1] && r[2]!=='').map(r=>({data:d(r[0]), sku:String(r[1]), qtd:n(r[2]), por:r[4]})),
+    };
+    salvar(); ir('bobinas','estoque');
+  } catch(e) { alert('Não consegui ler o arquivo: ' + e.message); }
+  ev.target.value = '';
+});
+
+render();
+</script>
+</body>
+</html>
