@@ -150,6 +150,14 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 #lmain{max-width:1100px;margin:0 auto;padding:22px 18px 60px}
 
 #vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+#linha{margin-top:30px} #linha:empty{display:none}
+#linha .lh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px} #linha .lh h3{margin:0;font-size:19px;text-transform:none;letter-spacing:0;color:#1f2933} #linha .lh span{color:#6b7480;font-size:13px}
+#linha .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+#linha .ft{background:#fff;border:1px solid #e3e8ee;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,40,80,.04)}
+#linha .ft b{display:block;font-size:14.5px;margin-bottom:6px} #linha .ft .mn{font-size:11.5px;color:#6b7480;margin-top:6px}
+#linha .ft table{width:100%;border-collapse:collapse;font-size:13px} #linha .ft td{padding:3px 0;border-top:1px dashed #e8edf3} #linha .ft tr:first-child td{border-top:0}
+#linha .ft td.tpr{text-align:right;font-weight:700;color:#1f5fae;white-space:nowrap} #linha .ft td.tpr small{font-weight:400;color:#8a9099}
+.cp .tabp{display:block;font-size:11px;font-weight:500;color:#6b7480;margin-top:2px}
 .card{background:var(--surf);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px rgba(25,45,80,.08);display:flex;flex-direction:column}
 .card .ilu{height:200px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 60%,#f6f9fd,#e3eaf3)}
 .card .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
@@ -374,7 +382,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
 </head>
 <body class="vloja">
 <div id="loja">
-  <div id="lbar">📦 Fabricação própria em Curitiba · Envio para todo o Brasil · Pedido mínimo: 1 milheiro</div>
+  <div id="lbar">📦 Fabricação própria em Curitiba · Envio para todo o Brasil · Pedido mínimo a partir de 5 mil unidades</div>
   <header id="ltop"><a class="logo" href="#loja" title="Embalagens Globo"><svg class="globo" viewBox="0 0 120 110" aria-hidden="true"><defs>
 <radialGradient id="gg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5bb8f0"/><stop offset=".55" stop-color="#2f7fd0"/><stop offset="1" stop-color="#1a3f9a"/></radialGradient>
 <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9ecef"/><stop offset="1" stop-color="#b9bfc6"/></linearGradient>
@@ -393,11 +401,12 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <div id="cats"></div>
     <div class="sech"><h2 id="sechT">Escolha o tamanho</h2><span id="sechN"></span></div>
     <div id="vitrine"></div>
+    <div id="linha"></div>
   </div>
   <footer id="lfoot"><div class="fl"><b>Embalagens Globo</b><span>Sacos de papel para padarias, confeitarias e lanchonetes.</span></div>
     <div><b>Atendimento</b><span>Seg a sex, 8h–18h</span><span>Curitiba · PR</span></div>
-    <div><b>Pagamento</b><span>Pix · Boleto · Cartão</span></div>
-    <div class="fd">Demonstração · preços e prazos ilustrativos</div></footer>
+    <div><b>Pagamento</b><span>Boleto 28 dias (mínimo R$ 250)</span><span>Pix: 5% antecipado · 3% na entrega</span></div>
+    <div class="fd">Preços da tabela 2026 por milheiro (bobinas por kg). Cliente com cupom do vendedor tem condição especial.</div></footer>
   <div id="veu"></div>
   <aside id="carrinho"><div class="dh">🛒 Seu carrinho <button id="fechacar" title="Fechar">×</button></div>
     <div id="carlista"></div>
@@ -2084,7 +2093,8 @@ function geraGabarito(o){
 }
 // Facas reais (OHDE), medidas extraídas dos PDFs em escala 1:1
 const CATEGORIAS = [
-  ['pao','🥖 Sacos de pão'], ['lanche','🍔 Lanches e porções'], ['envelope','✉️ Envelopes'], ['talher','🍴 Porta-talher']
+  ['pao','🥖 Sacos de pão'], ['lanche','🍔 Lanches e porções'], ['envelope','✉️ Envelopes'], ['talher','🍴 Porta-talher'],
+  ['lamina','🧻 Lâminas antigordura'], ['bandeja','🍰 Fundos de bandeja'], ['bobina','🎞️ Bobinas'], ['outros','🛍️ Outros sacos']
 ];
 const FACAS = [
   // Sacos de pão (sanfonados)
@@ -2113,8 +2123,20 @@ const FACAS = [
   {faca:'t65', cat:'talher', ref:'Porta Talher 6,5×27', nome:'Porta-talher 6,5 × 27', w:6.5, h:24, H:22.9, g:0, cola:2, ve:2.3, vd:4.2, abaL:1.4, abaF:2.5, fonte:'Gabarito Porta Talher 6,5x27cm.pdf', uso:'Talheres, guardanapo'},
   {faca:'t85', cat:'talher', ref:'Porta Talher 8,5×27', nome:'Porta-talher 8,5 × 27', w:8.5, h:24, H:22.95, g:0, cola:2, ve:4.3, vd:4.2, abaL:1.4, abaF:2.7, fonte:'Gabarito Porta Talher 8,5x27cm.pdf', uso:'Talheres, guardanapo, canudo'},
 ];
-const PAPEIS = {kraft:'Kraft natural', branco:'Branco monolúcido'};
-const FOTOS = __FOTOS__;  // foto do produto extraída do PDF da faca (chave = nome do PDF)
+const PAPEIS = {kraft:'Kraft pardo', branco:'Kraft branco'};
+const FOTOS = __FOTOS__;
+/* Catálogo completo (16-11-2026) — gerado por src/catalogo/gera_catalogo.py a partir das tabelas de preço do Start.
+   Itens SEM personalização online e sem foto. Preço = maior das Tabelas I/II/III × 1,10 (preço de quem não é cliente;
+   o cliente terá desconto pelo cupom do vendedor, que também mapeia a comissão). */
+const CAT_TAB = __CATALOGO_TAB__;
+const ITENS_TAB = CAT_TAB.itens;
+/* Preço de tabela das sacolas personalizáveis: faca → nome no catálogo; papel do site → linha da tabela
+   (kraft = kraft pardo K, branco = kraft branco KB; gramatura preferida 35 g, depois 30, depois 40). Sem par → preço ilustrativo. */
+const FACA_TAB = {f05:'Saco ½ kg', f900:'Saco 900 g', f1:'Saco 1 kg', f2:'Saco 2 kg', f3:'Saco 3 kg', f5:'Saco 5 kg', f75:'Saco 7,5 kg', f10:'Saco 10 kg', f15:'Saco 15 kg',
+  fbat120:'Saco batatinha', fbat180:'Saco batatinha', fsem:'Saco semente', fhb:'Saco hambúrguer', fham:'Saco hamburgão', f1317:'Saco 13,5 × 17,5 cm',
+  t65:'Porta-talher estreito', t85:'Porta-talher largo'};
+function itemTab(faca, papel){ const nome=FACA_TAB[faca]; if(!nome) return null; const pre=papel==='branco'?'KB':'K';
+  for(const g of ['35','30','40','32','60']){ const it=ITENS_TAB.find(i=>i.nome===nome && i.cod===pre+g); if(it) return it; } return null; }  // foto do produto extraída do PDF da faca (chave = nome do PDF)
 const CATALOGO = {};
 FACAS.forEach(f=>Object.keys(PAPEIS).forEach(pp=>{ const id=f.faca+'_'+pp;
   CATALOGO[id]=geraGabarito({...f, id, papel:pp, referencia:f.ref, nome:`${f.nome} · ${pp==='kraft'?'Kraft':'Branco'}`}); }));
@@ -2483,7 +2505,7 @@ function recomeca(){
 /* =====================================================================
    LOJA (fase 2): vitrine → carrinho → personalizar → pronto → finalizar
    ===================================================================== */
-const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
+const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const f=facaDe(id), it=f&&itemTab(f.faca,g.papel); if(it) return it.preco; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
 const facaDe = id=>FACAS.find(f=>id.startsWith(f.faca+'_'));
 const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm${f.g?` · sanfona ${String(f.g).replace('.',',')} cm`:''}. ${f.uso}.`; }});
 /* ---- Clichê (simulação de cobrança, preço ilustrativo) ----
@@ -2571,10 +2593,10 @@ function renderLoja(){
   sincroniza();
   if($('herosacos') && !$('herosacos').innerHTML) $('herosacos').innerHTML = ['f05_kraft','f5_branco','f3_kraft'].map((id,i)=>`<div style="transform:rotate(${[-8,0,7][i]}deg) translateY(${[18,0,24][i]}px)">${sacolaIlustra(id,[130,200,170][i])}</div>`).join('');
   design.papelSel = design.papelSel || {}; design.cat = design.cat || 'pao';
-  $('cats').innerHTML = CATEGORIAS.map(([k,n])=>`<button data-c="${k}" class="${k===design.cat?'on':''}">${n} <i>${FACAS.filter(f=>f.cat===k).length}</i></button>`).join('');
+  $('cats').innerHTML = CATEGORIAS.map(([k,n])=>`<button data-c="${k}" class="${k===design.cat?'on':''}">${n} <i>${FACAS.filter(f=>f.cat===k).length+ITENS_TAB.filter(i=>i.cat===k).length}</i></button>`).join('');
   $('cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{ design.cat=b.dataset.c; agendaSalvar(); renderLoja(); });
   const tituloCat = (CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1];
-  $('sechT').textContent = tituloCat.replace(/^\S+\s/,''); $('sechN').textContent = `${FACAS.filter(f=>f.cat===design.cat).length} modelos · kraft ou branco`;
+  $('sechT').textContent = tituloCat.replace(/^\S+\s/,''); { const nf=FACAS.filter(f=>f.cat===design.cat).length; $('sechT').parentNode.style.display=nf?'':'none'; $('sechN').textContent = `${nf} modelos para personalizar · kraft pardo ou branco`; }
   const altMax = Math.max(...FACAS.filter(f=>f.cat===design.cat).map(f=>f.h));
   $('vitrine').innerHTML = FACAS.filter(f=>f.cat===design.cat).map(f=>{
     const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
@@ -2584,7 +2606,7 @@ function renderLoja(){
         <div class="cn">${esc(f.nome)}</div>
         <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
         <div class="cd">${DESC[id]}</div>
-        <div class="cp">${brl(PRECO[id])} <span>/ milheiro · preço ilustrativo</span></div>
+        <div class="cp">${brl(PRECO[id])} <span>/ milheiro${(it=>it?'':' · preço ilustrativo')(itemTab(f.faca,pp))}</span>${(it=>it?`<span class="tabp">${esc(it.papel)}${it.minimo?' · pedido mínimo '+milhar(it.minimo):''}</span>`:'')(itemTab(f.faca,pp))}</div>
         <div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">milheiro${q>1?'s':''}</span></div>
         <div class="acts">
           <button data-a="add" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button>
@@ -2604,8 +2626,20 @@ function renderLoja(){
           <div style="display:flex;justify-content:flex-end;gap:8px"><button id="psX">Cancelar</button><button id="psOk" class="pri">🛒 Colocar no carrinho e personalizar</button></div>`); $('psX').onclick=fecha; $('psOk').onclick=()=>{ fecha(); vai(); }; } }
     });
   });
+  renderLinha();
   const n=design.carrinho.length; $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
   renderCarrinho();
+}
+const milhar = q => q>=1000 && q%1000===0 ? (q/1000)+' mil un.' : q.toLocaleString('pt-BR')+' un.';
+/* Linha completa da categoria (tabela de preços): uma ficha por produto, com os papéis e preços. Sem foto e sem personalização. */
+function renderLinha(){
+  const its=ITENS_TAB.filter(i=>i.cat===design.cat); if(!its.length){ $('linha').innerHTML=''; return; }
+  const grupos=[]; its.forEach(i=>{ let g=grupos.find(x=>x.nome===i.nome); if(!g) grupos.push(g={nome:i.nome, itens:[]}); g.itens.push(i); });
+  const tem=FACAS.some(f=>f.cat===design.cat), tit=(CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1].replace(/^\S+\s/,'');
+  $('linha').innerHTML = `<div class="lh"><h3>${tem?'Linha completa':tit}</h3><span>${its.length} ${its.length===1?'item':'itens'} · preço por ${its[0].un==='kg'?'kg':'milheiro'} · impressão sob pedido com o vendedor</span></div>
+    <div class="grade">${grupos.map(g=>{ const mins=[...new Set(g.itens.map(i=>i.minimo).filter(Boolean))];
+      return `<div class="ft"><b>${esc(g.nome)}</b><table>${g.itens.map(i=>`<tr><td>${esc(i.papel)}</td><td class="tpr">${brl(i.preco)} <small>/ ${i.un}</small></td></tr>`).join('')}</table>
+        ${mins.length?`<div class="mn">Pedido mínimo: ${mins.map(m=>typeof m==='number'?milhar(m):m).join(' / ')}${typeof mins[0]==='number'?' (1 cor)':''}</div>`:''}</div>`; }).join('')}</div>`;
 }
 function renderCarrinho(){
   const L=$('carlista');
