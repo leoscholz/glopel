@@ -4,7 +4,8 @@ Uso: python3 baixa_surishop.py [pasta_cache]
   1. Abre https://embalagensglobo.surishop.ai/catalog no Playwright (Node) e captura as respostas da API
      (/api/catalog/products/search e /api/catalog/top) → 81 produtos.
   2. Baixa a foto principal de cada um (blob público cbmstg) para a pasta de cache.
-  3. Recorta o branco em volta, reduz para no máx. 520 px e grava editor-sacolas/fotos_suri/<id>.webp.
+  3. Recorta o branco em volta, reduz para no máx. 520 px e grava editor-sacolas/fotos_suri/_orig/<id>.webp.
+     Depois rode python3 src/trata_fotos.py (cor/contraste) → fotos_suri/<id>.webp, que é o que o build usa.
   4. Grava catalogo/surishop_2025.json (id, nome, categoria Suri, preço Suri 2025, descrição).
 ATENÇÃO: preços dos SACOS no Suri são placeholders (10,00/10,01…) — a loja usa a tabela 2026 para eles.
 Plásticos e Gerais usam o preço Suri 2025 como REFERÊNCIA provisória (a confirmar com o Leo)."""
@@ -13,7 +14,7 @@ from PIL import Image, ImageChops
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CACHE = sys.argv[1] if len(sys.argv) > 1 else '/tmp/surishop'
 os.makedirs(os.path.join(CACHE, 'img'), exist_ok=True)
-FOTOS = os.path.join(AQUI, '..', '..', 'fotos_suri'); os.makedirs(FOTOS, exist_ok=True)
+FOTOS = os.path.join(AQUI, '..', '..', 'fotos_suri', '_orig'); os.makedirs(FOTOS, exist_ok=True)   # originais; o tratamento (src/trata_fotos.py) grava em fotos_suri/
 JS = r"""
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage();const R=[];
