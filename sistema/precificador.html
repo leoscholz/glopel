@@ -95,10 +95,9 @@ const FOLHA={'Saco ½ kg':33,'Saco 900 g':33,'Saco 1 kg':33,'Saco 2 kg':40,'Saco
  'Saco pipoca':33,'Saco pipoquinha':33,'Saco miniburger':28,'Saco baguete':33,'Saco baguete com visor':33,'Saco bijuteria':25,'Saco farmácia':25,'Saco nº 2':40,'Porta-sticks':20,
  'Saco churros grande 8,5 × 21 cm':20,'Saco churros pequeno 8,5 × 14 cm':20,'Saco 17,5 × 25 cm':54};
 const ALT_EXTRA={'Saco churros grande 8,5 × 21 cm':21.5,'Saco churros pequeno 8,5 × 14 cm':13.5,'Saco 17,5 × 25 cm':25,'Porta-sticks':16.5};
-const PAPEIS=[ // R$/kg da nota; est = sem nota (chute)
- ['K32','Kraft pardo 32 g',32,11.12,0],['K35','Kraft pardo 35 g',35,11.12,0],['K40','Kraft pardo 40 g',40,10.02,0],['K60','Kraft pardo 60 g',60,10.02,1],
- ['KB30','Kraft branco 30 g',30,13.61,0],['KB35','Kraft branco 35 g',35,12.59,0],['KB40','Kraft branco 40 g',40,12.24,0],
- ['M30','Monolúcido 30 g',30,11.00,0],['M40','Monolúcido 40 g',40,11.00,0],['N40','Semi kraft 38 g',38,7.50,1],['G32','Antigordura 32 g',32,17.00,0],['STRONG','Strong',55,7.00,1]];
+// R$/kg da nota por papel — vem do cofre do Sistema Globo (cifrado); esta página só funciona aberta pelo menu do sistema
+const PAPEIS=(()=>{ try { return window.parent!==window && window.parent.GLOPEL_PAPEIS; } catch(e) { return null; } })();
+if (!PAPEIS) { document.body.innerHTML='<div style="font:15px system-ui;padding:40px;text-align:center">🔒 O Precificador usa o preço do papel, que fica cifrado.<br><br><a href="./#precificador">Abrir pelo Sistema Globo</a> (pede a senha).</div>'; throw new Error('sem cofre'); }
 const FAM=[ // família de máquina: R$/hora, unidades/min, setup (h), lote típico (un)
  ['sp','Saco pequeno (< 27 cm)',150,300,1,30000],['sg','Saco grande (≥ 27 cm)',150,120,1,10000],['env','Envelope',150,250,1,20000],
  ['tal','Porta-talher / sticks',150,250,1,20000],['lam','Lâmina (corte)',120,600,0.5,10000],['band','Bandeja (corte)',120,400,0.5,10000]];
