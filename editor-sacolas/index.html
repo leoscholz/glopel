@@ -150,7 +150,9 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 #lmain{max-width:1100px;margin:0 auto;padding:22px 18px 60px}
 
 #vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-#linha{margin-top:30px} #linha:empty{display:none}
+.semfoto{display:flex;flex-direction:column;align-items:center;gap:6px;color:#9aa3ae} .semfoto span{font-size:46px;opacity:.55} .semfoto small{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+.card .soband{margin-top:auto;font-size:12.5px;color:#6b7480;background:#f4f7fb;border:1px dashed #d6dce4;border-radius:10px;padding:8px 10px;text-align:center}
+.card.cat-only .ilu{height:170px}
 #linha .lh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px} #linha .lh h3{margin:0;font-size:19px;text-transform:none;letter-spacing:0;color:#1f2933} #linha .lh span{color:#6b7480;font-size:13px}
 #linha .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 #linha .ft{background:#fff;border:1px solid #e3e8ee;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,40,80,.04)}
@@ -164,7 +166,7 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 .cn{font-weight:800;font-size:16px} .cd{color:var(--mute);font-size:13px;line-height:1.45} .cp{font-weight:800;font-size:17px} .cp span{font-weight:500;font-size:11.5px;color:var(--mute)}
 .ilu img.foto{max-width:88%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(20,40,80,.12))}
 .ilu img.foto.branco{filter:grayscale(1) brightness(1.55) contrast(.9) drop-shadow(0 6px 10px rgba(20,40,80,.12))}
-.papel{display:flex;gap:6px} .papel button{flex:1;padding:5px 6px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:center} .papel i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.2)} .papel button.on{font-weight:700}
+.papel{display:flex;gap:6px} .papel.vars{flex-wrap:wrap} .papel.vars button{flex:1 1 auto;white-space:nowrap;padding:5px 8px} .papel.vars i{flex:0 0 12px} .papel button{flex:1;padding:5px 6px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:center} .papel i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.2)} .papel button.on{font-weight:700}
 .qtdrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute)}
 .step{display:inline-flex;align-items:center;gap:8px} .step button{padding:4px 11px} .step b{min-width:22px;text-align:center;color:var(--ink)}
 .step.sm button{padding:2px 8px;font-size:12px} .step.sm span{font-size:12px;color:var(--mute)}
@@ -401,7 +403,6 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
     <div id="cats"></div>
     <div class="sech"><h2 id="sechT">Escolha o tamanho</h2><span id="sechN"></span></div>
     <div id="vitrine"></div>
-    <div id="linha"></div>
   </div>
   <footer id="lfoot"><div class="fl"><b>Embalagens Globo</b><span>Sacos de papel para padarias, confeitarias e lanchonetes.</span></div>
     <div><b>Atendimento</b><span>Seg a sex, 8h–18h</span><span>Curitiba · PR</span></div>
@@ -2509,7 +2510,7 @@ function recomeca(){
 /* =====================================================================
    LOJA (fase 2): vitrine → carrinho → personalizar → pronto → finalizar
    ===================================================================== */
-const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const f=facaDe(id), it=f&&itemTab(f.faca,g.papel); if(it) return it.preco; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
+const PRECO = new Proxy({}, {get:(_,id)=>{ const g=CATALOGO[id]; if(!g) return 0; const it=variacaoDe(id); if(it) return it.preco; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }});
 const facaDe = id=>FACAS.find(f=>id.startsWith(f.faca+'_'));
 const DESC = new Proxy({}, {get:(_,id)=>{ const f=facaDe(id), g=CATALOGO[id]; return `${PAPEIS[g.papel]} · frente ${String(f.w).replace('.',',')} × ${String(f.h).replace('.',',')} cm${f.g?` · sanfona ${String(f.g).replace('.',',')} cm`:''}. ${f.uso}.`; }});
 /* ---- Clichê (simulação de cobrança, preço ilustrativo) ----
@@ -2593,58 +2594,102 @@ function remCarrinho(id){
 }
 function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'); clearTimeout(d._t); d._t=setTimeout(()=>d.classList.remove('show'), ms||2600); }
 
+/* =====================================================================
+   VITRINE (17-11-2026): UM card por produto; os papéis da tabela são VARIAÇÕES dentro do card.
+   - Produto personalizável = faca OHDE (FACAS) + itens da tabela com o mesmo nome (FACA_TAB).
+     Papel da variação → papel do editor: K… e N… (pardo, semi kraft) → 'kraft'; KB… e G34 → 'branco'.
+     Papel do editor sem item na tabela → variação "preço ilustrativo" (o editor continua oferecendo).
+   - Produto só de catálogo = itens da tabela agrupados pelo nome; sem personalizar, sem carrinho (impressão com o vendedor).
+   - Foto: a da faca; nos itens de catálogo, reaproveitada quando a PROPORÇÃO bate (FOTO_REUSO), mesmo com medida diferente.
+   ===================================================================== */
+const FAMILIA = cod => /^KB/.test(cod) ? 'branco' : /^G/.test(cod) ? 'branco' : 'kraft';
+const COR_VAR = cod => /^KB/.test(cod) ? '#f3f0ea' : /^G/.test(cod) ? '#fbfaf6' : /^N/.test(cod) ? '#d9b98c' : /^STRONG/.test(cod) ? '#e9e6df' : '#c89a62';
+const NOME_FACA_TAB = {}; Object.entries(FACA_TAB).forEach(([fc,n])=>(NOME_FACA_TAB[n]=NOME_FACA_TAB[n]||[]).push(fc));
+/* Foto emprestada (chave = nome do PDF da faca). Proporção largura/altura do item ≈ a da faca (±10%). */
+const FOTO_REUSO = {
+  'Saco 13,5 × 21,5 cm':'Gabarito 0,5 Kg.pdf',          // 0,63 ≈ ½ kg 10×16 (0,63)
+  'Saco 17,5 × 25 cm':'Gabarito 13,5x17,5cm.pdf',        // 0,70 ≈ 0,77 (13,5×17,5) — mais próximo
+  'Envelope aberto 14 × 14 cm':'Gabarito Envelope 17x17cm.pdf',
+  'Envelope aberto 16,5 × 17,5 cm':'Gabarito Envelope 17x17cm.pdf',
+  'Envelope aberto 20 × 21,5 cm':'Gabarito Envelope 20x20cm.pdf',
+  'Envelope aberto 14 × 17,5 cm':'Gabarito Envelope 17x21cm.pdf',
+  'Envelope aberto 16,5 × 21 cm':'Gabarito Envelope 17x21cm.pdf',
+  'Envelope batatinha 10 × 12 cm':'Gabarito Envelope 17x21cm.pdf',
+  'Envelope fechado 18 × 21,5 cm':'Gabarito Envelope 17x21cm.pdf',
+  'Envelope aberto 16,5 × 25 cm':'Gabarito Envelope 17x25cm.pdf',
+  'Envelope fechado 16 × 26 cm':'Gabarito Envelope 17x25cm.pdf',
+};
+const ICONE_CAT = {pao:'🥖', lanche:'🍔', envelope:'✉️', talher:'🍴', lamina:'🧻', bandeja:'🍰', bobina:'🎞️', outros:'🛍️'};
+function altCm(nome){ const m=nome.match(/(\d+(?:,\d+)?)\s*×\s*(\d+(?:,\d+)?)/); return m?parseFloat(m[2].replace(',','.')):null; }
+const PRODUTOS = (()=>{
+  const L=[];
+  FACAS.forEach(f=>{ const its=ITENS_TAB.filter(i=>i.nome===FACA_TAB[f.faca]);
+    const v=its.map(i=>({k:i.id, papel:i.papel, cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}));
+    ['kraft','branco'].forEach(pp=>{ if(!v.some(x=>x.edit===pp)) v.push({k:'x_'+pp, papel:PAPEIS[pp], cod:pp==='kraft'?'K':'KB', preco:null, un:'milheiro', edit:pp, ilu:true}); });
+    v.sort((a,b)=>(a.edit===b.edit?0:a.edit==='kraft'?-1:1) || (a.ilu?1:0)-(b.ilu?1:0) || a.papel.localeCompare(b.papel,'pt',{numeric:true}));
+    L.push({key:f.faca, cat:f.cat, nome:f.nome, faca:f, foto:f.fonte, h:f.h, uso:f.uso, vars:v, minimo:(its.find(i=>i.minimo)||{}).minimo, nomeTab:FACA_TAB[f.faca]}); });
+  ITENS_TAB.filter(i=>!NOME_FACA_TAB[i.nome]).forEach(i=>{
+    // bobinas: um card por largura; lisa/timbrada/strong viram variações
+    const acab=i.cat==='bobina'?(i.nome.match(/ (lisa|timbrada)$/)||[])[1]:null, gNome=i.cat==='bobina'?i.nome.replace(/ (lisa|timbrada)$/,''):i.nome;
+    let p=L.find(x=>!x.faca && x.nome===gNome);
+    if(!p) L.push(p={key:i.id, cat:i.cat, nome:gNome, foto:FOTO_REUSO[gNome]||null, h:altCm(gNome), vars:[], minimo:i.minimo});
+    p.vars.push({k:i.id, papel:i.papel+(acab?' · '+acab:''), cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}); if(!p.minimo && i.minimo) p.minimo=i.minimo; });
+  return L; })();
+const produtoDaFaca = fc => PRODUTOS.find(p=>p.faca && p.faca.faca===fc);
+/* preço ilustrativo antigo (por área) — só para papel do editor que a tabela não tem */
+function precoIlustrativo(id){ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }
+function varDe(p){ design.varSel=design.varSel||{}; return p.vars.find(v=>v.k===design.varSel[p.key]) || p.vars.find(v=>!v.ilu) || p.vars[0]; }
+const precoVar = (p,v) => v.preco!=null ? v.preco : precoIlustrativo(p.faca.faca+'_'+v.edit);
 function renderLoja(){
   sincroniza();
-  if($('herosacos') && !$('herosacos').innerHTML) $('herosacos').innerHTML = ['f05_kraft','f5_branco','f3_kraft'].map((id,i)=>`<div style="transform:rotate(${[-8,0,7][i]}deg) translateY(${[18,0,24][i]}px)">${sacolaIlustra(id,[130,200,170][i])}</div>`).join('');
-  design.papelSel = design.papelSel || {}; design.cat = design.cat || 'pao';
-  $('cats').innerHTML = CATEGORIAS.map(([k,n])=>`<button data-c="${k}" class="${k===design.cat?'on':''}">${n} <i>${FACAS.filter(f=>f.cat===k).length+ITENS_TAB.filter(i=>i.cat===k).length}</i></button>`).join('');
+  design.cat = design.cat || 'pao'; design.varSel = design.varSel || {};
+  $('cats').innerHTML = CATEGORIAS.map(([k,n])=>`<button data-c="${k}" class="${k===design.cat?'on':''}">${n} <i>${PRODUTOS.filter(p=>p.cat===k).length}</i></button>`).join('');
   $('cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{ design.cat=b.dataset.c; agendaSalvar(); renderLoja(); });
+  const ps=PRODUTOS.filter(p=>p.cat===design.cat), nPers=ps.filter(p=>p.faca).length;
   const tituloCat = (CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1];
-  $('sechT').textContent = tituloCat.replace(/^\S+\s/,''); { const nf=FACAS.filter(f=>f.cat===design.cat).length; $('sechT').parentNode.style.display=nf?'':'none'; $('sechN').textContent = `${nf} modelos para personalizar · kraft pardo ou branco`; }
-  const altMax = Math.max(...FACAS.filter(f=>f.cat===design.cat).map(f=>f.h));
-  $('vitrine').innerHTML = FACAS.filter(f=>f.cat===design.cat).map(f=>{
-    const pp=design.papelSel[f.faca]||'kraft', id=f.faca+'_'+pp, g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, dentro=noCarrinho(id);
-    return `<div class="card" data-id="${id}" data-faca="${f.faca}">
-      <div class="ilu">${FOTOS[f.fonte] ? `<img class="foto ${pp}" src="${FOTOS[f.fonte]}" alt="${esc(f.nome)}" style="height:${Math.round(105+80*f.h/altMax)}px">` : sacolaIlustra(id, Math.max(56, 170*g.paineis.frente.h/altMax))}</div>
+  $('sechT').parentNode.style.display=''; $('sechT').textContent = tituloCat.replace(/^\S+\s/,'');
+  $('sechN').textContent = `${ps.length} produtos${nPers?` · ${nPers} personalizáve${nPers>1?'is':'l'} online`:''} · preço por ${ps[0]&&ps[0].vars[0].un==='kg'?'kg':'milheiro'}`;
+  const altMax = Math.max(...ps.map(p=>p.h||0), 1);
+  $('vitrine').innerHTML = ps.map(p=>{
+    const v=varDe(p), pers=!!p.faca, id=pers?p.faca.faca+'_'+v.edit:null, q=pers?((design.qtd&&design.qtd[id])||1):0, dentro=pers&&noCarrinho(id);
+    const hFoto = Math.round(105+80*(p.h||altMax*0.6)/altMax);
+    const ilu = p.foto && FOTOS[p.foto] ? `<img class="foto ${v.edit}" src="${FOTOS[p.foto]}" alt="${esc(p.nome)}" style="height:${hFoto}px">`
+      : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
+    const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : '';
+    return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
+      <div class="ilu">${ilu}</div>
       <div class="cb">
-        <div class="cn">${esc(f.nome)}</div>
-        <div class="papel">${Object.entries(PAPEIS).map(([k,n])=>`<button data-a="papel" data-p="${k}" class="${k===pp?'on':''}"><i style="background:${COR_PAPEL[k]}"></i>${n}</button>`).join('')}</div>
-        <div class="cd">${DESC[id]}</div>
-        <div class="cp">${brl(PRECO[id])} <span>/ milheiro${(it=>it?'':' · preço ilustrativo')(itemTab(f.faca,pp))}</span>${(it=>it?`<span class="tabp">${esc(it.papel)}${it.minimo?' · pedido mínimo '+milhar(it.minimo):''}</span>`:'')(itemTab(f.faca,pp))}</div>
-        <div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">milheiro${q>1?'s':''}</span></div>
+        <div class="cn">${esc(p.nome)}</div>
+        <div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>
+        ${desc?`<div class="cd">${desc}</div>`:''}
+        <div class="cp">${brl(precoVar(p,v))} <span>/ ${v.un}${v.ilu?' · preço ilustrativo':''}</span>${p.minimo?`<span class="tabp">Pedido mínimo ${typeof p.minimo==='number'?milhar(p.minimo)+' (1 cor)':p.minimo}</span>`:''}</div>
+        ${pers?`<div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">milheiro${q>1?'s':''}</span></div>
         <div class="acts">
           <button data-a="add" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button>
           <button data-a="pers">🎨 Personalizar</button>
-        </div>
+        </div>`:`<div class="soband">Impressão com a sua marca sob pedido com o vendedor.</div>`}
       </div></div>`; }).join('');
   $('vitrine').querySelectorAll('.card').forEach(c=>{
-    const id=c.dataset.id;
+    const p=PRODUTOS.find(x=>x.key===c.dataset.k);
     c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
-      design.qtd=design.qtd||{}; const q=design.qtd[id]||1;
-      if(bt.dataset.a==='papel'){ design.papelSel[c.dataset.faca]=bt.dataset.p; agendaSalvar(); renderLoja(); return; }
+      if(bt.dataset.a==='var'){ design.varSel[p.key]=bt.dataset.v; agendaSalvar(); renderLoja(); return; }
+      const v=varDe(p), id=p.faca.faca+'_'+v.edit; design.qtd=design.qtd||{}; const q=design.qtd[id]||1;
+      const marca=()=>{ design.variante=design.variante||{}; if(v.ilu) delete design.variante[id]; else design.variante[id]=v.k; };
       if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
       if(bt.dataset.a==='p'){ design.qtd[id]=Math.min(99,q+1); agendaSalvar(); renderLoja(); }
-      if(bt.dataset.a==='add'){ if(noCarrinho(id)){ abreCarrinho(); return; } addCarrinho(id,q); novaHistoria(); renderLoja(); toast(`🛒 <b>${esc(CATALOGO[id].nome)}</b> adicionada ao carrinho.`); }
-      if(bt.dataset.a==='pers'){ const vai=()=>{ addCarrinho(id,q); novaHistoria(); vaiEditor(id); };
-        if(noCarrinho(id)) vai(); else { modal(`${H3('🎨 Personalizar '+esc(CATALOGO[id].nome)+'?')}<div style="margin-bottom:12px">Para criar a arte, a sacola entra no carrinho com <b>${q} milheiro${q>1?'s':''}</b>. Você pode mudar a quantidade ou tirar depois.</div>
+      if(bt.dataset.a==='add'){ if(noCarrinho(id)){ abreCarrinho(); return; } marca(); addCarrinho(id,q); novaHistoria(); renderLoja(); toast(`🛒 <b>${esc(p.nome)} · ${esc(v.papel)}</b> adicionada ao carrinho.`); }
+      if(bt.dataset.a==='pers'){ const vai=()=>{ marca(); addCarrinho(id,q); novaHistoria(); vaiEditor(id); };
+        if(noCarrinho(id)) vai(); else { modal(`${H3('🎨 Personalizar '+esc(p.nome)+' · '+esc(v.papel)+'?')}<div style="margin-bottom:12px">Para criar a arte, a sacola entra no carrinho com <b>${q} milheiro${q>1?'s':''}</b>. Você pode mudar a quantidade ou tirar depois.</div>
           <div style="display:flex;justify-content:flex-end;gap:8px"><button id="psX">Cancelar</button><button id="psOk" class="pri">🛒 Colocar no carrinho e personalizar</button></div>`); $('psX').onclick=fecha; $('psOk').onclick=()=>{ fecha(); vai(); }; } }
     });
   });
-  renderLinha();
   const n=design.carrinho.length; $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
   renderCarrinho();
 }
 const milhar = q => q>=1000 && q%1000===0 ? (q/1000)+' mil un.' : q.toLocaleString('pt-BR')+' un.';
-/* Linha completa da categoria (tabela de preços): uma ficha por produto, com os papéis e preços. Sem foto e sem personalização. */
-function renderLinha(){
-  const its=ITENS_TAB.filter(i=>i.cat===design.cat); if(!its.length){ $('linha').innerHTML=''; return; }
-  const grupos=[]; its.forEach(i=>{ let g=grupos.find(x=>x.nome===i.nome); if(!g) grupos.push(g={nome:i.nome, itens:[]}); g.itens.push(i); });
-  const tem=FACAS.some(f=>f.cat===design.cat), tit=(CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1].replace(/^\S+\s/,'');
-  $('linha').innerHTML = `<div class="lh"><h3>${tem?'Linha completa':tit}</h3><span>${its.length} ${its.length===1?'item':'itens'} · preço por ${its[0].un==='kg'?'kg':'milheiro'} · impressão sob pedido com o vendedor</span></div>
-    <div class="grade">${grupos.map(g=>{ const mins=[...new Set(g.itens.map(i=>i.minimo).filter(Boolean))];
-      return `<div class="ft"><b>${esc(g.nome)}</b><table>${g.itens.map(i=>`<tr><td>${esc(i.papel)}</td><td class="tpr">${brl(i.preco)} <small>/ ${i.un}</small></td></tr>`).join('')}</table>
-        ${mins.length?`<div class="mn">Pedido mínimo: ${mins.map(m=>typeof m==='number'?milhar(m):m).join(' / ')}${typeof mins[0]==='number'?' (1 cor)':''}</div>`:''}</div>`; }).join('')}</div>`;
-}
+/* variação escolhida de uma sacola do carrinho (gramatura). Vale só se o papel do editor ainda bate (mudaPapel troca kraft↔branco). */
+function variacaoDe(id){ const b=idBase(id), k=design.variante&&design.variante[b], it=k&&ITENS_TAB.find(i=>i.id===k), g=CATALOGO[id];
+  if(it && g && FAMILIA(it.cod)===g.papel) return it; const f=facaDe(id); return f&&g?itemTab(f.faca,g.papel):null; }
 function renderCarrinho(){
   const L=$('carlista');
   if(!design.carrinho.length){ L.innerHTML='<div class="empty" style="padding:20px 4px">Seu carrinho está vazio. Escolha uma sacola ao lado.</div>'; $('cartotal').textContent=brl(0); $('finalizar').disabled=true; $('carmsg').textContent=''; return; }
@@ -2652,7 +2697,7 @@ function renderCarrinho(){
   L.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
     const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
     return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id); return FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
-      <div class="cim"><b>${esc(g.nome)}</b><div class="cist" style="color:${cor}">${ic} ${txt}</div>
+      <div class="cim"><b>${esc(g.nome.replace(/ · (Kraft|Branco)$/,''))}</b><div class="cist" style="color:#6b7480">${esc((variacaoDe(id)||{}).papel||PAPEIS[g.papel]+' · preço ilustrativo')}</div><div class="cist" style="color:${cor}">${ic} ${txt}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>${linhaCliche(id)}
         <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   const tc=totalCliches(); $('cartotal').innerHTML=brl(tot+tc)+(tc?`<small style="display:block;font-weight:400;font-size:11.5px;color:var(--mute);text-align:right">sacolas ${brl(tot)} + clichês ${brl(tc)}</small>`:'');
