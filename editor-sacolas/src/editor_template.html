@@ -597,6 +597,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- cores ---------- */
+function tintaOpaca(k){ const p=arte.paleta[k]; return !!(p && p.cmyk && p.cmyk.reduce((a,b)=>a+b,0)<=12); }   // branco e quase-branco: na flexo é tinta opaca
 function cmyk2hex(c){const [C,Mg,Y,K]=c.map(v=>v/100);const r=255*(1-C)*(1-K),g=255*(1-Mg)*(1-K),b=255*(1-Y)*(1-K);return '#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}
 function cor(chave, tinta=100){
   if(!chave) return 'none';
@@ -1829,15 +1830,19 @@ async function texturasSaco(){
   const svTinta = marcaSheet({px:PX, papel:'#ffffff', fundo:'#ffffff'});
   corOverride = k => k==='papel' ? '#e8e8e8' : '#6f6f6f';
   const svRug = marcaSheet({px:PX, papel:'#e8e8e8', fundo:'#e8e8e8'});
+  // tinta branca/clara é opaca (cobre o kraft): vai numa camada própria, por cima, sem "multiplicar"
+  const claras = Object.keys(arte.paleta).filter(tintaOpaca);
+  corOverride = k => claras.includes(k) ? cmyk2hex(arte.paleta[k].cmyk) : 'none';
+  const svOpaca = claras.length ? marcaSheet({px:PX, papel:'none'}) : null;
   corOverride = null;
   const chave = GAB.nome+'|'+W+'x'+H;
   let M = CACHE_MASCARA[chave];
   const pBase = svgCanvas(svBase, W, H), pTinta = svgCanvas(svTinta, W, H), pRug = svgCanvas(svRug, W, H);
   if(!M){ const [preto, alfa] = await Promise.all([svgCanvas(marcaSheet({px:PX, papel:'#000', semCamadas:true}), W, H), svgCanvas(marcaSheet({px:PX, papel:'#ffffff', fundo:'#000000', semCamadas:true}), W, H)]);
     M = CACHE_MASCARA[chave] = {preto, alfa}; }
-  const [arteC, tintaC, rugC] = await Promise.all([pBase, pTinta, pRug]);
+  const [arteC, tintaC, rugC, opacaC] = await Promise.all([pBase, pTinta, pRug, svOpaca ? svgCanvas(svOpaca, W, H) : null]);
   // tinta flexo é translúcida: base kraft + tintas em "multiplicar"
-  { const ax=arteC.getContext('2d'); ax.globalCompositeOperation='multiply'; ax.globalAlpha=0.95; ax.drawImage(tintaC,0,0); ax.globalAlpha=1; ax.globalCompositeOperation='destination-in'; ax.drawImage(M.preto,0,0); ax.globalCompositeOperation='source-over'; }
+  { const ax=arteC.getContext('2d'); ax.globalCompositeOperation='multiply'; ax.globalAlpha=0.95; ax.drawImage(tintaC,0,0); ax.globalAlpha=1; if(opacaC){ ax.globalCompositeOperation='source-over'; ax.globalAlpha=0.9; ax.drawImage(opacaC,0,0); ax.globalAlpha=1; } ax.globalCompositeOperation='destination-in'; ax.drawImage(M.preto,0,0); ax.globalCompositeOperation='source-over'; }
   const alphaC = M.alfa;
   // kraft de verdade: multiplica fibras/manchas sobre a arte
   const nz = M.nz || (M.nz = kraftNoise(W,H)), cx=arteC.getContext('2d');

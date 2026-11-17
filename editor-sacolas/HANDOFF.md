@@ -90,3 +90,6 @@ Publicar: GitHub = commit + push em `main` (Pages serve `editor-sacolas/index.ht
 5. **Contas reais de clientes** (cadastro por e-mail, 1 conta por padaria) e trocar/remover admin/admin antes de divulgar.
 6. Upload PDF/AI/EPS; editar item dentro de pasta; fotos reais do papel branco (envelope kraft hoje é foto tingida).
 7. Finalizar já grava o pedido (`tipo='feito'`) na conta do cliente; falta a Glopel ver TODOS os pedidos (painel interno, outra policy/tabela).
+
+- **Tinta branca no Produto final (17-11):** tintas claras (`tintaOpaca()`: soma CMYK ≤ 12) vão numa camada própria por cima do kraft, sem "multiplicar" — antes o branco sumia no 3D. Caso conhecido: um elemento escuro por cima de um branco não esconde o branco no 3D.
+- **Artes de clientes como presets (17-11):** Panetelli 5 kg vetorizada da prova CFC (potrace, 1:1 com a faca f5) e salva na conta admin como arte "Panetelli (prova CFC jun/25)". Padrão de trigo = camadas `fundo:true` por painel. Plano: `claude/Artes-Conversao-Plano.md` no Projeto.
