@@ -271,7 +271,17 @@ function estoque(){
     if (saldo===null) st='SEM CONTAGEM'; else if (saldo<0) st='RECONTAR'; else if (!(cons>0)) st='SEM CONSUMO'; else if (ate <= H) st='PEDIR JÁ'; else if (ate <= addD(H,14)) st='PEDIR EM 2 SEM'; else st='OK';
     if (saldo!==null && cons>0) sug = Math.max(0, Math.ceil(cons*(lm/7+4) - saldo - trans));
     const ult = DB.saidas.filter(s => s.sku===k.sku).map(s=>s.data).sort().pop() || null;
-    return {...k, cont, qtdc, entr, sai, saldo, trans, kg: saldo!==null ? Math.round(saldo*pm) : null, pm, cons, cob, rup, lm, ate, st, sug, ult};
+    // Confiança do status: quantas saídas sustentam o consumo, e se o lead time já foi medido (pedido → recebido)
+    const nJan = DB.saidas.filter(s => s.sku===k.sku && s.data >= jan0).length;
+    const leadMed = DB.ent.some(e => e.sku===k.sku && e.status==='RECEBIDO' && e.pedido && e.receb);
+    let conf = null;
+    if (saldo!==null && nJan>0){
+      if (saldo<=0) conf = nJan>=2 ? ['✅','alta','estoque zerado e consumo recorrente ('+nJan+' saídas)'] : ['⚠️','média','estoque zerado, mas só 1 saída registrada'];
+      else if (nJan>=4 && leadMed) conf = ['✅','alta',nJan+' saídas e prazo de entrega medido'];
+      else if (nJan>=2) conf = ['⚠️','média',nJan+' saídas'+(leadMed?'':'; prazo de entrega padrão (40+10 d), não medido')];
+      else conf = ['❓','baixa','consumo estimado de 1 saída só'+(leadMed?'':'; prazo de entrega padrão (40+10 d), não medido')];
+    }
+    return {...k, nJan, leadMed, conf, cont, qtdc, entr, sai, saldo, trans, kg: saldo!==null ? Math.round(saldo*pm) : null, pm, cons, cob, rup, lm, ate, st, sug, ult};
   });
 }
 const ST = {'RECONTAR':['warn',0],'PEDIR JÁ':['bad',0],'PEDIR EM 2 SEM':['warn',1],'OK':['ok',2],'SEM CONTAGEM':['grey',3],'SEM CONSUMO':['grey',4]};
@@ -470,11 +480,12 @@ function bEstoque(){
   <div class="card tw"><table>
     <thead><tr><th>Status</th><th>Tipo</th><th class="n">Saldo (bob.)</th><th class="n">Saldo kg</th><th class="n">Em trânsito</th><th class="n">Consumo/sem.</th><th class="n">Cobertura (sem.)</th><th>Acaba em</th><th>Pedir até</th><th class="n">Sugestão (bob.)</th><th>Última saída</th></tr></thead>
     <tbody>${E.map(e=>`<tr>
-      <td>${pill(e.st)}</td><td><b>${e.sku}</b> <span class="mut">${esc(e.tipo)}</span></td>
+      <td>${pill(e.st)}${e.conf?` <span title="Confiança ${e.conf[1]}: ${esc(e.conf[2])}" style="cursor:help">${e.conf[0]}</span>`:''}</td><td><b>${e.sku}</b> <span class="mut">${esc(e.tipo)}</span></td>
       <td class="n">${e.saldo===null?'<span class="mut">sem contagem</span>':fmt(e.saldo)}</td><td class="n">${fmt(e.kg)}</td>
       <td class="n">${fmt(e.trans)}</td><td class="n">${fmt(e.cons,2)}</td><td class="n">${fmt(e.cob,1)}</td>
       <td>${dmy(e.rup)}</td><td>${dmy(e.ate)}</td><td class="n">${fmt(e.sug)}</td><td>${dmy(e.ult)}</td></tr>`).join('')}</tbody>
   </table></div>
+  <p class="note">Confiança do status (passe o mouse no emoji): ✅ alta = estoque zerado com consumo recorrente, ou 4+ saídas no período com prazo de entrega medido · ⚠️ média = 2–3 saídas, ou zerado com 1 saída · ❓ baixa = consumo calculado de 1 saída só. Enquanto nenhum pedido de bobina for registrado como recebido, o prazo de entrega é o padrão de 40 + 10 dias e nada passa de ⚠️ (exceto estoque zerado).</p>
   <p class="note">RECONTAR = saldo negativo: saiu mais bobina do que a contagem + entradas explicam (contagem errada ou entrada não registrada). Saldo = contagem + entradas recebidas − saídas depois da contagem. Consumo = saídas dos últimos 28 dias. Pedir até = hoje + (saldo + trânsito) ÷ consumo − (prazo de entrega + margem). Sugestão cobre o prazo + 4 semanas.</p>
   <div class="two">
     <div class="card"><b>Saídas por semana</b><div class="bars">${wk.map(([k,v])=>`<div class="b" title="Semana de ${dm(k)}: ${v}"><i style="height:${v/mx*100}%"><span>${v}</span></i>${dm(k)}</div>`).join('')}</div></div>
