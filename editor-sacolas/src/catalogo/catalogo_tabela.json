@@ -1,5 +1,5 @@
 {
- "gerado": "tabelas do Start: TABELA PREÇOS GLOBO 2026 (25-08-2026), Lâminas e Envelopes (30-06-2026)",
+ "gerado": "fonte de verdade (17-11-2026): 16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx + 5c6537b6-TABELA_ANTIGORDURA_2026.xlsx",
  "fator": 1.1,
  "itens": [
   {
@@ -13,10 +13,11 @@
     58.0,
     55.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_k35_k35_1_2_kg",
@@ -29,10 +30,11 @@
     63.0,
     57.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_1_2_kg",
@@ -45,10 +47,11 @@
     72.0,
     65.6
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_1_2_kg",
@@ -61,10 +64,11 @@
     71.0,
     64.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_1_2kg",
@@ -77,14 +81,15 @@
     82.0,
     80.9
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_n40_n40_1_2_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 46.2,
    "un": "milheiro",
@@ -93,10 +98,28 @@
     35.8,
     34.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco ½ kg",
    "cat": "pao",
-   "minimo": 15000
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_1_2_kg",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 122.1,
+   "un": "milheiro",
+   "tab": [
+    111.0,
+    104.0,
+    99.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco ½ kg",
+   "cat": "pao",
+   "minimo": 15000,
+   "medidas": "9,5 × 18,5 × 5,5"
   },
   {
    "id": "c_k35_k35_900_grs",
@@ -109,9 +132,10 @@
     73.0,
     69.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 900 g",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_900grs",
@@ -124,9 +148,10 @@
     86.2,
     75.2
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco 900 g",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_900_grs",
@@ -139,9 +164,10 @@
     88.6,
     78.9
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 900 g",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_900grs",
@@ -154,13 +180,14 @@
     90.0,
     85.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco 900 g",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
   },
   {
    "id": "c_n40_n40_900grs",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 57.2,
    "un": "milheiro",
@@ -169,9 +196,26 @@
     45.0,
     42.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 900 g",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_900grs",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 145.2,
+   "un": "milheiro",
+   "tab": [
+    132.0,
+    126.0,
+    120.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 900 g",
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5"
   },
   {
    "id": "c_k32_k32_1kg",
@@ -184,10 +228,11 @@
     78.0,
     74.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_k35_k35_1_kg",
@@ -200,10 +245,11 @@
     83.0,
     77.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_1_kg",
@@ -216,10 +262,11 @@
     88.3,
     77.3
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_1_kg",
@@ -232,10 +279,11 @@
     93.8,
     88.5
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_1_kg",
@@ -248,14 +296,15 @@
     118.8,
     114.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_n40_n40_1_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 61.38,
    "un": "milheiro",
@@ -264,10 +313,28 @@
     49.0,
     46.5
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 1 kg",
    "cat": "pao",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_1_kg",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 160.05,
+   "un": "milheiro",
+   "tab": [
+    145.5,
+    139.4,
+    133.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 1 kg",
+   "cat": "pao",
+   "minimo": 10000,
+   "medidas": "9,5 × 26,5 × 5,5"
   },
   {
    "id": "c_k32_k32_2kg",
@@ -280,10 +347,11 @@
     103.0,
     97.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_k35_k35_2kg",
@@ -296,10 +364,11 @@
     105.0,
     99.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_kb30_kb30_2_kg",
@@ -312,10 +381,11 @@
     113.4,
     102.4
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_kb35_kb35_2_kg",
@@ -328,10 +398,11 @@
     125.4,
     116.9
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_kb40_kb40_2_kg",
@@ -344,14 +415,15 @@
     155.0,
     146.8
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_n40_n40_2_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 89.87,
    "un": "milheiro",
@@ -360,10 +432,28 @@
     70.8,
     68.2
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 2 kg",
    "cat": "pao",
-   "minimo": 8000
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
+  },
+  {
+   "id": "c_g34sac_2_kg",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 245.3,
+   "un": "milheiro",
+   "tab": [
+    223.0,
+    210.0,
+    199.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 2 kg",
+   "cat": "pao",
+   "minimo": 8000,
+   "medidas": "13,5 × 31 × 5,5"
   },
   {
    "id": "c_k32_k32_3kg",
@@ -376,10 +466,11 @@
     130.0,
     124.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco 3 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "16 × 37 × 6,0"
   },
   {
    "id": "c_k35_k35_3_kg",
@@ -392,10 +483,11 @@
     156.0,
     136.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 3 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "16 × 37 × 6,0"
   },
   {
    "id": "c_kb35_kb35_3_kg",
@@ -408,14 +500,15 @@
     168.8,
     162.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 3 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "16 × 37 × 6,0"
   },
   {
    "id": "c_n40_n40_3_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 119.57,
    "un": "milheiro",
@@ -424,10 +517,11 @@
     94.5,
     89.7
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 3 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "16 × 37 × 6,0"
   },
   {
    "id": "c_k32_k32_5kg",
@@ -440,10 +534,11 @@
     184.0,
     176.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco 5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "17,5 × 43 × 8,5"
   },
   {
    "id": "c_k35_k35_5_kg",
@@ -456,10 +551,11 @@
     212.0,
     198.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "17,5 × 43 × 8,5"
   },
   {
    "id": "c_kb35_kb35_5_kg",
@@ -472,14 +568,15 @@
     224.4,
     214.8
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "17,5 × 43 × 8,5"
   },
   {
    "id": "c_n40_n40_5_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 159.5,
    "un": "milheiro",
@@ -488,10 +585,11 @@
     125.7,
     119.5
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "17,5 × 43 × 8,5"
   },
   {
    "id": "c_k32_k32_7_5_kg",
@@ -504,10 +602,11 @@
     247.0,
     232.0
    ],
-   "fonte": "tabela2026.xlsx › k32 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k32 sacos de papel",
    "nome": "Saco 7,5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 52,5 × 8,5"
   },
   {
    "id": "c_k35_k35_7_5_kg",
@@ -520,10 +619,11 @@
     263.0,
     252.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 7,5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 52,5 × 8,5"
   },
   {
    "id": "c_kb35_kb35_7_5kg",
@@ -536,14 +636,15 @@
     304.0,
     292.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 7,5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 52,5 × 8,5"
   },
   {
    "id": "c_n40_n40_7_5kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 215.16,
    "un": "milheiro",
@@ -552,10 +653,11 @@
     170.6,
     161.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 7,5 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 52,5 × 8,5"
   },
   {
    "id": "c_k35_k35_10_kg",
@@ -568,10 +670,11 @@
     322.0,
     307.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 10 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 56,5 × 10,5"
   },
   {
    "id": "c_kb35_kb35_10_kg",
@@ -584,14 +687,15 @@
     360.0,
     348.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco 10 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 56,5 × 10,5"
   },
   {
    "id": "c_n40_n40_10_kg",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 239.8,
    "un": "milheiro",
@@ -600,10 +704,11 @@
     189.0,
     182.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 10 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "20 × 56,5 × 10,5"
   },
   {
    "id": "c_k40_k40_15_kg_sacos_de_papel_kraft",
@@ -616,10 +721,11 @@
     402.0,
     378.0
    ],
-   "fonte": "tabela2026.xlsx › k40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 sacos de papel",
    "nome": "Saco 15 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "24,5 × 63,5 × 10,5"
   },
   {
    "id": "c_kb40_kb40_15_kg",
@@ -632,10 +738,11 @@
     514.5,
     488.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco 15 kg",
    "cat": "pao",
-   "minimo": 5000
+   "minimo": 5000,
+   "medidas": "24,5 × 63,5 × 10,5"
   },
   {
    "id": "c_k35_k35_baguete_longo",
@@ -648,9 +755,10 @@
     209.0,
     192.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco baguete",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0"
   },
   {
    "id": "c_kb35_kb35_baguete",
@@ -663,9 +771,10 @@
     196.2,
     189.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco baguete",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0"
   },
   {
    "id": "c_k35_k35_baguete_visor",
@@ -678,9 +787,10 @@
     234.0,
     217.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco baguete com visor",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0"
   },
   {
    "id": "c_kb35_kb35_baguete_viso",
@@ -693,9 +803,10 @@
     233.5,
     220.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco baguete com visor",
-   "cat": "pao"
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0"
   },
   {
    "id": "c_k40_porta_sticks_kraft_pardo_40grs",
@@ -708,7 +819,7 @@
     60.0,
     56.3
    ],
-   "fonte": "tabela2026.xlsx › k40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 sacos de papel",
    "nome": "Porta-sticks",
    "cat": "lanche"
   },
@@ -723,10 +834,11 @@
     77.6,
     69.2
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 17,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 17,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_13_5_x17_5",
@@ -739,10 +851,11 @@
     82.5,
     78.8
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 17,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 17,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_13_5_x_17_5",
@@ -755,10 +868,28 @@
     89.4,
     84.5
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 17,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 17,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_13_5_x_17_5",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 156.42,
+   "un": "milheiro",
+   "tab": [
+    142.2,
+    133.4,
+    130.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 13,5 × 17,5 cm",
+   "cat": "lanche",
+   "minimo": 10000,
+   "medidas": "13,5 × 17,5 × 5,5"
   },
   {
    "id": "c_k35_k35_13_5_x_21_5_cm",
@@ -771,10 +902,11 @@
     96.0,
     92.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 21,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 21,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_13_5x21_5",
@@ -787,10 +919,11 @@
     89.6,
     81.2
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 21,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 21,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_13_5_x_21_5",
@@ -803,10 +936,11 @@
     103.0,
     97.0
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 21,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 21,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_13_5_x_21_5",
@@ -819,10 +953,43 @@
     110.0,
     107.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 13,5 × 21,5 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 21,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_13_5_x_21_5",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 187.66,
+   "un": "milheiro",
+   "tab": [
+    170.6,
+    164.6,
+    156.4
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 13,5 × 21,5 cm",
+   "cat": "lanche",
+   "minimo": 10000,
+   "medidas": "13,5 × 21,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_13_5_x_27_cm",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 244.2,
+   "un": "milheiro",
+   "tab": [
+    222.0,
+    212.0,
+    203.5
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco 13,5 × 27 cm",
+   "cat": "lanche"
   },
   {
    "id": "c_k35_k35_17_5x25",
@@ -835,7 +1002,7 @@
     135.0,
     112.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "cat": "lanche",
    "nome": "Saco 17,5 × 25 cm"
   },
@@ -850,10 +1017,75 @@
     53.4,
     49.7
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco batatinha",
    "cat": "lanche",
-   "minimo": 20000
+   "minimo": 20000,
+   "medidas": "10 × 12 × 6,0"
+  },
+  {
+   "id": "c_g34sac_batatinha_120grs",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 71.5,
+   "un": "milheiro",
+   "tab": [
+    65.0,
+    59.3,
+    56.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco batatinha 120 g",
+   "cat": "lanche",
+   "minimo": 20000,
+   "medidas": "10 × 12 × 4,0"
+  },
+  {
+   "id": "c_g34sac_batatinha_180grs",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 74.8,
+   "un": "milheiro",
+   "tab": [
+    68.0,
+    63.0,
+    59.9
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco batatinha 180 g",
+   "cat": "lanche",
+   "minimo": 20000,
+   "medidas": "10 × 12 × 6,5"
+  },
+  {
+   "id": "c_g34sac_churros_grande_8_5_x_21cm",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 109.67,
+   "un": "milheiro",
+   "tab": [
+    99.7,
+    96.2,
+    92.7
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco churros grande 8,5 × 21 cm",
+   "cat": "lanche"
+  },
+  {
+   "id": "c_g34sac_churros_pequeno_8_5_x_14_cm",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 74.14,
+   "un": "milheiro",
+   "tab": [
+    67.4,
+    64.1,
+    60.2
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco churros pequeno 8,5 × 14 cm",
+   "cat": "lanche"
   },
   {
    "id": "c_k35_k35_hamburg_o",
@@ -866,10 +1098,11 @@
     63.0,
     59.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco hamburgão",
    "cat": "lanche",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 13,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_hamburgao",
@@ -882,10 +1115,11 @@
     57.5,
     52.9
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco hamburgão",
    "cat": "lanche",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 13,5 × 5,5"
   },
   {
    "id": "c_kb35_kb35_hamburg_o",
@@ -898,10 +1132,11 @@
     64.3,
     58.7
    ],
-   "fonte": "tabela2026.xlsx › kb35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco hamburgão",
    "cat": "lanche",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 13,5 × 5,5"
   },
   {
    "id": "c_kb40_kb40_hamburgao",
@@ -914,10 +1149,28 @@
     78.0,
     68.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco hamburgão",
    "cat": "lanche",
-   "minimo": 10000
+   "minimo": 10000,
+   "medidas": "13,5 × 13,5 × 5,5"
+  },
+  {
+   "id": "c_g34sac_hamburgao_14_x_14",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 119.13,
+   "un": "milheiro",
+   "tab": [
+    108.3,
+    103.92,
+    98.45
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco hamburgão",
+   "cat": "lanche",
+   "minimo": 10000,
+   "medidas": "13,5 × 13,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_hamburger",
@@ -930,10 +1183,11 @@
     50.2,
     47.0
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco hambúrguer",
    "cat": "lanche",
-   "minimo": 20000
+   "minimo": 20000,
+   "medidas": "9,5 × 13,5 × 6,5"
   },
   {
    "id": "c_kb40_kb40_hamburger",
@@ -946,10 +1200,28 @@
     60.8,
     58.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco hambúrguer",
    "cat": "lanche",
-   "minimo": 20000
+   "minimo": 20000,
+   "medidas": "9,5 × 13,5 × 6,5"
+  },
+  {
+   "id": "c_g34sac_hamburger",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 108.9,
+   "un": "milheiro",
+   "tab": [
+    99.0,
+    93.2,
+    90.0
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco hambúrguer",
+   "cat": "lanche",
+   "minimo": 20000,
+   "medidas": "9,5 × 13,5 × 6,5"
   },
   {
    "id": "c_kb30_kb30_miniburger",
@@ -962,9 +1234,10 @@
     40.6,
     36.8
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco miniburger",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "8 × 13,5 × 4,5"
   },
   {
    "id": "c_k35_k35_pipoca",
@@ -977,13 +1250,14 @@
     58.0,
     54.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco pipoca",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "9,5 × 17 × 5,5"
   },
   {
    "id": "c_n40_n40_pipoca",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 41.8,
    "un": "milheiro",
@@ -992,9 +1266,10 @@
     33.0,
     31.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco pipoca",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "9,5 × 17 × 5,5"
   },
   {
    "id": "c_k35_k35_pipoquinha",
@@ -1007,13 +1282,14 @@
     50.0,
     45.0
    ],
-   "fonte": "tabela2026.xlsx › k35 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco pipoquinha",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "9,5 × 13,5 × 5,5"
   },
   {
    "id": "c_n40_n40_pipoquinha",
-   "papel": "Semi kraft 40 g",
+   "papel": "Semi kraft 38 g",
    "cod": "N40",
    "preco": 34.1,
    "un": "milheiro",
@@ -1022,9 +1298,10 @@
     26.0,
     25.0
    ],
-   "fonte": "tabela2026.xlsx › n40 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco pipoquinha",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "9,5 × 13,5 × 5,5"
   },
   {
    "id": "c_kb30_kb30_semente",
@@ -1037,13 +1314,31 @@
     29.7,
     28.2
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco semente",
    "cat": "lanche",
-   "minimo": 20000
+   "minimo": 20000,
+   "medidas": "5,5 × 12 × 4,5"
   },
   {
-   "id": "c_g34env_g34_env_aber_14x14",
+   "id": "c_g34sac_semente",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 61.05,
+   "un": "milheiro",
+   "tab": [
+    55.5,
+    53.6,
+    51.7
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco semente",
+   "cat": "lanche",
+   "minimo": 20000,
+   "medidas": "5,5 × 12 × 4,5"
+  },
+  {
+   "id": "c_g34env_aberto_14cm_x_14cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 113.3,
@@ -1053,14 +1348,14 @@
     96.8,
     93.2
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316134",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 14 × 14 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898936316134"
   },
   {
-   "id": "c_g34env_g34_env_aber_14x17_5",
+   "id": "c_g34env_aberto_14cm_x_17_5cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 128.7,
@@ -1070,14 +1365,14 @@
     108.0,
     105.0
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316141",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 14 × 17,5 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898936316141"
   },
   {
-   "id": "c_g34env_g34_env_aber_16_5x17",
+   "id": "c_g34env_aberto_16_5cm_x_17_5cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 159.5,
@@ -1087,14 +1382,14 @@
     134.5,
     128.4
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929450142",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 16,5 × 17,5 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898929450142"
   },
   {
-   "id": "c_g34env_g34_env_aber_16_5x21",
+   "id": "c_g34env_aberto_16_5cm_x_21cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 169.4,
@@ -1104,14 +1399,14 @@
     145.0,
     140.0
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929451767",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 16,5 × 21 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898929451767"
   },
   {
-   "id": "c_g34env_g34_env_aber_16_5x25",
+   "id": "c_g34env_aberto_16_5cm_x_25_cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 190.96,
@@ -1121,14 +1416,14 @@
     161.3,
     155.7
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929450746",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 16,5 × 25 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898929450746"
   },
   {
-   "id": "c_g34env_g34_env_aber_20x21",
+   "id": "c_g34env_aberto_20cm_x_21_5cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 181.5,
@@ -1138,14 +1433,14 @@
     154.0,
     150.0
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316790",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope aberto 20 × 21,5 cm",
-   "minimo": 20000
+   "minimo": 20000,
+   "ean": "7898936316790"
   },
   {
-   "id": "c_g34env_g34_env_fech_10x12",
+   "id": "c_g34env_batatinha_10_x_12",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 67.76,
@@ -1155,14 +1450,14 @@
     54.8,
     53.7
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316370",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope batatinha 10 × 12 cm",
-   "minimo": 15000
+   "minimo": 15000,
+   "ean": "7898936316370"
   },
   {
-   "id": "c_g34env_g34_env_fech_14x26",
+   "id": "c_g34env_fechado_16cm_x_25cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 213.07,
@@ -1172,14 +1467,14 @@
     180.3,
     173.6
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316295",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
-   "nome": "Envelope fechado 16 × 26 cm",
-   "minimo": 15000
+   "nome": "Envelope fechado 16 × 25 cm",
+   "minimo": 15000,
+   "ean": "7898936316295"
   },
   {
-   "id": "c_g34env_g34_env_fech_18x21_5",
+   "id": "c_g34env_fechado_18cm_x_21_5cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 147.84,
@@ -1189,31 +1484,14 @@
     123.2,
     112.0
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898936316288",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
    "nome": "Envelope fechado 18 × 21,5 cm",
-   "minimo": 15000
+   "minimo": 15000,
+   "ean": "7898936316288"
   },
   {
-   "id": "c_g34env_g34_hot_dog_24x15",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
-   "preco": 183.26,
-   "un": "milheiro",
-   "tab": [
-    166.6,
-    161.7,
-    155.5
-   ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929450197",
-   "cat": "envelope",
-   "nome": "Envelope hot dog 24,5 × 15 cm",
-   "minimo": 15000
-  },
-  {
-   "id": "c_g34env_g34_hot_dog_24_5x17",
+   "id": "c_g34env_padr_o_hot_dog_24_5cm_x_16_5_cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 167.2,
@@ -1223,28 +1501,28 @@
     142.0,
     136.6
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929449610",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
-   "nome": "Envelope hot dog 24,5 × 16 cm",
-   "minimo": 15000
+   "nome": "Envelope hot dog 24,5 × 16,5 cm",
+   "minimo": 15000,
+   "ean": "7898929449610"
   },
   {
-   "id": "c_g34env_g34_hot_dog_24x19",
+   "id": "c_g34env_padr_o_hot_dog_24_5_x_21_5cm",
    "papel": "Antigordura 34 g",
    "cod": "G34",
-   "preco": 235.4,
+   "preco": 183.26,
    "un": "milheiro",
    "tab": [
-    214.0,
-    199.7,
-    192.0
+    166.6,
+    161.7,
+    155.5
    ],
-   "fonte": "envelopes.xls",
-   "ean": "7898929450111",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › ENVELOPES ANTIGORDURA",
    "cat": "envelope",
-   "nome": "Envelope hot dog 24,5 × 19 cm",
-   "minimo": 15000
+   "nome": "Envelope hot dog 24,5 × 21,5 cm",
+   "minimo": 15000,
+   "ean": "7898929450197"
   },
   {
    "id": "c_porta_k40_talheres_estreito_pardo",
@@ -1257,7 +1535,7 @@
     55.0,
     53.0
    ],
-   "fonte": "tabela2026.xlsx › porta talheres",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › porta talheres",
    "cat": "talher",
    "nome": "Porta-talher estreito",
    "minimo": 10000
@@ -1273,7 +1551,7 @@
     58.9,
     56.9
    ],
-   "fonte": "tabela2026.xlsx › porta talheres",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › porta talheres",
    "cat": "talher",
    "nome": "Porta-talher estreito",
    "minimo": 10000
@@ -1289,7 +1567,7 @@
     64.0,
     62.0
    ],
-   "fonte": "tabela2026.xlsx › porta talheres",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › porta talheres",
    "cat": "talher",
    "nome": "Porta-talher largo",
    "minimo": 10000
@@ -1305,7 +1583,7 @@
     67.9,
     63.8
    ],
-   "fonte": "tabela2026.xlsx › porta talheres",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › porta talheres",
    "cat": "talher",
    "nome": "Porta-talher largo",
    "minimo": 10000
@@ -1321,13 +1599,13 @@
     67.0,
     65.0
    ],
-   "fonte": "tabela2026.xlsx › porta talheres",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › porta talheres",
    "cat": "talher",
    "nome": "Porta-talher largo",
    "minimo": 10000
   },
   {
-   "id": "c_g34lam_l_minas_g34_10x15",
+   "id": "c_g34lam_10x15",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 28.82,
@@ -1337,14 +1615,14 @@
     25.2,
     24.1
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451873",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 10 × 15 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451873"
   },
   {
-   "id": "c_g34lam_l_minas_g34_14x14",
+   "id": "c_g34lam_14x14",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 43.34,
@@ -1354,14 +1632,14 @@
     35.0,
     30.0
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936317582",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 14 × 14 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936317582"
   },
   {
-   "id": "c_g34lam_l_minas_g34_14x33",
+   "id": "c_g34lam_au_au_14x33",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 92.62,
@@ -1371,14 +1649,14 @@
     79.6,
     77.2
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451385",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 14 × 33 cm (modelo Au Au New York)",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451385"
   },
   {
-   "id": "c_g34lam_laminas_g34_15x12_5",
+   "id": "c_g34lam_15x12_5",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 35.75,
@@ -1388,31 +1666,14 @@
     31.3,
     29.5
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451958",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 15 × 12,5 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451958"
   },
   {
-   "id": "c_g34lam_l_minas_g34_16_x17_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
-   "preco": 67.32,
-   "un": "milheiro",
-   "tab": [
-    61.2,
-    57.5,
-    55.1
-   ],
-   "fonte": "laminas.xls",
-   "ean": "7898929449429",
-   "cat": "lamina",
-   "nome": "Lâmina antigordura 16,5 × 17,5 cm",
-   "minimo": 5000
-  },
-  {
-   "id": "c_g34lam_laminas_g34_16_5x15",
+   "id": "c_g34lam_16_5x15",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 56.43,
@@ -1422,14 +1683,31 @@
     45.8,
     42.8
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451613",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
-   "nome": "Lâmina antigordura 17 × 15 cm",
-   "minimo": 5000
+   "nome": "Lâmina antigordura 16,5 × 15 cm",
+   "minimo": 5000,
+   "ean": "7898929451613"
   },
   {
-   "id": "c_g34lam_laminas_g34_17_5x20",
+   "id": "c_g34lam_16_5x17_5",
+   "papel": "Antigordura 34 g",
+   "cod": "G34",
+   "preco": 67.32,
+   "un": "milheiro",
+   "tab": [
+    61.2,
+    57.5,
+    55.1
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
+   "cat": "lamina",
+   "nome": "Lâmina antigordura 16,5 × 17,5 cm",
+   "minimo": 5000,
+   "ean": "7898929449429"
+  },
+  {
+   "id": "c_g34lam_16_5x20",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 60.5,
@@ -1439,14 +1717,14 @@
     51.0,
     49.0
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936318534",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
-   "nome": "Lâmina antigordura 17,5 × 20 cm",
-   "minimo": 5000
+   "nome": "Lâmina antigordura 16,5 × 20 cm",
+   "minimo": 5000,
+   "ean": "7898936318534"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x12_5",
+   "id": "c_g34lam_20x12_5",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 55.22,
@@ -1456,14 +1734,14 @@
     47.8,
     45.4
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451972",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 12,5 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451972"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x15",
+   "id": "c_g34lam_20x15",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 74.03,
@@ -1473,14 +1751,14 @@
     63.7,
     61.2
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929450302",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 15 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929450302"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x20",
+   "id": "c_g34lam_20x20",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 80.96,
@@ -1490,14 +1768,14 @@
     69.9,
     67.5
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316349",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 20 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316349"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x25",
+   "id": "c_g34lam_20x25",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 106.48,
@@ -1507,14 +1785,14 @@
     89.0,
     84.5
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316653",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 25 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316653"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x30",
+   "id": "c_g34lam_20x30",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 128.04,
@@ -1524,14 +1802,14 @@
     109.0,
     98.8
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936317315",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 30 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936317315"
   },
   {
-   "id": "c_g34lam_l_minas_g34_20x40",
+   "id": "c_g34lam_20x40",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 153.45,
@@ -1541,14 +1819,14 @@
     129.8,
     122.5
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929449559",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 20 × 40 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929449559"
   },
   {
-   "id": "c_g34lam_l_minas_g34_25x12_5",
+   "id": "c_g34lam_25x12_5",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 75.79,
@@ -1558,14 +1836,14 @@
     62.3,
     56.9
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929449986",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 25 × 12,5 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929449986"
   },
   {
-   "id": "c_g34lam_l_minas_g34_25x25",
+   "id": "c_g34lam_25x25",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 121.33,
@@ -1575,14 +1853,14 @@
     103.0,
     96.8
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316097",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 25 × 25 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316097"
   },
   {
-   "id": "c_g34lam_l_minas_g34_25x33",
+   "id": "c_g34lam_25x33",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 169.4,
@@ -1592,14 +1870,14 @@
     144.4,
     137.2
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936317575",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 25 × 33 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936317575"
   },
   {
-   "id": "c_g34lam_l_minas_g34_28x15",
+   "id": "c_g34lam_28x15",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 83.27,
@@ -1609,14 +1887,14 @@
     70.7,
     68.3
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451729",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 28 × 15 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451729"
   },
   {
-   "id": "c_g34lam_l_minas_g34_28x28",
+   "id": "c_g34lam_28x28",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 150.37,
@@ -1626,14 +1904,14 @@
     128.6,
     121.2
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316479",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 28 × 28 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316479"
   },
   {
-   "id": "c_g34lam_l_minas_g34_28x30",
+   "id": "c_g34lam_28x30",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 159.06,
@@ -1643,14 +1921,14 @@
     134.7,
     128.6
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316387",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 28 × 30 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316387"
   },
   {
-   "id": "c_g34lam_l_minas_g34_28x35",
+   "id": "c_g34lam_28x35",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 185.9,
@@ -1660,14 +1938,14 @@
     155.5,
     149.3
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929450364",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 28 × 35 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929450364"
   },
   {
-   "id": "c_g34lam_l_minas_g34_28x40",
+   "id": "c_g34lam_28x40",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 211.53,
@@ -1677,14 +1955,14 @@
     177.6,
     170.3
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451934",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 28 × 40 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451934"
   },
   {
-   "id": "c_g34lam_l_minas_g34_30x20",
+   "id": "c_g34lam_30x20",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 128.04,
@@ -1694,14 +1972,14 @@
     114.0,
     110.3
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936317087",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 30 × 20 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936317087"
   },
   {
-   "id": "c_g34lam_l_minas_g34_30x40",
+   "id": "c_g34lam_30x40",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 226.49,
@@ -1711,14 +1989,14 @@
     189.9,
     181.4
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316394",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 30 × 40 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316394"
   },
   {
-   "id": "c_g34lam_l_minas_g34_33x30",
+   "id": "c_g34lam_33x30",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 200.75,
@@ -1728,14 +2006,14 @@
     170.3,
     162.9
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929451187",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 33 × 30 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929451187"
   },
   {
-   "id": "c_g34lam_l_minas_g34_33x35",
+   "id": "c_g34lam_33x35",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 230.78,
@@ -1745,14 +2023,14 @@
     201.1,
     192.0
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936317155",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 33 × 35 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936317155"
   },
   {
-   "id": "c_g34lam_l_minas_g34_33x50",
+   "id": "c_g34lam_33x50",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 327.47,
@@ -1762,14 +2040,14 @@
     274.3,
     263.0
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929450630",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 33 × 50 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929450630"
   },
   {
-   "id": "c_g34lam_l_minas_g34_35x40",
+   "id": "c_g34lam_35x40",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 264.0,
@@ -1779,14 +2057,14 @@
     220.5,
     211.9
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936318466",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 35 × 40 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936318466"
   },
   {
-   "id": "c_g34lam_l_minas_g34_40x40",
+   "id": "c_g34lam_40x40",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 298.1,
@@ -1796,14 +2074,14 @@
     253.8,
     243.3
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898929449948",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 40 × 40 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898929449948"
   },
   {
-   "id": "c_g34lam_l_minas_g34_40x50",
+   "id": "c_g34lam_40x50",
    "papel": "Antigordura 34 g",
    "cod": "G34",
    "preco": 388.3,
@@ -1813,11 +2091,11 @@
     335.0,
     317.2
    ],
-   "fonte": "laminas.xls",
-   "ean": "7898936316158",
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
    "nome": "Lâmina antigordura 40 × 50 cm",
-   "minimo": 5000
+   "minimo": 5000,
+   "ean": "7898936316158"
   },
   {
    "id": "c_k60_k60_bandeja_14_x_20",
@@ -1830,7 +2108,7 @@
     72.0,
     68.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 14 × 20 cm",
    "minimo": 10000
@@ -1846,7 +2124,7 @@
     50.0,
     45.8
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 20 × 20 cm",
    "minimo": 10000
@@ -1862,7 +2140,7 @@
     49.0,
     46.9
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 20 × 25 cm",
    "minimo": 10000
@@ -1878,7 +2156,7 @@
     90.5,
     88.0
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 35 cm",
    "minimo": 10000
@@ -1894,7 +2172,7 @@
     112.0,
     106.8
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 35 cm",
    "minimo": 10000
@@ -1910,7 +2188,7 @@
     101.8,
     98.5
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 40 cm",
    "minimo": 10000
@@ -1926,7 +2204,7 @@
     115.0,
     114.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 40 cm",
    "minimo": 10000
@@ -1942,7 +2220,7 @@
     95.0,
     92.8
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 35 cm",
    "minimo": 10000
@@ -1958,7 +2236,7 @@
     113.0,
     107.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 35 cm",
    "minimo": 10000
@@ -1974,7 +2252,7 @@
     115.0,
     107.0
    ],
-   "fonte": "tabela2026.xlsx › k40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
    "minimo": 10000
@@ -1990,7 +2268,7 @@
     139.0,
     136.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
    "minimo": 10000
@@ -2006,7 +2284,7 @@
     109.0,
     105.8
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
    "minimo": 10000
@@ -2022,7 +2300,7 @@
     125.4,
     118.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
    "minimo": 10000
@@ -2038,7 +2316,7 @@
     150.0,
     141.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 30 × 40 cm",
    "minimo": 10000
@@ -2054,7 +2332,7 @@
     92.0,
     88.0
    ],
-   "fonte": "tabela2026.xlsx › k40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 25 cm",
    "minimo": 10000
@@ -2070,7 +2348,7 @@
     95.0,
     91.0
    ],
-   "fonte": "tabela2026.xlsx › k40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 28 cm",
    "minimo": 10000
@@ -2086,7 +2364,7 @@
     127.0,
     120.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 28 cm",
    "minimo": 10000
@@ -2102,7 +2380,7 @@
     142.0,
     137.0
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 35 cm",
    "minimo": 10000
@@ -2118,7 +2396,7 @@
     133.0,
     129.0
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 40 cm",
    "minimo": 10000
@@ -2134,7 +2412,7 @@
     158.0,
     154.8
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 40 cm",
    "minimo": 10000
@@ -2150,7 +2428,7 @@
     94.0,
     90.0
    ],
-   "fonte": "tabela2026.xlsx › k40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 25 cm",
    "minimo": 10000
@@ -2166,7 +2444,7 @@
     117.0,
     114.0
    ],
-   "fonte": "tabela2026.xlsx › k40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 35 cm",
    "minimo": 10000
@@ -2182,7 +2460,7 @@
     174.0,
     165.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 35 cm",
    "minimo": 10000
@@ -2198,7 +2476,7 @@
     212.0,
     197.0
    ],
-   "fonte": "tabela2026.xlsx › k60 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 40 cm",
    "minimo": 10000
@@ -2214,7 +2492,7 @@
     175.0,
     170.0
    ],
-   "fonte": "tabela2026.xlsx › kb30 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 50 cm",
    "minimo": 10000
@@ -2230,7 +2508,7 @@
     220.2,
     215.8
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 60 cm",
    "minimo": 10000
@@ -2246,7 +2524,7 @@
     556.0,
     528.3
    ],
-   "fonte": "tabela2026.xlsx › kb40 bandejas",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 72 × 70 cm",
    "minimo": 10000
@@ -2262,7 +2540,7 @@
     11.4,
     10.2
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 25 cm",
    "minimo": "40 kg"
@@ -2278,7 +2556,7 @@
     23.0,
     22.0
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 25 cm lisa",
    "minimo": "40 kg"
@@ -2294,7 +2572,7 @@
     11.4,
     10.2
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 40 cm",
    "minimo": "40 kg"
@@ -2310,7 +2588,7 @@
     23.0,
     22.0
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 40 cm lisa",
    "minimo": "40 kg"
@@ -2326,7 +2604,7 @@
     23.0,
     22.0
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 40 cm timbrada",
    "minimo": "40 kg"
@@ -2342,7 +2620,7 @@
     11.4,
     10.2
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 60 cm",
    "minimo": "60 kg"
@@ -2358,7 +2636,7 @@
     23.0,
     22.0
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 60 cm lisa",
    "minimo": "60 kg"
@@ -2374,7 +2652,7 @@
     23.0,
     22.0
    ],
-   "fonte": "tabela2026.xlsx › bobinas de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › bobinas de papel",
    "cat": "bobina",
    "nome": "Bobina 60 cm timbrada",
    "minimo": "60 kg"
@@ -2390,9 +2668,10 @@
     38.7,
     36.5
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco bijuteria",
-   "cat": "outros"
+   "cat": "outros",
+   "medidas": "6,5 × 14 × 5,0"
   },
   {
    "id": "c_kb30_kb30_farmacia",
@@ -2405,9 +2684,10 @@
     45.8,
     43.8
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco farmácia",
-   "cat": "outros"
+   "cat": "outros",
+   "medidas": "6,5 × 17 × 5,0"
   },
   {
    "id": "c_kb30_kb30_n_2",
@@ -2420,9 +2700,10 @@
     107.0,
     98.0
    ],
-   "fonte": "tabela2026.xlsx › kb30 sacos de papel",
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco nº 2",
-   "cat": "outros"
+   "cat": "outros",
+   "medidas": "13,5 × 26,5 × 5,5"
   }
  ]
 }

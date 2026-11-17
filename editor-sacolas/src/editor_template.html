@@ -2141,10 +2141,12 @@ const ITENS_TAB = CAT_TAB.itens;
 /* Preço de tabela das sacolas personalizáveis: faca → nome no catálogo; papel do site → linha da tabela
    (kraft = kraft pardo K, branco = kraft branco KB; gramatura preferida 35 g, depois 30, depois 40). Sem par → preço ilustrativo. */
 const FACA_TAB = {f05:'Saco ½ kg', f900:'Saco 900 g', f1:'Saco 1 kg', f2:'Saco 2 kg', f3:'Saco 3 kg', f5:'Saco 5 kg', f75:'Saco 7,5 kg', f10:'Saco 10 kg', f15:'Saco 15 kg',
-  fbat120:'Saco batatinha', fbat180:'Saco batatinha', fsem:'Saco semente', fhb:'Saco hambúrguer', fham:'Saco hamburgão', f1317:'Saco 13,5 × 17,5 cm',
+  fbat120:['Saco batatinha 120 g','Saco batatinha'], fbat180:['Saco batatinha 180 g','Saco batatinha'], fsem:'Saco semente', fhb:'Saco hambúrguer', fham:'Saco hamburgão', f1317:'Saco 13,5 × 17,5 cm',
   t65:'Porta-talher estreito', t85:'Porta-talher largo'};
-function itemTab(faca, papel){ const nome=FACA_TAB[faca]; if(!nome) return null; const pre=papel==='branco'?'KB':'K';
-  for(const g of ['35','30','40','32','60']){ const it=ITENS_TAB.find(i=>i.nome===nome && i.cod===pre+g); if(it) return it; } return null; }  // foto do produto extraída do PDF da faca (chave = nome do PDF)
+/* FACA_TAB aceita lista de nomes (batatinha: a Antigordura separa 120 g e 180 g; o "Saco batatinha" KB30 da tabela Globo vale para as duas). */
+const nomesFT = fc => [].concat(FACA_TAB[fc]||[]);
+function itemTab(faca, papel){ const ns=nomesFT(faca); if(!ns.length) return null; const pre=papel==='branco'?'KB':'K';
+  for(const g of ['35','30','40','32','60']){ const it=ITENS_TAB.find(i=>ns.includes(i.nome) && i.cod===pre+g); if(it) return it; } return null; }  // foto do produto extraída do PDF da faca (chave = nome do PDF)
 const CATALOGO = {};
 FACAS.forEach(f=>Object.keys(PAPEIS).forEach(pp=>{ const id=f.faca+'_'+pp;
   CATALOGO[id]=geraGabarito({...f, id, papel:pp, referencia:f.ref, nome:`${f.nome} · ${pp==='kraft'?'Kraft':'Branco'}`}); }));
@@ -2608,7 +2610,7 @@ function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'
    ===================================================================== */
 const FAMILIA = cod => /^KB/.test(cod) ? 'branco' : /^G/.test(cod) ? 'branco' : 'kraft';
 const COR_VAR = cod => /^KB/.test(cod) ? '#f3f0ea' : /^G/.test(cod) ? '#fbfaf6' : /^N/.test(cod) ? '#d9b98c' : /^STRONG/.test(cod) ? '#e9e6df' : '#c89a62';
-const NOME_FACA_TAB = {}; Object.entries(FACA_TAB).forEach(([fc,n])=>(NOME_FACA_TAB[n]=NOME_FACA_TAB[n]||[]).push(fc));
+const NOME_FACA_TAB = {}; Object.keys(FACA_TAB).forEach(fc=>nomesFT(fc).forEach(n=>(NOME_FACA_TAB[n]=NOME_FACA_TAB[n]||[]).push(fc)));
 /* Foto emprestada (chave = nome do PDF da faca). Proporção largura/altura do item ≈ a da faca (±10%). */
 /* "cat:<arquivo>" = foto/render de editor-sacolas/fotos_catalogo (renders 3D de 2016 da Glopel e fotos de estúdio de 2016,
    achados no Drive em 17-11-2026). Essas já mostram o papel certo: sem filtro de cor. */
@@ -2622,7 +2624,7 @@ const FOTO_REUSO = {
   'Envelope aberto 16,5 × 17,5 cm':'cat:env_170x170', 'Envelope aberto 20 × 21,5 cm':'cat:env_170x170',
   'Envelope aberto 16,5 × 21 cm':'cat:env_170x210', 'Envelope aberto 16,5 × 25 cm':'cat:env_170x250',
   'Envelope batatinha 10 × 12 cm':'cat:envelopinho10', 'Envelope fechado 18 × 21,5 cm':'cat:envelopinho10',
-  'Envelope fechado 16 × 26 cm':'Gabarito Envelope 17x25cm.pdf',
+  'Envelope fechado 16 × 25 cm':'Gabarito Envelope 17x25cm.pdf', 'Saco 13,5 × 27 cm':'cat:n2',
 };
 const FOTO_CAT_POR_CAT = {lamina:'cat:real_lamina', bandeja:'cat:real_bandeja', bobina:'cat:real_bobina'};
 const fotoSrc = k => !k ? null : k.startsWith('cat:') ? FOTOS_CAT[k.slice(4)] : FOTOS[k];
@@ -2668,11 +2670,11 @@ const embDe = t => { const m=(t||'').match(/(\d[\d.]*)\s*(unidades|un\b|copos)/i
 function altCm(nome){ const m=nome.match(/(\d+(?:,\d+)?)\s*×\s*(\d+(?:,\d+)?)/); return m?parseFloat(m[2].replace(',','.')):null; }
 const PRODUTOS = (()=>{
   const L=[];
-  FACAS.forEach(f=>{ const its=ITENS_TAB.filter(i=>i.nome===FACA_TAB[f.faca]);
+  FACAS.forEach(f=>{ const its=ITENS_TAB.filter(i=>nomesFT(f.faca).includes(i.nome));
     const v=its.map(i=>({k:i.id, papel:i.papel, cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}));
     ['kraft','branco'].forEach(pp=>{ if(!v.some(x=>x.edit===pp)) v.push({k:'x_'+pp, papel:PAPEIS[pp], cod:pp==='kraft'?'K':'KB', preco:null, un:'milheiro', edit:pp, ilu:true}); });
-    v.sort((a,b)=>(a.edit===b.edit?0:a.edit==='kraft'?-1:1) || (a.ilu?1:0)-(b.ilu?1:0) || a.papel.localeCompare(b.papel,'pt',{numeric:true}));
-    L.push({key:f.faca, cat:f.cat, nome:f.nome, faca:f, foto:f.fonte, h:f.h, uso:f.uso, vars:v, minimo:(its.find(i=>i.minimo)||{}).minimo, nomeTab:FACA_TAB[f.faca]}); });
+    v.sort((a,b)=>(a.edit===b.edit?0:a.edit==='kraft'?-1:1) || (a.ilu?1:0)-(b.ilu?1:0) || (/^G/.test(a.cod)?1:0)-(/^G/.test(b.cod)?1:0) || a.papel.localeCompare(b.papel,'pt',{numeric:true}));
+    L.push({key:f.faca, cat:f.cat, nome:f.nome, faca:f, foto:f.fonte, h:f.h, uso:f.uso, vars:v, minimo:(its.find(i=>i.minimo)||{}).minimo, nomeTab:nomesFT(f.faca)[0]}); });
   ITENS_TAB.filter(i=>!NOME_FACA_TAB[i.nome]).forEach(i=>{
     // bobinas: um card por largura; lisa/timbrada/strong viram variações
     const acab=i.cat==='bobina'?(i.nome.match(/ (lisa|timbrada)$/)||[])[1]:null, gNome=i.cat==='bobina'?i.nome.replace(/ (lisa|timbrada)$/,''):i.nome;
@@ -2708,7 +2710,8 @@ function renderLoja(){
     const fo = fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
     const ilu = fo ? `<img class="foto ${fo.cls}" src="${fo.src}" alt="${esc(p.nome)}" style="height:${nat?(/suri/.test(fo.cls)?190:150):hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
-    const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : '';
+    const med = !pers && !p.revenda && v.it && v.it.medidas ? `Medidas: ${v.it.medidas} cm (largura × altura × sanfona).` : '';
+    const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : med;
     const unQ = v.un==='kg'?'kg':v.un==='milheiro'?'milheiro'+(q>1?'s':''):v.un+(q>1?'s':'');
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
       <div class="ilu">${ilu}</div>
