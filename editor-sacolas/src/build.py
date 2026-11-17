@@ -11,6 +11,8 @@ a = json.load(open(os.path.join(AQUI, 'exemplo_padaria.json')))
 import base64, glob
 fotos = {os.path.basename(f)[:-5]+'.pdf': 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos','*.webp')))}
 t = t.replace('__FOTOS__', json.dumps(fotos))
+fcat = {os.path.basename(f)[:-5]: 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos_catalogo','*.webp')))}
+t = t.replace('__FOTOS_CAT__', json.dumps(fcat))
 t = t.replace('__CATALOGO_TAB__', json.dumps(json.load(open(os.path.join(AQUI,'catalogo','catalogo_tabela.json'),encoding='utf-8')), ensure_ascii=False))
 fontes = {os.path.basename(f)[:-5]: base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fontes','*.woff')))}
 kit = open(os.path.join(AQUI,'kit.js'), encoding='utf-8').read().replace('__FONTES_CURVA__', json.dumps(fontes))

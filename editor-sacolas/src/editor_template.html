@@ -165,6 +165,7 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 .card .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
 .cn{font-weight:800;font-size:16px} .cd{color:var(--mute);font-size:13px;line-height:1.45} .cp{font-weight:800;font-size:17px} .cp span{font-weight:500;font-size:11.5px;color:var(--mute)}
 .ilu img.foto{max-width:88%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(20,40,80,.12))}
+.ilu img.foto.natural{mix-blend-mode:multiply;border-radius:10px;max-height:170px;filter:none}
 .ilu img.foto.branco{filter:grayscale(1) brightness(1.55) contrast(.9) drop-shadow(0 6px 10px rgba(20,40,80,.12))}
 .papel{display:flex;gap:6px} .papel.vars{flex-wrap:wrap} .papel.vars button{flex:1 1 auto;white-space:nowrap;padding:5px 8px} .papel.vars i{flex:0 0 12px} .papel button{flex:1;padding:5px 6px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:center} .papel i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.2)} .papel button.on{font-weight:700}
 .qtdrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute)}
@@ -2602,19 +2603,22 @@ const FAMILIA = cod => /^KB/.test(cod) ? 'branco' : /^G/.test(cod) ? 'branco' : 
 const COR_VAR = cod => /^KB/.test(cod) ? '#f3f0ea' : /^G/.test(cod) ? '#fbfaf6' : /^N/.test(cod) ? '#d9b98c' : /^STRONG/.test(cod) ? '#e9e6df' : '#c89a62';
 const NOME_FACA_TAB = {}; Object.entries(FACA_TAB).forEach(([fc,n])=>(NOME_FACA_TAB[n]=NOME_FACA_TAB[n]||[]).push(fc));
 /* Foto emprestada (chave = nome do PDF da faca). Proporção largura/altura do item ≈ a da faca (±10%). */
+/* "cat:<arquivo>" = foto/render de editor-sacolas/fotos_catalogo (renders 3D de 2016 da Glopel e fotos de estúdio de 2016,
+   achados no Drive em 17-11-2026). Essas já mostram o papel certo: sem filtro de cor. */
+const FOTOS_CAT = __FOTOS_CAT__;
 const FOTO_REUSO = {
-  'Saco 13,5 × 21,5 cm':'Gabarito 0,5 Kg.pdf',          // 0,63 ≈ ½ kg 10×16 (0,63)
-  'Saco 17,5 × 25 cm':'Gabarito 13,5x17,5cm.pdf',        // 0,70 ≈ 0,77 (13,5×17,5) — mais próximo
-  'Envelope aberto 14 × 14 cm':'Gabarito Envelope 17x17cm.pdf',
-  'Envelope aberto 16,5 × 17,5 cm':'Gabarito Envelope 17x17cm.pdf',
-  'Envelope aberto 20 × 21,5 cm':'Gabarito Envelope 20x20cm.pdf',
-  'Envelope aberto 14 × 17,5 cm':'Gabarito Envelope 17x21cm.pdf',
-  'Envelope aberto 16,5 × 21 cm':'Gabarito Envelope 17x21cm.pdf',
-  'Envelope batatinha 10 × 12 cm':'Gabarito Envelope 17x21cm.pdf',
-  'Envelope fechado 18 × 21,5 cm':'Gabarito Envelope 17x21cm.pdf',
-  'Envelope aberto 16,5 × 25 cm':'Gabarito Envelope 17x25cm.pdf',
+  'Saco 13,5 × 21,5 cm':'cat:135x215', 'Saco 17,5 × 25 cm':'Gabarito 13,5x17,5cm.pdf',
+  'Saco baguete':'cat:baguete', 'Saco baguete com visor':'cat:baguete_visor',
+  'Saco miniburger':'cat:miniburger', 'Saco pipoca':'cat:pipoca', 'Saco pipoquinha':'cat:pipoquinha',
+  'Saco bijuteria':'cat:bijuteria', 'Saco farmácia':'cat:farmacia', 'Saco nº 2':'cat:n2',
+  'Envelope aberto 14 × 14 cm':'cat:env_140x135', 'Envelope aberto 14 × 17,5 cm':'cat:env_140x175',
+  'Envelope aberto 16,5 × 17,5 cm':'cat:env_170x170', 'Envelope aberto 20 × 21,5 cm':'cat:env_170x170',
+  'Envelope aberto 16,5 × 21 cm':'cat:env_170x210', 'Envelope aberto 16,5 × 25 cm':'cat:env_170x250',
+  'Envelope batatinha 10 × 12 cm':'cat:envelopinho10', 'Envelope fechado 18 × 21,5 cm':'cat:envelopinho10',
   'Envelope fechado 16 × 26 cm':'Gabarito Envelope 17x25cm.pdf',
 };
+const FOTO_CAT_POR_CAT = {lamina:'cat:real_lamina', bandeja:'cat:real_bandeja', bobina:'cat:real_bobina'};
+const fotoSrc = k => !k ? null : k.startsWith('cat:') ? FOTOS_CAT[k.slice(4)] : FOTOS[k];
 const ICONE_CAT = {pao:'🥖', lanche:'🍔', envelope:'✉️', talher:'🍴', lamina:'🧻', bandeja:'🍰', bobina:'🎞️', outros:'🛍️'};
 function altCm(nome){ const m=nome.match(/(\d+(?:,\d+)?)\s*×\s*(\d+(?:,\d+)?)/); return m?parseFloat(m[2].replace(',','.')):null; }
 const PRODUTOS = (()=>{
@@ -2628,7 +2632,7 @@ const PRODUTOS = (()=>{
     // bobinas: um card por largura; lisa/timbrada/strong viram variações
     const acab=i.cat==='bobina'?(i.nome.match(/ (lisa|timbrada)$/)||[])[1]:null, gNome=i.cat==='bobina'?i.nome.replace(/ (lisa|timbrada)$/,''):i.nome;
     let p=L.find(x=>!x.faca && x.nome===gNome);
-    if(!p) L.push(p={key:i.id, cat:i.cat, nome:gNome, foto:FOTO_REUSO[gNome]||null, h:altCm(gNome), vars:[], minimo:i.minimo});
+    if(!p) L.push(p={key:i.id, cat:i.cat, nome:gNome, foto:FOTO_REUSO[gNome]||FOTO_CAT_POR_CAT[i.cat]||null, h:altCm(gNome), vars:[], minimo:i.minimo});
     p.vars.push({k:i.id, papel:i.papel+(acab?' · '+acab:''), cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}); if(!p.minimo && i.minimo) p.minimo=i.minimo; });
   return L; })();
 const produtoDaFaca = fc => PRODUTOS.find(p=>p.faca && p.faca.faca===fc);
@@ -2649,7 +2653,8 @@ function renderLoja(){
   $('vitrine').innerHTML = ps.map(p=>{
     const v=varDe(p), pers=!!p.faca, id=pers?p.faca.faca+'_'+v.edit:null, q=pers?((design.qtd&&design.qtd[id])||1):0, dentro=pers&&noCarrinho(id);
     const hFoto = Math.round(105+80*(p.h||altMax*0.6)/altMax);
-    const ilu = p.foto && FOTOS[p.foto] ? `<img class="foto ${v.edit}" src="${FOTOS[p.foto]}" alt="${esc(p.nome)}" style="height:${hFoto}px">`
+    const src = fotoSrc(p.foto), nat = p.foto && p.foto.startsWith('cat:');
+    const ilu = src ? `<img class="foto ${nat?'natural':v.edit}" src="${src}" alt="${esc(p.nome)}" style="height:${nat?150:hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
     const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : '';
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
