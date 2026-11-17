@@ -670,7 +670,7 @@ function usaCofre(d){
   iniciarDB(); carregaL();
   document.getElementById('trava').hidden = true;
   render();
-  lerAoVivo();
+  lerAoVivo(); lerSis();
 }
 async function destrancar(){
   const s = (()=>{ try { return localStorage.getItem(LS_SENHA); } catch(e) { return null; } })();
@@ -701,8 +701,8 @@ function carregaL(){
   L.pagos = L.pagos || {}; L.taxas = L.taxas || {}; L.eventos = L.eventos || [];
 }
 function salvaL(){ try { localStorage.setItem(LS_L, JSON.stringify(L)); } catch(e) {} }
-const funcs = () => L.func || SEG.funcionarios;
-const contas = () => L.contas || SEG.contas || [];
+const funcs = () => REM ? REM.func : (L.func || SEG.funcionarios);
+const contas = () => REM ? REM.contas : (L.contas || SEG.contas || []);
 const num = v => { if (v===''||v==null) return null; const x = Number(String(v).replace(/\s|R\$/g,'').replace(/\./g,'').replace(',','.')); return isFinite(x) ? x : null; };
 const uid = () => Math.random().toString(36).slice(2,9);
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -798,7 +798,8 @@ function vFuncionarios(){
   const inp = (k, lab, t='text', w=150) => `<label>${lab}<input name="${k}" type="${t}" value="${esc(e[k]||'')}" style="min-width:${w}px"></label>`;
   const sel = (k, lab, ops) => `<label>${lab}<select name="${k}">${ops.map(o=>`<option ${o===(e[k]||'')?'selected':''} value="${o}">${o||'—'}</option>`).join('')}</select></label>`;
   return `
-  <div class="banner">Lista inicial: quem aparece nos grupos de produção e nos pedidos. <b>Admissão, aniversário, salário, telefone e férias estão em branco</b> — preencha aqui. As edições ficam salvas <b>neste navegador</b>; para valer para todos, use <b>Exportar</b> e mande o arquivo para o Claude publicar no cofre.</div>
+  ${remBanner()}${gravBox()}
+  ${REM?`<div class="banner ok">Lido da planilha <b>Glopel — Sistema Globo (dados do site)</b>. Salvar e Remover <b>gravam na planilha</b> e valem para todos.</div>`:`<div class="banner">Lista inicial: quem aparece nos grupos de produção e nos pedidos. <b>Admissão, aniversário, salário, telefone e férias estão em branco</b> — preencha aqui. As edições ficam salvas <b>neste navegador</b>; para valer para todos, use <b>Exportar</b> e mande o arquivo para o Claude publicar no cofre.</div>`}
   <div class="grid kpis">
     <div class="card kpi"><div class="v">${F.length}</div><div class="l">pessoas · ${porSetor.map(([s,n])=>n+' '+s.toLowerCase()).join(' · ')}</div></div>
     <div class="card kpi"><div class="v">${folha?brl(folha):'—'}</div><div class="l">folha mensal (salários cadastrados: ${comSal} de ${F.length})</div></div>
@@ -806,7 +807,7 @@ function vFuncionarios(){
     <div class="card kpi"><div class="v">${prox.length}</div><div class="l">saem de férias em 60 dias</div></div>
     <div class="card kpi"><div class="v">${aniv.length}</div><div class="l">🎂 aniversários em ${MESES[Number(H.slice(5,7))-1]}${aniv.length?': '+aniv.map(f=>esc(f.nome)+' ('+nascMD(f.nascimento).slice(3)+')').join(', '):''}</div></div>
   </div>
-  <div class="filtros"><button class="btn pri" onclick="fEdit='novo';render()">+ Novo funcionário</button><button class="btn" onclick="baixar('funcionarios-glopel.json', funcs())">Exportar</button>${L.func?`<button class="btn" onclick="if(confirm('Descartar as edições deste navegador e voltar à lista publicada?')){delete L.func;salvaL();fEdit=null;render()}">Voltar à lista publicada</button>`:''}</div>
+  <div class="filtros"><button class="btn pri" onclick="fEdit='novo';render()">+ Novo funcionário</button><button class="btn" onclick="baixar('funcionarios-glopel.json', funcs())">Exportar</button>${L.func&&!REM?`<button class="btn" onclick="if(confirm('Descartar as edições deste navegador e voltar à lista publicada?')){delete L.func;salvaL();fEdit=null;render()}">Voltar à lista publicada</button>`:''}</div>
   ${e?`<div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">${fEdit==='novo'?'Novo funcionário':'Editar — '+esc(e.nome)}</h3>
     <form class="inline" onsubmit="salvaFunc(event,'${e.id}')">${inp('nome','Nome','text',180)}${inp('funcao','Função','text',170)}${sel('setor','Setor',SETORES)}${sel('vinculo','Vínculo',VINC)}${inp('admissao','Admissão','date')}${inp('salario','Salário (R$/mês)','text',110)}${inp('telefone','Telefone','tel',130)}<label>Aniversário<input name="nascimento" value="${esc(e.nascimento||'')}" placeholder="dd/mm" style="min-width:90px"></label>${inp('ferias_ini','Férias de','date')}${inp('ferias_fim','até','date')}${inp('obs','Obs.','text',220)}
     <button class="btn pri">Salvar</button><button type="button" class="btn" onclick="fEdit=null;render()">Cancelar</button>${fEdit!=='novo'?`<button type="button" class="btn" style="color:var(--bad)" onclick="apagaFunc('${e.id}')">Remover</button>`:''}</form></div>`:''}
@@ -823,9 +824,10 @@ function salvaFunc(ev, id){
   if (!f.nome.trim()) return alert('Falta o nome.');
   if (f.nascimento && !nascMD(f.nascimento)) return alert('Aniversário: use dd/mm (ex.: 07/03).');
   if (i<0) F.push({id, ...f}); else F[i] = {...F[i], ...f};
+  if (REM) { const reg = {...(i<0?{}:F[i]), id, ...f, status:'ATIVO'}; fEdit = null; gravarSis('Funcionarios', reg, `${reg.nome} gravado na planilha.`); return; }
   L.func = F; salvaL(); fEdit = null; render();
 }
-function apagaFunc(id){ if (!confirm('Remover esta pessoa da lista?')) return; L.func = funcs().filter(x=>x.id!==id); salvaL(); fEdit = null; render(); }
+function apagaFunc(id){ if (!confirm('Remover esta pessoa da lista?')) return; if (REM) { fEdit = null; gravarSis('Funcionarios', {id, status:'REMOVIDO'}, 'Removido da lista (fica na planilha como REMOVIDO).'); return; } L.func = funcs().filter(x=>x.id!==id); salvaL(); fEdit = null; render(); }
 
 /* =========================================================
    A pagar
@@ -855,7 +857,9 @@ function ocorrencias(de, ate){
   }
   return out.sort((a,b) => a.data<b.data?-1:a.data>b.data?1:a.nome.localeCompare(b.nome));
 }
-const pago = o => !!L.pagos[o.id] || o.data < L.desde;
+const DESDE_SIS = '2026-11-17'; // na planilha: vencidas antes disso contam como pagas
+const pago = o => REM ? (!!REM.pagos[o.id] || o.data < DESDE_SIS) : (!!L.pagos[o.id] || o.data < L.desde);
+const OC = {};
 let pFiltro = 'todas', pEdit = null, pMostra = false;
 function vApagar(){
   const H = iso(hoje());
@@ -865,12 +869,14 @@ function vApagar(){
   const S = a => a.reduce((s,o)=>s+(o.valor||0),0);
   const cats = [...new Set(O.map(o=>o.cat))];
   const lista = (pMostra ? O : ab).filter(o => pFiltro==='todas' || o.cat===pFiltro);
+  O.forEach(o => { OC[o.id] = o; });
   const C = contas();
   const e = pEdit==='novo' ? {id:uid(), nome:'', cat:'Aluguel', valor:'', dia:'', freq:'mensal', inicio:H, fim:'', obs:''} : (typeof pEdit==='object' && pEdit) ? pEdit : C.find(c=>c.id===pEdit);
   const meses = [0,1,2,3].map(i=>addM(H.slice(0,7),i));
   const porCat = cats.map(c => [c, meses.map(m => S(O.filter(o=>o.cat===c && o.data.slice(0,7)===m)))]);
   return `
-  ${C.length?'':`<div class="banner">Por enquanto só entram as <b>parcelas das notas de papel</b> e as <b>comissões estimadas</b>. Cadastre aluguel, assinaturas, frota e o resto em <b>Contas fixas</b> abaixo — fica salvo neste navegador.</div>`}
+  ${remBanner()}${gravBox()}
+  ${C.length?'':`<div class="banner">Por enquanto só entram as <b>parcelas das notas de papel</b> e as <b>comissões estimadas</b>. Cadastre aluguel, assinaturas, frota e o resto em <b>Contas fixas</b> abaixo — ${REM?'grava na planilha e vale para todos':'fica salvo neste navegador'}.</div>`}
   <div class="grid kpis">
     <div class="card kpi ${venc.length?'bad':''}"><div class="v">${brl(S(venc))}</div><div class="l">vencido e não marcado como pago (${venc.length})</div></div>
     <div class="card kpi ${sem.length?'warn':''}"><div class="v">${brl(S(sem))}</div><div class="l">vence nos próximos 7 dias (${sem.length})</div></div>
@@ -881,7 +887,7 @@ function vApagar(){
   <label class="mut" style="font-size:13px;display:block;margin:-6px 0 8px"><input type="checkbox" ${pMostra?'checked':''} onchange="pMostra=this.checked;render()"> mostrar também as pagas (últimos 90 dias)</label>
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
     <thead><tr><th title="Pago">✓</th><th>Vencimento</th><th>Conta</th><th>Categoria</th><th class="n">Valor</th><th>Origem</th></tr></thead>
-    <tbody>${lista.map(o=>`<tr style="${pago(o)?'opacity:.5':''}"><td><input type="checkbox" ${pago(o)?'checked':''} title="Marcar como pago" onchange="L.pagos['${o.id}']=this.checked||undefined;salvaL();render()"></td><td>${dBR(o.data)} ${o.data<H?'<span class="pill bad">vencida</span>':o.data<=addD(H,7)?'<span class="pill warn">esta semana</span>':''}</td><td>${esc(o.nome)}</td><td>${CATS[o.cat]||''} ${esc(o.cat)}</td><td class="n">${o.valor!=null?brl(o.valor):'<span class="mut">sem valor</span>'}</td><td class="mut" style="font-size:12px">${o.fonte}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Nada em aberto.</td></tr>'}</tbody>
+    <tbody>${lista.map(o=>`<tr style="${pago(o)?'opacity:.5':''}"><td><input type="checkbox" ${pago(o)?'checked':''} title="Marcar como pago" onchange="marcaPago('${o.id}',this.checked)"></td><td>${dBR(o.data)} ${o.data<H?'<span class="pill bad">vencida</span>':o.data<=addD(H,7)?'<span class="pill warn">esta semana</span>':''}</td><td>${esc(o.nome)}</td><td>${CATS[o.cat]||''} ${esc(o.cat)}</td><td class="n">${o.valor!=null?brl(o.valor):'<span class="mut">sem valor</span>'}</td><td class="mut" style="font-size:12px">${o.fonte}${REM&&REM.pagos[o.id]?` · pago ${dmy(REM.pagos[o.id].pago_em)}${REM.pagos[o.id].forma?' · '+esc(REM.pagos[o.id].forma):''}`:''}${REM?` <button class="btn" style="padding:1px 7px;font-size:12px" title="Pagar com detalhes (data, valor, forma, obs.)" onclick="detalhePago('${o.id}')">…</button>`:''}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Nada em aberto.</td></tr>'}</tbody>
   </table></div></div>
   <h3>Por categoria — próximos meses</h3>
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
@@ -914,9 +920,29 @@ function salvaConta(ev, id){
   if (f.freq!=='unica' && !f.dia) return alert('Falta o dia do vencimento.');
   const i = C.findIndex(x=>x.id===id);
   if (i<0) C.push({id, ...f}); else C[i] = {...C[i], ...f};
+  if (REM) { const reg = {...(i<0?{}:C[i]), id, ...f, status:'ATIVA'}; pEdit = null; gravarSis('Contas_fixas', reg, `Conta "${reg.nome}" gravada na planilha.`); return; }
   L.contas = C; salvaL(); pEdit = null; render();
 }
-function apagaConta(id){ if (!confirm('Remover esta conta?')) return; L.contas = contas().filter(x=>x.id!==id); salvaL(); pEdit = null; render(); }
+function apagaConta(id){ if (!confirm('Remover esta conta?')) return; if (REM) { pEdit = null; gravarSis('Contas_fixas', {id, status:'REMOVIDO'}, 'Conta removida (fica na planilha como REMOVIDO).'); return; } L.contas = contas().filter(x=>x.id!==id); salvaL(); pEdit = null; render(); }
+
+/* Pagamentos: OK rápido (checkbox) ou com detalhes (…) */
+const regPago = (o, extra) => ({id:o.id, vencimento:o.data, conta:o.nome, categoria:o.cat, valor_previsto:o.valor!=null?String(Math.round(o.valor*100)/100):'', ...extra});
+function marcaPago(id, chk){
+  const o = OC[id]; if (!o) return;
+  if (!REM) { L.pagos[id] = chk || undefined; salvaL(); render(); return; }
+  gravarSis('Pagamentos', regPago(o, chk ? {pago_em:iso(hoje()), valor_pago:o.valor!=null?String(Math.round(o.valor*100)/100):'', status:'PAGO'} : {status:'DESFEITO'}), chk ? `"${o.nome}" marcado como pago.` : `Pagamento de "${o.nome}" desfeito.`);
+}
+function detalhePago(id){
+  const o = OC[id]; if (!o) return; const p = (REM && REM.pagos[id]) || {};
+  const formas = ['','Pix','Boleto','Transferência','Débito automático','Cartão','Dinheiro','Cheque'];
+  dialogo(`Pagamento — ${esc(o.nome)}`,
+    `<p class="mut" style="margin:0 0 8px">Vence ${dmy(o.data)} · previsto ${o.valor!=null?brl(o.valor):'sem valor'}</p>
+     <label style="display:block;margin-bottom:8px">Pago em<br><input type="date" name="pago_em" value="${esc(p.pago_em||iso(hoje()))}" required></label>
+     <label style="display:block;margin-bottom:8px">Valor pago (R$)<br><input name="valor_pago" inputmode="decimal" value="${esc(p.valor_pago||(o.valor!=null?String(Math.round(o.valor*100)/100).replace('.',','):''))}"></label>
+     <label style="display:block;margin-bottom:8px">Forma<br><select name="forma">${formas.map(f=>`<option ${f===(p.forma||'')?'selected':''}>${f}</option>`).join('')}</select></label>
+     <label style="display:block">Obs.<br><input name="obs" value="${esc(p.obs||'')}" style="min-width:260px"></label>`,
+    'Marcar como pago', (f) => gravarSis('Pagamentos', regPago(o, {pago_em:f.pago_em, valor_pago:String(f.valor_pago||'').replace(/\./g,'').replace(',','.'), forma:f.forma||'', obs:f.obs||'', status:'PAGO'}), `"${o.nome}" marcado como pago.`));
+}
 
 /* =========================================================
    Calendário
@@ -1023,6 +1049,43 @@ async function lerAoVivo(){
   try { const j = await api('ler'); montarVivo(j.dados); VIVO.estado = 'ok'; VIVO.em = j.dados.lido; VIVO.erro = null; }
   catch(e) { VIVO.estado = 'erro'; VIVO.erro = e.message || String(e); }
   render();
+}
+/* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos'];
+let REM = null, REM_ERRO = null;
+const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
+async function lerSis(){
+  if (!API()) return;
+  try {
+    const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
+    const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, lido: j.lido };
+    REM_ERRO = null;
+  } catch(e) { REM_ERRO = e.message || String(e); }
+  render();
+}
+async function gravarSis(aba, registro, okTxt){
+  avisoGrav('Gravando na planilha…');
+  try { await api('upsert', {aba, registro}); await lerSis(); avisoGrav(okTxt, 'ok'); }
+  catch(e) { avisoGrav('Não consegui gravar: ' + (e.message||e) + '. Nada foi alterado.', 'erro'); }
+}
+const pendLocal = () => !!REM && ((L.func && L.func.length) || (L.contas && L.contas.length) || Object.keys(L.pagos||{}).some(k=>L.pagos[k]));
+function remBanner(){
+  if (!API()) return '';
+  if (REM_ERRO && !REM) return `<div class="banner">Não consegui ler a planilha do site agora (${esc(REM_ERRO)}). Mostrando o que está salvo neste navegador. <button class="btn" onclick="lerSis()">Tentar de novo</button></div>`;
+  if (!REM) return `<div class="banner">Lendo a planilha do site…</div>`;
+  if (pendLocal()) return `<div class="banner">Este navegador tem edições feitas <b>antes</b> de ligar a planilha (funcionários, contas ou pagos). <button class="btn pri" onclick="enviarLocal()">Enviar para a planilha</button> <button class="btn" onclick="if(confirm('Descartar as edições guardadas só neste navegador?')){delete L.func;delete L.contas;L.pagos={};salvaL();render()}">Descartar</button></div>`;
+  return '';
+}
+async function enviarLocal(){
+  avisoGrav('Enviando as edições deste navegador…');
+  try {
+    for (const f of (L.func||[])) await api('upsert', {aba:'Funcionarios', registro:{...f, status:'ATIVO'}});
+    for (const c of (L.contas||[])) await api('upsert', {aba:'Contas_fixas', registro:{...c, status:'ATIVA'}});
+    for (const id of Object.keys(L.pagos||{}).filter(k=>L.pagos[k])) { const o = OC[id] || {id, data:id.split(':').pop(), nome:id, cat:'', valor:null}; await api('upsert', {aba:'Pagamentos', registro:regPago(o, {pago_em:iso(hoje()), status:'PAGO', obs:'marcado antes da planilha'})}); }
+    delete L.func; delete L.contas; L.pagos = {}; salvaL();
+    await lerSis(); avisoGrav('Edições enviadas para a planilha.', 'ok');
+  } catch(e) { avisoGrav('Parou no meio: ' + (e.message||e) + '. O que já foi enviado ficou na planilha; tente de novo.', 'erro'); }
 }
 const AO_VIVO = () => API() && DB.fonte==='planilha ao vivo';
 let GRAV = null;

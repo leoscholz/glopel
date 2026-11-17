@@ -12,6 +12,9 @@
  */
 const CHAVE = 'COLE_AQUI_A_CHAVE_DO_COFRE';  // a chave real está no cofre (api.chave) e no script instalado
 
+// Planilha só do site (funcionários, contas fixas, pagamentos e o que vier): qualquer aba dela pode ser lida/gravada
+const SIS = '1EcJLIH3Yqd7Byx9bEdJ167BDf6enCF-oRmwvy2Ozo8g';
+
 const ABAS = {
   saidas: ['Bobinas', 'A2:Q'],
   skus: ['Bob_SKU', 'A2:J'],
@@ -39,9 +42,11 @@ function doPost(e) {
       case 'cancelar': r = cancelar(d); break;
       case 'contagem': r = contagem(d); break;
       case 'saida': r = saidaBobina(d); break;
+      case 'tabelas': r = tabelas(d); break;
+      case 'upsert': r = upsert(d, req.quem); break;
       default: return saida({ ok: false, erro: 'ação desconhecida: ' + req.acao });
     }
-    if (req.acao !== 'ler') registrarLog(req.acao, req.quem, d);
+    if (req.acao !== 'ler' && req.acao !== 'tabelas') registrarLog(req.acao, req.quem, d);
     return saida(Object.assign({ ok: true }, r));
   } catch (x) {
     return saida({ ok: false, erro: String(x && x.message || x) });
@@ -98,6 +103,49 @@ function saidaBobina(d) {
   exigir(d, ['data', 'sku']);
   aba('Bobinas').appendRow([data(d.data), d.hora || '', d.autor || '', '', '', '', d.autor || '', 'registrado no site', '', d.fornecedor || '', '', '', '', '', '', d.sku, d.peso ? num(d.peso) : '']);
   return { msg: 'Saída registrada.' };
+}
+
+/* ---------- genérico: planilha do site (SIS) ---------- */
+function nomeAba(n) {
+  n = String(n || '');
+  if (!/^[A-Za-z0-9_]{1,40}$/.test(n)) throw new Error('nome de aba inválido: ' + n);
+  return n;
+}
+function tabelas(d) {
+  const ss = SpreadsheetApp.openById(SIS), out = {};
+  (d.abas || []).forEach(n => {
+    const sh = ss.getSheetByName(nomeAba(n));
+    out[n] = sh ? sh.getDataRange().getDisplayValues() : [];
+  });
+  return { dados: out, lido: new Date().toISOString() };
+}
+function upsert(d, quem) {
+  const reg = d.registro || {};
+  if (!reg.id) throw new Error('falta id');
+  const ss = SpreadsheetApp.openById(SIS), nome = nomeAba(d.aba);
+  let sh = ss.getSheetByName(nome);
+  if (!sh) {
+    sh = ss.insertSheet(nome);
+    sh.getRange(1, 1, sh.getMaxRows(), sh.getMaxColumns()).setNumberFormat('@');
+    sh.getRange(1, 1, 1, 1).setValue('id');
+    sh.setFrozenRows(1);
+  }
+  let head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getDisplayValues()[0].map(String);
+  const campos = Object.keys(reg).concat(['atualizado_em', 'por']);
+  campos.forEach(c => { if (head.indexOf(c) < 0) { head.push(c); sh.getRange(1, head.length).setNumberFormat('@').setValue(c); } });
+  const val = Object.assign({}, reg, { atualizado_em: new Date().toISOString(), por: quem || '' });
+  const ult = sh.getLastRow();
+  const ids = ult < 2 ? [] : sh.getRange(2, 1, ult - 1, 1).getDisplayValues().map(r => String(r[0]));
+  let lin = ids.indexOf(String(reg.id));
+  if (lin < 0) {
+    const row = head.map(h => val[h] === undefined || val[h] === null ? '' : String(val[h]));
+    lin = ult + 1;
+    sh.getRange(lin, 1, 1, head.length).setNumberFormat('@').setValues([row]);
+    return { msg: 'Gravado (novo).', linha: lin };
+  }
+  lin += 2;
+  head.forEach((h, i) => { if (val[h] !== undefined) sh.getRange(lin, i + 1).setNumberFormat('@').setValue(val[h] === null ? '' : String(val[h])); });
+  return { msg: 'Gravado.', linha: lin };
 }
 
 /* ---------- apoio ---------- */
