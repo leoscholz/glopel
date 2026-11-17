@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo Globo — perguntas para a Márcia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#1f5fae;--azul2:#2f7fd0;--azulcl:#eaf2fb;--tx:#1d2733;--cz:#6b7684;--ln:#dfe5ec;--ok:#1d8a4e;--bg:#f5f7fa}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:16px;line-height:1.45}
+header{background:var(--azul);color:#fff;padding:22px 18px 18px}
+header h1{margin:0 0 6px;font-size:22px;font-weight:800}
+header p{margin:0;opacity:.92;font-size:15px}
+.barra{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--ln);padding:10px 18px}
+.barra .txt{font-size:13px;color:var(--cz);display:flex;justify-content:space-between}
+.barra .trilho{height:8px;background:var(--ln);border-radius:9px;margin-top:6px;overflow:hidden}
+.barra .enchido{height:100%;background:var(--ok);width:0;transition:width .3s}
+main{max-width:720px;margin:0 auto;padding:14px 14px 120px}
+.intro{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;margin:6px 0 18px;font-size:15px}
+.intro b{color:var(--azul)}
+h2{font-size:17px;color:var(--azul);margin:26px 4px 10px;display:flex;gap:8px;align-items:center}
+h2 small{color:var(--cz);font-weight:600;font-size:13px}
+.q{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:16px;margin-bottom:12px;transition:border-color .2s}
+.q.feita{border-color:#9fd3b5}
+.q .n{font-size:12px;font-weight:700;color:var(--cz);text-transform:uppercase;letter-spacing:.04em}
+.q .t{font-weight:700;font-size:16px;margin:4px 0 4px}
+.q .c{color:var(--cz);font-size:14px;margin-bottom:10px}
+.ops{display:flex;flex-direction:column;gap:8px}
+.ops button{text-align:left;font:inherit;font-size:15px;padding:11px 13px;border:1.5px solid var(--ln);border-radius:10px;background:#fff;color:var(--tx);cursor:pointer;display:flex;gap:10px;align-items:center}
+.ops button i{width:18px;height:18px;border-radius:50%;border:2px solid #b8c2ce;flex:none}
+.ops button.on{border-color:var(--azul);background:var(--azulcl);font-weight:600}
+.ops button.on i{border-color:var(--azul);background:radial-gradient(circle,var(--azul) 45%,transparent 50%)}
+textarea,input[type=text],input[type=number]{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid var(--ln);border-radius:10px;background:#fff;color:var(--tx)}
+textarea{min-height:64px;resize:vertical;margin-top:10px}
+.extra label{display:block;font-size:13px;color:var(--cz);margin:10px 0 4px}
+.grade{display:grid;grid-template-columns:1fr 130px;gap:8px 10px;align-items:center}
+.grade span{font-size:15px}
+.conf{border-top:1px solid var(--ln);padding:12px 0 4px}
+.conf:first-of-type{border-top:0;padding-top:0}
+.conf .d{font-size:15px;margin-bottom:8px}
+.conf .d b{font-weight:700}
+.conf .ops{flex-direction:row;flex-wrap:wrap}
+.conf .ops button{padding:8px 11px;font-size:14px}
+.fim{background:#fff;border:2px solid var(--azul);border-radius:14px;padding:18px;margin-top:24px}
+.fim h3{margin:0 0 8px;color:var(--azul)}
+.btn{display:block;width:100%;text-align:center;font:inherit;font-weight:700;font-size:17px;padding:15px;border-radius:12px;border:0;cursor:pointer;text-decoration:none;margin-top:10px}
+.btn.wa{background:#1fa855;color:#fff}
+.btn.sec{background:#fff;color:var(--azul);border:1.5px solid var(--azul)}
+.aviso{font-size:13px;color:var(--cz);margin-top:10px}
+.prev{white-space:pre-wrap;font-size:13px;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px;max-height:220px;overflow:auto;margin-top:12px;display:none}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1d2733;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Catálogo da Globo — suas respostas</h1>
+  <p>Perguntas para deixar o catálogo do site certinho. Leva uns 10 minutos.</p>
+</header>
+<div class="barra"><div class="txt"><span id="contTxt">0 respondidas</span><span id="pctTxt">0%</span></div><div class="trilho"><div class="enchido" id="enchido"></div></div></div>
+<main>
+  <div class="intro">
+    Oi, Márcia! Estamos montando o <b>catálogo do site</b> com a <b>tabela de preços 2026</b> e a <b>planilha de medidas</b>. Faltam algumas informações que só a fábrica sabe.<br><br>
+    É só tocar nas respostas. <b>"Não sei" também vale</b>, e nenhuma pergunta é obrigatória. Suas respostas ficam guardadas neste celular, então dá para parar e continuar depois.<br><br>
+    No fim, toque em <b>"Enviar pelo WhatsApp"</b>.
+  </div>
+  <div id="perguntas"></div>
+  <div class="fim">
+    <h3>Pronto! 🎉</h3>
+    <div style="font-size:15px">Toque no botão verde para mandar as respostas pelo WhatsApp. A mensagem já vai escrita: é só apertar <b>enviar</b>.</div>
+    <a class="btn wa" id="btnWa" href="#" target="_blank" rel="noopener">📲 Enviar pelo WhatsApp</a>
+    <button class="btn sec" id="btnCopia">📄 Copiar as respostas</button>
+    <div class="aviso">Se o WhatsApp não abrir, toque em "Copiar as respostas" e cole numa conversa com a Globo: <b>(41) 99145-5539</b>.</div>
+    <div class="prev" id="prev"></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const WA_NUMERO = '554191455539';   // chip da empresa (canal Márcia ↔ Claude)
+const NS = ['Não sei'];
+const PERGUNTAS = [
+ {sec:'1. Produtos: a Globo vende ou não?', itens:[
+  {id:'env_kraft', t:'Envelopes de pastel abertos de PAPEL (sem antigordura): 17×17, 17×21 e 17×25', c:'Eles estão na planilha de medidas, mas não têm preço na tabela.',
+   ops:['Sim, em papel pardo','Sim, em papel branco','Sim, em pardo e em branco','Não vende mais',...NS], txt:'Preço por milheiro (se souber)'},
+  {id:'env_pastel_peq', t:'Envelopes de pastel 14×13,5, 17×13,5 e 14×17', c:'Também estão na planilha de medidas, sem preço.',
+   ops:['Sim, em papel pardo','Sim, em papel branco','Sim, em pardo e em branco','Não vende mais',...NS], txt:'Preço por milheiro (se souber)'},
+  {id:'env_2020', t:'Envelope 20×20 de papel (sem antigordura)', c:'Aparece no site, mas não aparece em nenhuma planilha.',
+   ops:['Existe e vende','Não existe / não vende mais',...NS]},
+  {id:'pardo_peq', t:'Batatinha, semente, hambúrguer e saco 13,5×17,5 em kraft PARDO', c:'A tabela só traz esses sacos em kraft branco e antigordura.',
+   ops:['Fazemos todos em pardo também','Fazemos só alguns em pardo (escreva quais)','Não, só branco e antigordura',...NS], txt:'Quais? Preço?'},
+  {id:'monolucido', t:'Papel monolúcido (M30, M40, M60)', c:'Está na planilha de medidas, mas não tem preço na tabela.',
+   ops:['Vende normalmente','Só sob encomenda','Não vende mais',...NS], txt:'Preço ou observação'},
+  {id:'bandejas_sem_preco', t:'Bandejas que estão na planilha de medidas mas não têm preço', c:'14×14, 25×25, 33×25, 25×28, 33×28, 33×35, 33×40, 28×50, 35×50, 60×60 e 60×120. Como o site deve mostrar?',
+   ops:['Mostrar com "preço sob consulta"','Não mostrar no site','Vou mandar os preços',...NS], txt:'Observação ou preços'},
+  {id:'saco_1725', t:'Saco 17,5×25 em kraft pardo 35 g (R$ 143,00 na tabela)', c:'Está na tabela, mas não está na planilha de medidas.',
+   ops:['Ainda vende','Não vende mais',...NS], txt:'Medida (largura × altura × sanfona)'},
+  {id:'sticks', t:'Porta-sticks (kraft pardo 40 g)', c:'Qual é a medida?', ops:null, txt:'Medida (largura × altura × sanfona)'},
+ ]},
+ {sec:'2. Dúvidas da tabela e das medidas', itens:[
+  {id:'n2', t:'O saco antigordura 13,5×27 é o mesmo saco "nº 2" (13,5×26,5)?', ops:['Sim, é o mesmo saco','Não, é outro saco',...NS]},
+  {id:'batatinha', t:'Na tabela de kraft branco 30 g existe uma só "batatinha" (R$ 56,50). Ela é qual?', ops:['A de 120 g','A de 180 g','As duas, com o mesmo preço',...NS]},
+  {id:'medidas_aba', t:'A planilha "MEDIDAS SACOS GLOBO" tem duas listas com números um pouco diferentes', c:'Exemplo: o saco ½ kg aparece com 9,5 cm de largura numa lista e 10 cm na outra. Qual lista está certa?',
+   ops:['A 2ª ("Sacos de papel fechados com sanfona")','A 1ª (a primeira aba)',...NS]},
+  {id:'bat180', t:'A batatinha 180 g aparece com sanfona de 6,0 cm e de 6,5 cm. Qual é a certa?', ops:['6,0 cm','6,5 cm',...NS]},
+ ]},
+ {sec:'3. Pedido mínimo (quantidade)', itens:[
+  {id:'minimos', t:'Pedido mínimo destes produtos (em unidades, 1 cor)', c:'A tabela não traz o mínimo destes. Deixe em branco o que não souber.', grade:[
+   '900 g','Baguete','Baguete com visor','Pipoca','Pipoquinha','Miniburger','Saco 17,5×25','Saco 13,5×27 antigordura','Churros grande','Churros pequeno','Porta-sticks','Bijuteria','Farmácia','Saco nº 2']},
+ ]},
+ {sec:'4. Preços que parecem fora do padrão', itens:[
+  {id:'precos', t:'Estes preços estão certos?', c:'Pela regra da própria tabela, eles deveriam ser diferentes. Se algum for de propósito, marque "Está certo".', conf:[
+   ['p_meio_kb30','½ kg KB30 > KB35','<b>Saco ½ kg:</b> o kraft branco <b>30 g (R$ 79,00)</b> custa mais que o <b>35 g (R$ 74,50)</b>'],
+   ['p_1317_kb30','13,5×17,5 KB30 > KB35','<b>Saco 13,5×17,5:</b> o <b>30 g (R$ 93,00)</b> custa mais que o <b>35 g (R$ 88,00)</b>'],
+   ['p_900_kb40','900 g KB40 < KB35','<b>Saco 900 g:</b> o kraft branco <b>40 g (R$ 96,00)</b> custa menos que o <b>35 g (R$ 97,00)</b>'],
+   ['p_baguete','Baguete branco < pardo','<b>Baguete:</b> a de papel <b>branco (R$ 220,80)</b> custa menos que a de <b>pardo (R$ 223,00)</b>. Na com visor: R$ 244,50 × R$ 250,00'],
+   ['p_env_fech','Env. fechado 18×21,5 < aberto 16,5×21','<b>Envelope fechado 18×21,5 (R$ 134,40)</b> custa menos que o <b>aberto 16,5×21 (R$ 154,00)</b>, que é menor'],
+   ['p_lam','Lâmina 16,5×20 < 16,5×17,5','<b>Lâmina 16,5×20 (R$ 55,00)</b> custa menos que a <b>16,5×17,5 (R$ 61,20)</b>, que é menor'],
+   ['p_band','Bandeja K60 40×40 Tab II > Tab I','<b>Bandeja kraft pardo 60 g 40×40:</b> a <b>Tabela II (R$ 212,00)</b> é mais cara que a <b>Tabela I (R$ 208,00)</b>'],
+   ['p_strong','Bobina Strong Tab I = Tab II','<b>Bobina Strong:</b> Tabela I e Tabela II têm o mesmo preço (R$ 11,40/kg)'],
+   ['p_hamb_ag','Antigordura hambúrguer R$ 99 × batatinha 180 R$ 68','<b>Saco antigordura hambúrguer (R$ 99,00)</b> custa bem mais que a <b>batatinha 180 g (R$ 68,00)</b>, que tem quase o mesmo tamanho'],
+  ], txt:'Se algum estiver errado: qual é o preço certo?'},
+  {id:'proposito', t:'Algum produto tem preço mais baixo de propósito (para atrair cliente)?', ops:['Sim (escreva qual)','Não',...NS], txt:'Qual produto e por quê?'},
+ ]},
+ {sec:'5. Custo do papel', itens:[
+  {id:'custos', t:'Quanto a Globo paga hoje pelo papel? (R$ por kg)', c:'Isso serve para montar o cálculo novo de preços. Pode ser aproximado. Deixe em branco o que não souber.', grade:[
+   'Kraft branco Irani (KB)','Kraft pardo Irani (K)','Semi kraft (N40)','Antigordura (G34)','Strong','Monolúcido (M)'], gradeTipo:'text', txt:'Se você não souber, quem sabe? (nome)'},
+ ]},
+ {sec:'6. Plásticos e descartáveis (revenda)', itens:[
+  {id:'revenda_preco', t:'O site mostra os preços de plásticos e descartáveis do antigo Suri Shop (2025). Qual preço usar?',
+   ops:['Os do Suri 2025 ainda estão bons','Tem tabela nova (vou mandar)','O custo de compra mais uma margem',...NS], txt:'Observação'},
+  {id:'revenda_un', t:'Como esses produtos são vendidos?', ops:['Por pacote','Por fardo/caixa','Depende do produto',...NS], txt:'Observação'},
+ ]},
+ {sec:'7. Para fechar', itens:[
+  {id:'quem', t:'Seu nome', ops:null, txt:'Nome', txtVal:'Márcia', curto:true},
+  {id:'geral', t:'Mais alguma coisa sobre o catálogo?', c:'Produto que falta, produto que não fazem mais, foto, nome errado… qualquer coisa.', ops:null, txt:'Escreva aqui'},
+ ]},
+];
+let R={}; try{ R=JSON.parse(localStorage.getItem('quiz_catalogo_marcia')||'{}'); }catch(e){ R={}; }
+const salva=()=>{ try{ localStorage.setItem('quiz_catalogo_marcia', JSON.stringify(R)); }catch(e){} atualiza(); };
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const limpo=s=>String(s).replace(/<[^>]+>/g,'');
+let num=0;
+function render(){
+  const el=document.getElementById('perguntas'); let h='';
+  PERGUNTAS.forEach(s=>{ h+=`<h2>${esc(s.sec)}</h2>`;
+    s.itens.forEach(q=>{ num++; q.n=num;
+      h+=`<div class="q" data-q="${q.id}"><div class="n">Pergunta ${num}</div><div class="t">${esc(q.t)}</div>${q.c?`<div class="c">${esc(q.c)}</div>`:''}`;
+      if(q.ops) h+=`<div class="ops">${q.ops.map((o,i)=>`<button data-o="${i}"><i></i>${esc(o)}</button>`).join('')}</div>`;
+      if(q.grade) h+=`<div class="grade">${q.grade.map((g,i)=>`<span>${esc(g)}</span><input type="${q.gradeTipo==='text'?'text':'number'}" inputmode="${q.gradeTipo==='text'?'decimal':'numeric'}" data-g="${i}" placeholder="${q.gradeTipo==='text'?'R$/kg':'unidades'}">`).join('')}</div>`;
+      if(q.conf) h+=q.conf.map(([k,l,d])=>`<div class="conf" data-k="${k}"><div class="d">${d}</div><div class="ops">${['Está certo','Está errado','Não sei'].map((o,i)=>`<button data-c="${i}"><i></i>${o}</button>`).join('')}</div></div>`).join('');
+      if(q.txt) h+=`<div class="extra">${q.curto?`<input type="text" data-t placeholder="${esc(q.txt)}">`:`<textarea data-t placeholder="${esc(q.txt)}"></textarea>`}</div>`;
+      h+='</div>'; }); });
+  el.innerHTML=h;
+  el.querySelectorAll('.q').forEach(div=>{ const q=acha(div.dataset.q); R[q.id]=R[q.id]||{}; const r=R[q.id];
+    if(q.txtVal && r.t==null) r.t=q.txtVal;
+    div.querySelectorAll('button[data-o]').forEach(b=>{ b.classList.toggle('on', r.o===+b.dataset.o);
+      b.onclick=()=>{ r.o = r.o===+b.dataset.o ? undefined : +b.dataset.o; div.querySelectorAll('button[data-o]').forEach(x=>x.classList.toggle('on', r.o===+x.dataset.o)); salva(); }; });
+    div.querySelectorAll('.conf').forEach(cf=>{ const k=cf.dataset.k; r.c=r.c||{};
+      cf.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', r.c[k]===+b.dataset.c);
+        b.onclick=()=>{ r.c[k] = r.c[k]===+b.dataset.c ? undefined : +b.dataset.c; cf.querySelectorAll('button').forEach(x=>x.classList.toggle('on', r.c[k]===+x.dataset.c)); salva(); }; }); });
+    div.querySelectorAll('input[data-g]').forEach(inp=>{ r.g=r.g||{}; inp.value=r.g[inp.dataset.g]||''; inp.oninput=()=>{ r.g[inp.dataset.g]=inp.value; salva(); }; });
+    const t=div.querySelector('[data-t]'); if(t){ t.value=r.t||''; t.oninput=()=>{ r.t=t.value; salva(); }; }
+  });
+  atualiza();
+}
+const acha=id=>{ for(const s of PERGUNTAS) for(const q of s.itens) if(q.id===id) return q; };
+function respondida(q){ const r=R[q.id]||{};
+  if(q.id==='quem') return false;
+  if(r.o!=null) return true;
+  if(r.c && Object.values(r.c).some(v=>v!=null)) return true;
+  if(r.g && Object.values(r.g).some(v=>String(v).trim())) return true;
+  if(r.t && String(r.t).trim()) return true;
+  return false; }
+function texto(){
+  const L=['📋 RESPOSTAS DO QUIZ DO CATÁLOGO (para o Leo)', 'Respondido por: '+(((R.quem||{}).t)||'Márcia'), ''];
+  PERGUNTAS.forEach(s=>{ const linhas=[];
+    s.itens.forEach(q=>{ if(q.id==='quem') return; const r=R[q.id]||{}; const p=[];
+      if(q.ops && r.o!=null) p.push(q.ops[r.o]);
+      if(q.conf && r.c) q.conf.forEach(([k,l])=>{ if(r.c[k]!=null) p.push('\n   • '+l+' → '+['CERTO','ERRADO','não sei'][r.c[k]]); });
+      if(q.grade && r.g) q.grade.forEach((g,i)=>{ const v=String(r.g[i]||'').trim(); if(v) p.push('\n   • '+g+': '+v); });
+      if(r.t && String(r.t).trim()) p.push((q.conf||q.grade?'\n   ✍️ ':(p.length?'✍️ ':''))+String(r.t).trim());
+      if(p.length) linhas.push(`${q.n}. ${q.t}: ${p.join(q.conf||q.grade?'':' — ')}`); });
+    if(linhas.length){ L.push('*'+s.sec+'*'); L.push(...linhas); L.push(''); } });
+  const n=PERGUNTAS.flatMap(s=>s.itens).filter(respondida).length;
+  if(n===0) L.push('(nenhuma resposta ainda)');
+  return L.join('\n').trim(); }
+function atualiza(){
+  const todas=PERGUNTAS.flatMap(s=>s.itens).filter(q=>q.id!=='quem'), n=todas.filter(respondida).length, pct=Math.round(100*n/todas.length);
+  document.getElementById('contTxt').textContent=`${n} de ${todas.length} respondidas`;
+  document.getElementById('pctTxt').textContent=pct+'%';
+  document.getElementById('enchido').style.width=pct+'%';
+  document.querySelectorAll('.q').forEach(d=>{ const q=acha(d.dataset.q); d.classList.toggle('feita', respondida(q)); });
+  const tx=texto(); document.getElementById('btnWa').href='https://wa.me/'+WA_NUMERO+'?text='+encodeURIComponent(tx);
+  const pv=document.getElementById('prev'); pv.textContent=tx; pv.style.display=n?'block':'none'; }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2500); }
+document.getElementById('btnCopia').onclick=async()=>{ const tx=texto();
+  try{ await navigator.clipboard.writeText(tx); toast('✅ Respostas copiadas. Cole no WhatsApp.'); }
+  catch(e){ const pv=document.getElementById('prev'); pv.style.display='block'; const rg=document.createRange(); rg.selectNodeContents(pv); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); toast('Selecionei o texto: toque em Copiar.'); } };
+render();
+</script>
+</body>
+</html>
