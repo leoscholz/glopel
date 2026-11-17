@@ -1,5 +1,6 @@
 -- GloboEditor · Ponte Site ↔ WhatsApp · contrato v1 (17-11-2026)
--- Tabela de pedidos vindos do carrinho do site. NÃO RODADO AINDA: aguarda OK do Leo.
+-- Tabela de pedidos vindos do carrinho do site. OK do Leo para rodar: 17-11-2026.
+-- Decisões: número 554191455539 · sem login (identidade = nº do WhatsApp) · arte = a já cadastrada do cliente; arte nova é exceção.
 -- Cole no SQL Editor do Supabase (projeto dzfelcufnsltutxeidow) e clique em Run. Pode rodar de novo.
 -- Front usa só a chave publishable (anon). service_role NUNCA no front: leitura/baixa é do bot/Claude/painel interno.
 
@@ -10,12 +11,13 @@ create table if not exists public.pedidos_site (
   versao        smallint not null default 1,               -- versão do contrato
   wa_token      text check (wa_token is null or wa_token ~ '^[A-Za-z0-9]{8,16}$'),
   cupom         text check (cupom is null or length(cupom) <= 20),
-  user_id       uuid default auth.uid(),                   -- preenchido só se o cliente estiver logado
+  user_id       uuid,                                       -- sem login (decisão 17-11); reservado
   itens         jsonb not null check (jsonb_typeof(itens) = 'array' and jsonb_array_length(itens) between 1 and 60),
   total_itens   numeric(12,2) not null check (total_itens >= 0),
   total_cliches numeric(12,2) not null default 0 check (total_cliches >= 0),
   total         numeric(12,2) not null check (total >= 0),
   tem_arte      boolean not null default false,
+  arte_nova     boolean not null default false,             -- exceção: atendente trata
   -- preenchidos pelo lado interno (bot/Claude/humano), nunca pelo site:
   status        text not null default 'aguardando_whatsapp'
                 check (status in ('aguardando_whatsapp','recebido','conferido','confirmado','cancelado','expirado')),
@@ -32,13 +34,11 @@ alter table public.pedidos_site enable row level security;
 drop policy if exists pedidos_site_insert on public.pedidos_site;
 create policy pedidos_site_insert on public.pedidos_site for insert to anon, authenticated
   with check (status = 'aguardando_whatsapp' and telefone_wa is null and recebido_em is null
-              and ref_interna is null and obs is null
-              and (user_id is null or user_id = auth.uid()));
+              and ref_interna is null and obs is null and user_id is null
+              );
 
--- Cliente logado vê os próprios pedidos (histórico). Anônimo não vê nada.
+-- Sem login: ninguém do front lê pedidos (nem anon nem logado).
 drop policy if exists pedidos_site_select_dono on public.pedidos_site;
-create policy pedidos_site_select_dono on public.pedidos_site for select to authenticated
-  using (user_id = auth.uid());
 
 -- Sem policy de update/delete para anon/authenticated => bloqueado. Baixa de status = service_role no backend.
 
@@ -55,3 +55,6 @@ create table if not exists public.wa_links (
   cupom        text
 );
 alter table public.wa_links enable row level security;   -- sem policy: só service_role (bot) lê/escreve
+
+-- Conferência depois de rodar (deve listar as 2 tabelas com RLS ligado):
+select relname, relrowsecurity from pg_class where relname in ('pedidos_site','wa_links');

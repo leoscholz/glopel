@@ -3,7 +3,9 @@
      PonteWA.leEntrada()                       -> {wa, cupom} lidos da URL (?wa=…&c=…) e guardados
      await PonteWA.fecharPedido(itens, extras) -> grava no Supabase (se der) e abre o WhatsApp
    Formato do item (uma linha do carrinho):
-     {id, nome, papel, qtd, un:'milheiro', preco_unit, arte:{tem:bool, aprovada:bool, ref:string|null}}
+     {id, nome, papel, qtd, un:'milheiro', preco_unit, arte:{tem:bool, nova:bool, ref:string|null}}
+   Arte (decisão Leo 17-11): pedido pelo WhatsApp = arte já cadastrada do cliente (identificado pelo número).
+   arte.nova=true é exceção -> a mensagem avisa e o atendente trata.
    Regra de segurança: só a chave publishable; nunca service_role aqui. */
 (function(g){
   const NUMERO_WA = '554191455539';          // chip da empresa (mesmo do Suri Shop e do LetsBot). CONFIRMAR COM O LEO.
@@ -35,7 +37,7 @@
     const L = [`${PREFIXO} *${codigo}*`, ''];
     const max = 12;
     itens.slice(0, max).forEach(i => {
-      const arte = i.arte && i.arte.tem ? ' 🎨 arte própria' : '';
+      const arte = !(i.arte && i.arte.tem) ? '' : i.arte.nova ? ' 🎨 ARTE NOVA (atendente confere)' : ' · arte de sempre';
       L.push(`• ${i.qtd} ${i.un==='milheiro'?'mil':'un'} × ${i.nome}${i.papel?' ('+i.papel+')':''}${arte} — ${brl(i.qtd*i.preco_unit)}`);
     });
     if (itens.length > max) L.push(`• … e mais ${itens.length-max} itens`);
@@ -58,7 +60,7 @@
       const {error} = await SB.from('pedidos_site').insert({
         codigo, wa_token: ent.wa||null, cupom: ent.cupom||null, itens,
         total_itens: tot.itens, total_cliches: tot.cliches, total: tot.total,
-        tem_arte: itens.some(i=>i.arte&&i.arte.tem)});
+        tem_arte: itens.some(i=>i.arte&&i.arte.tem), arte_nova: itens.some(i=>i.arte&&i.arte.nova)});
       if (!error) ok = true;
       else if (error.code === '23505') codigo = novoCodigo();   // código repetido: sorteia outro
       else break;
