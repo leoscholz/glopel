@@ -62,6 +62,13 @@ tr:hover td{background:#fafaf6}
 .pill.grey{background:var(--grey2);color:var(--mute)}
 .mut{color:var(--mute)}
 .note{color:var(--mute);font-size:12px;margin:8px 0 0}
+.ora{margin-bottom:16px;border-color:#cdbfe6}
+.ora-log{max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px 8px}
+.ora-q{align-self:flex-end;background:var(--acc);color:#fff;border-radius:12px 12px 2px 12px;padding:8px 12px;max-width:80%;white-space:pre-wrap}
+.ora-a{align-self:flex-start;background:#f5f2fb;border-radius:12px 12px 12px 2px;padding:8px 12px;max-width:92%;font-size:14px;line-height:1.45}
+.ora-a p{margin:0 0 6px} .ora-a ul,.ora-a ol{margin:0 0 6px;padding-left:20px} .ora-a table{background:#fff;margin:4px 0 6px;font-size:13px} .ora-a th,.ora-a td{white-space:normal}
+.ora-ex{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px} .ora-ex .btn{font-size:12px;padding:4px 10px;border-radius:14px}
+.ora-in{display:flex;gap:8px;align-items:stretch} .ora-in textarea{flex:1;resize:vertical;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;min-height:44px}
 .banner{background:var(--warn2);border:1px solid #f1dcae;color:#7a5a12;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px}
 .banner.ok{background:var(--ok2);border-color:#c7e3d1;color:#235c3a}
 .ph{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
@@ -337,6 +344,7 @@ function badgeFonte(){
 
 function render(){
   if (!SEG) return;
+  const focoOra = document.activeElement && document.activeElement.id==='oraIn';
   menu();
   const m = MODS.find(x => x.id && x.id===atual) || MODS[0];
   document.getElementById('title').textContent = m.ic+' '+m.nome;
@@ -356,6 +364,10 @@ function render(){
   else if (atual==='precificador') v.innerHTML = `<iframe src="precificador.html" title="Precificador" style="width:100%;height:calc(100vh - 110px);border:0;border-radius:12px;background:#fff"></iframe>`;
   else if (atual==='artes') v.innerHTML = vArtes();
   else v.innerHTML = vPH(m);
+  if (atual==='inicio') {
+    const lg = document.getElementById('oraLog'); if (lg) lg.scrollTop = lg.scrollHeight;
+    const ta = document.getElementById('oraIn'); if (ta && focoOra && !ta.disabled) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
+  }
 }
 
 /* =========================================================
@@ -574,6 +586,7 @@ function vInicio(){
   const trans = DB.ent.filter(e=>e.status==='PEDIDO').reduce((a,e)=>a+Number(e.qtd||0),0);
   const card = (ic,n,txt,id) => `<div class="card" style="cursor:pointer" onclick="ir('${id}')"><div style="font-size:22px">${ic}</div><b>${n}</b><div class="mut" style="font-size:13px;margin-top:4px">${txt}</div></div>`;
   return `
+  ${oraBox()}
   <div class="grid kpis">
     <div class="card kpi ${ja.length?'bad':''}"><div class="v">${ja.length}</div><div class="l">tipos de bobina para pedir já</div></div>
     <div class="card kpi ${br.length?'warn':''}"><div class="v">${br.length}</div><div class="l">para pedir em 2 semanas</div></div>
@@ -588,6 +601,84 @@ function vInicio(){
     ${card('📤','A pagar','Papel, contas fixas, folha e comissões.','apagar')}
     ${card('🤝','Comissões','Vendido e quitado por vendedor.','comissoes')}
     ${card('🚚','Fornecedores','Prazos reais e preço do papel.','fornecedores')}
+  </div>`;
+}
+
+/* =========================================================
+   🔮 Oráculo — perguntas sobre a empresa (Claude pelo porteiro)
+   A chave da Anthropic fica no porteiro (Propriedades do script), nunca aqui.
+   ========================================================= */
+const ORA = {hist:[], rasc:'', carregando:false, erro:null};
+try { const s = JSON.parse(sessionStorage.getItem('glopel-oraculo')||'null'); if (s && Array.isArray(s.hist)) ORA.hist = s.hist; } catch(e) {}
+function oraSalva(){ try { sessionStorage.setItem('glopel-oraculo', JSON.stringify({hist:ORA.hist})); } catch(e) {} }
+const ORA_EX = ['Quais bobinas preciso pedir esta semana?','Quanto temos para pagar nos próximos 15 dias?','Quem mais vendeu em outubro?','Qual é o CNPJ e o regime tributário da empresa?','O que as máquinas produziram ontem?','Quais clientes estão na fila de conversão de arte?'];
+function oraContexto(){
+  const H = iso(hoje()), S = Object.assign({}, SEG||{});
+  delete S.api; delete S.bob; delete S.contas; delete S.funcionarios;
+  const C = {gerado_em: new Date().toISOString(), cofre: S};
+  try {
+    C.bobinas = {fonte: DB.fonte, atualizado: DB.atualizado, tipos: DB.skus,
+      estoque: estoque().map(e=>({sku:e.sku, tipo:e.tipo, status:e.st, alerta:e.conf?e.conf[1]+': '+e.conf[2]:'', saldo_bob:e.saldo, saldo_kg:e.kg, em_transito:e.trans, consumo_por_semana:e.cons, cobertura_semanas:e.cob, acaba_em:e.rup, pedir_ate:e.ate, sugestao_bob:e.sug, ultima_saida:e.ult})),
+      saidas_recentes: DB.saidas.filter(x=>x.data>=addD(H,-60)), pedidos_e_entradas: DB.ent, contagens: DB.inv};
+  } catch(e) { C.bobinas = {erro: String(e)}; }
+  try { C.funcionarios = {fonte: REM?'planilha do site':'navegador/cofre', lista: funcs()}; } catch(e) {}
+  try { C.contas_fixas = {fonte: REM?'planilha do site':'navegador/cofre', lista: contas()}; } catch(e) {}
+  try { C.a_pagar = {de: addD(H,-30), ate: addD(H,90), obs:'pago=true se marcado como pago; vencidas antes de '+DESDE_SIS+' contam como pagas; comissões são estimadas (taxa de 5% é chute)',
+      itens: ocorrencias(addD(H,-30), addD(H,90)).map(o=>({vencimento:o.data, conta:o.nome, categoria:o.cat, valor:o.valor, origem:o.fonte, pago:pago(o), pagamento:REM&&REM.pagos[o.id]||null}))}; } catch(e) {}
+  return C;
+}
+async function oraPerguntar(txt){
+  txt = String(txt||'').trim(); if (!txt || ORA.carregando) return;
+  if (!API()) { ORA.erro = 'Destranque o cofre primeiro (a senha libera o acesso ao Oráculo).'; render(); return; }
+  const historico = ORA.hist.slice(-10).map(m=>({role:m.role, content:m.content}));
+  ORA.hist.push({role:'user', content:txt}); ORA.rasc = ''; ORA.carregando = true; ORA.erro = null; oraSalva(); render();
+  try {
+    const j = await api('perguntar', {pergunta:txt, historico, hoje:dmy(iso(hoje())), contexto:oraContexto()});
+    ORA.hist.push({role:'assistant', content:j.resposta, modelo:j.modelo});
+  } catch(e) {
+    ORA.hist.pop(); ORA.rasc = txt;
+    const m = e.message||String(e);
+    ORA.erro = /ação desconhecida/.test(m) ? 'O porteiro ainda não tem o Oráculo: falta publicar a versão nova do script (v3).' : m;
+  }
+  ORA.carregando = false; oraSalva(); render();
+  const el = document.getElementById('oraLog'); if (el) el.scrollTop = el.scrollHeight;
+}
+function oraNova(){ ORA.hist = []; ORA.erro = null; oraSalva(); render(); }
+function mdLeve(t){
+  const inl = x => esc(x).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const L = String(t||'').split('\n'), out = []; let i = 0;
+  while (i < L.length) {
+    const l = L[i];
+    if (/^\s*\|.*\|\s*$/.test(l)) {
+      const rows = []; while (i < L.length && /^\s*\|.*\|\s*$/.test(L[i])) { rows.push(L[i]); i++; }
+      const cells = r => r.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      const body = rows.filter(r=>!/^\s*\|[\s:\-|]+\|\s*$/.test(r));
+      out.push('<div class="tw"><table>'+body.map((r,k)=>'<tr>'+cells(r).map(c=>k===0?`<th>${inl(c)}</th>`:`<td>${inl(c)}</td>`).join('')+'</tr>').join('')+'</table></div>');
+      continue;
+    }
+    if (/^\s*[-*•]\s+/.test(l)) { const it = []; while (i < L.length && /^\s*[-*•]\s+/.test(L[i])) { it.push('<li>'+inl(L[i].replace(/^\s*[-*•]\s+/,''))+'</li>'); i++; } out.push('<ul>'+it.join('')+'</ul>'); continue; }
+    if (/^\s*\d+[.)]\s+/.test(l)) { const it = []; while (i < L.length && /^\s*\d+[.)]\s+/.test(L[i])) { it.push('<li>'+inl(L[i].replace(/^\s*\d+[.)]\s+/,''))+'</li>'); i++; } out.push('<ol>'+it.join('')+'</ol>'); continue; }
+    const h = /^\s*#{1,4}\s+(.*)$/.exec(l); if (h) { out.push('<b>'+inl(h[1])+'</b>'); i++; continue; }
+    out.push(l.trim() ? '<p>'+inl(l)+'</p>' : ''); i++;
+  }
+  return out.join('');
+}
+function oraTecla(ev){ if (ev.key==='Enter' && !ev.shiftKey) { ev.preventDefault(); oraPerguntar(ev.target.value); } }
+function oraBox(){
+  const tem = !!API();
+  const log = ORA.hist.map(m => m.role==='user'
+    ? `<div class="ora-q">${esc(m.content)}</div>`
+    : `<div class="ora-a">${mdLeve(m.content)}</div>`).join('')
+    + (ORA.carregando ? `<div class="ora-a mut">🔮 Consultando os dados da empresa…</div>` : '');
+  return `<div class="card ora">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:22px">🔮</span><b style="font-size:16px">Oráculo</b><span class="mut" style="font-size:13px">pergunte qualquer coisa da empresa</span><span class="sp"></span>${ORA.hist.length?`<button class="btn" style="padding:3px 10px;font-size:12px" onclick="oraNova()">Nova conversa</button>`:''}</div>
+    ${ORA.hist.length||ORA.carregando ? `<div id="oraLog" class="ora-log">${log}</div>` : `<div class="ora-ex">${ORA_EX.map(q=>`<button class="btn" onclick='oraPerguntar(${JSON.stringify(q)})' ${tem?'':'disabled'}>${esc(q)}</button>`).join('')}</div>`}
+    ${ORA.erro?`<div class="banner" style="margin:8px 0 0">${esc(ORA.erro)}</div>`:''}
+    <div class="ora-in">
+      <textarea id="oraIn" rows="2" placeholder="${tem?'Ex.: quanto devemos para a Irani e quando vence?  (Enter envia · Shift+Enter quebra linha)':'Destranque o cofre para usar o Oráculo'}" ${tem&&!ORA.carregando?'':'disabled'} oninput="ORA.rasc=this.value" onkeydown="oraTecla(event)">${esc(ORA.rasc)}</textarea>
+      <button class="btn pri" ${tem&&!ORA.carregando?'':'disabled'} onclick="oraPerguntar(document.getElementById('oraIn').value)">${ORA.carregando?'…':'Perguntar'}</button>
+    </div>
+    <div class="mut" style="font-size:11px;margin-top:6px">Responde com a base do Oráculo (documentos lidos, com fonte) + os dados abertos neste sistema. Só lê — não grava nada. Confira números importantes na fonte indicada.</div>
   </div>`;
 }
 

@@ -30,6 +30,11 @@ function doPost(e) {
   let req;
   try { req = JSON.parse(e.postData.contents); } catch (x) { return saida({ ok: false, erro: 'pedido inválido' }); }
   if (!req || req.chave !== CHAVE) return saida({ ok: false, erro: 'chave' });
+  // Oráculo: não trava a planilha (a resposta do Claude demora alguns segundos)
+  if (req.acao === 'perguntar') {
+    try { const r = perguntar(req.dados || {}, req.quem); registrarLog('perguntar', req.quem, { pergunta: String((req.dados || {}).pergunta || '').slice(0, 500) }); return saida(Object.assign({ ok: true }, r)); }
+    catch (x) { return saida({ ok: false, erro: String(x && x.message || x) }); }
+  }
   const trava = LockService.getScriptLock();
   if (!trava.tryLock(20000)) return saida({ ok: false, erro: 'ocupado, tente de novo' });
   try {
@@ -44,6 +49,7 @@ function doPost(e) {
       case 'saida': r = saidaBobina(d); break;
       case 'tabelas': r = tabelas(d); break;
       case 'upsert': r = upsert(d, req.quem); break;
+      // 'perguntar' (Oráculo) é tratado antes da trava, lá em cima
       default: return saida({ ok: false, erro: 'ação desconhecida: ' + req.acao });
     }
     if (req.acao !== 'ler' && req.acao !== 'tabelas') registrarLog(req.acao, req.quem, d);
@@ -146,6 +152,61 @@ function upsert(d, quem) {
   lin += 2;
   head.forEach((h, i) => { if (val[h] !== undefined) sh.getRange(lin, i + 1).setNumberFormat('@').setValue(val[h] === null ? '' : String(val[h])); });
   return { msg: 'Gravado.', linha: lin };
+}
+
+/* ---------- Oráculo: perguntas sobre a empresa, respondidas pelo Claude ----------
+ * A chave da API da Anthropic fica SÓ aqui, nas Propriedades do script (nunca no site nem no GitHub):
+ *   Apps Script › ⚙️ Configurações do projeto › Propriedades do script › ANTHROPIC_KEY = sk-ant-…
+ * Opcional: MODELO (padrão claude-sonnet-5-5).
+ * O site manda a pergunta + o histórico da conversa + um retrato dos dados que ele já tem abertos
+ * (cofre destrancado, planilha do site, bobinas). Aqui juntamos a base do Oráculo (fatos com fonte).
+ */
+const ORACULO = '1SUSBDzyd0ItjMlJEcnhSSr6kij_3RgWgktdikrAPf34'; // Glopel_Oraculo_Base › Fatos
+
+function baseOraculo() {
+  try {
+    const sh = SpreadsheetApp.openById(ORACULO).getSheetByName('Fatos');
+    if (!sh || sh.getLastRow() < 2) return '(base vazia)';
+    const v = sh.getDataRange().getDisplayValues();
+    const h = v[0], iV = h.indexOf('Vigente');
+    return [h.join('\t')].concat(v.slice(1).filter(r => r[0] && (iV < 0 || r[iV] !== 'NÃO')).map(r => r.join('\t'))).join('\n');
+  } catch (x) { return '(não consegui ler a base do Oráculo: ' + x + ')'; }
+}
+
+function perguntar(d, quem) {
+  const props = PropertiesService.getScriptProperties();
+  const key = props.getProperty('ANTHROPIC_KEY');
+  if (!key) throw new Error('falta a chave da Anthropic no porteiro (Propriedades do script › ANTHROPIC_KEY)');
+  const modelo = props.getProperty('MODELO') || 'claude-sonnet-5-5';
+  const pergunta = String(d.pergunta || '').trim();
+  if (!pergunta) throw new Error('pergunta vazia');
+  const hist = (d.historico || []).slice(-10).filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.content)
+    .map(m => ({ role: m.role, content: String(m.content).slice(0, 8000) }));
+  while (hist.length && hist[0].role !== 'user') hist.shift();
+  const instr = [
+    'Você é o Oráculo da Glopel (Embalagens Globo Indústria e Comércio Ltda, fábrica de sacos de papel para padarias em Curitiba).',
+    'Quem pergunta é alguém da empresa (Márcia, a dona; Daiane, do escritório; ou Leo, o consultor). Hoje é ' + (d.hoje || '') + '. Quem está perguntando: ' + (quem || 'não informado') + '.',
+    'Responda em português do Brasil, curto e direto, como uma secretária experiente: a resposta primeiro, depois o detalhe necessário. Use listas curtas e tabelas pequenas quando ajudarem. Valores em R$ com vírgula decimal; datas dd/mm/aaaa.',
+    'Use SÓ os dados abaixo. Não invente número, nome, data nem prazo. Se a informação não estiver nos dados, diga claramente que não sabe e onde provavelmente está (Sage Start, Drive, uma pessoa) — essa resposta é útil.',
+    'Diga de onde veio cada número importante, entre parênteses e curto: (base do Oráculo F0012), (planilha do site), (bobinas ao vivo), (retrato de produção 17/11), (vendas do Start até 16/11)…',
+    'Se dois dados se contradizem, mostre os dois e diga qual é mais recente. Avise quando um dado for retrato antigo ou estimativa (ex.: comissão 5% é chute).',
+    'Você só lê: não consegue gravar nada. Se pedirem para registrar algo, diga em qual página do Sistema Globo fazer isso.'
+  ].join('\n');
+  const dadosSite = JSON.stringify(d.contexto || {});
+  const system = [
+    { type: 'text', text: instr },
+    { type: 'text', text: '<base_oraculo>\nFatos sobre a empresa, cada um com fonte e data de referência (vale o mais recente):\n' + baseOraculo() + '\n</base_oraculo>\n\n<dados_do_sistema>\n' + dadosSite.slice(0, 400000) + '\n</dados_do_sistema>', cache_control: { type: 'ephemeral' } }
+  ];
+  const corpo = { model: modelo, max_tokens: 2000, system: system, messages: hist.concat([{ role: 'user', content: pergunta }]) };
+  const r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    payload: JSON.stringify(corpo)
+  });
+  const code = r.getResponseCode(), j = JSON.parse(r.getContentText() || '{}');
+  if (code !== 200) throw new Error('Claude respondeu ' + code + ': ' + ((j.error && j.error.message) || r.getContentText().slice(0, 200)));
+  const txt = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
+  return { resposta: txt || '(sem resposta)', modelo: j.model, uso: j.usage };
 }
 
 /* ---------- apoio ---------- */
