@@ -152,6 +152,38 @@ def chave(o):
     kg=n[0]*(1 if 'kg' in o['nome'] else 0.001 if ' g' in o['nome'] else 1) if n else 999
     saco_kg = o['cat']=='pao' and n and ('kg' in o['nome'] or ' g' in o['nome'])
     return (ORD[o['cat']], 0 if saco_kg else 1, kg if saco_kg else 0, o['nome'] if not saco_kg else '', [x for x in n] if not saco_kg else [], o['cod'].startswith('G'), o['cod'])
+
+# ---- respostas da Márcia ao quiz do catálogo (17-11-2026; claude/Catalogo-Quiz-Respostas-Marcia-2026-11-17.md) ----
+# Enquanto a tabela do Start não for corrigida, as correções ficam aqui. Cada item corrigido guarda o preço original em 'tab_start'.
+for o in out:
+    if o['cod']=='G34': o['cod']='G32'; o['papel']='Antigordura 32 g'          # papel é o Greasepack 32 g (Lutepel); "34 g" estava errado
+    if o['nome']=='Saco 13,5 × 27 cm': o['nome']='Saco nº 2'; o['cat']='outros'  # é o mesmo saco nº 2 (13,5 × 26,5)
+    if o['nome']=='Saco batatinha': o['nome']='Saco batatinha 180 g'          # a batatinha KB30 da tabela é a de 180 g
+    if o['nome'] in TAM_NOME and TAM_NOME[o['nome']] in TAM: o['medidas']=TAM[TAM_NOME[o['nome']]]
+    if o['nome']=='Porta-sticks': o['medidas']='8,5 × 16,5'                     # sem sanfona; bobina de 20 cm
+MIN_MARCIA={'Saco 900 g':10000,'Saco baguete':10000,'Saco baguete com visor':20000,'Saco pipoca':20000,'Saco pipoquinha':20000,'Saco miniburger':20000,
+  'Saco 17,5 × 25 cm':10000,'Saco nº 2':10000,'Saco churros grande 8,5 × 21 cm':20000,'Saco churros pequeno 8,5 × 14 cm':20000,'Porta-sticks':20000,
+  'Saco bijuteria':20000,'Saco farmácia':20000}
+for o in out:
+    if not o.get('minimo') and o['nome'] in MIN_MARCIA: o['minimo']=MIN_MARCIA[o['nome']]
+# "inverter os preços dos errados": trocar as três tabelas entre os pares; na bandeja K60 40×40, trocar Tab I e Tab II
+TROCA=[('c_kb35_kb35_900_grs','c_kb40_kb40_900grs'),('c_k35_k35_baguete_longo','c_kb35_kb35_baguete'),
+       ('c_k35_k35_baguete_visor','c_kb35_kb35_baguete_viso'),('c_g34lam_16_5x20','c_g34lam_16_5x17_5')]
+por_id={o['id']:o for o in out}
+for a,b in TROCA:
+    A,B=por_id[a],por_id[b]; A['tab_start'],B['tab_start']=A['tab'],B['tab']; A['tab'],B['tab']=B['tab_start'],A['tab_start']
+    for X in (A,B): X['corrigido']='preço invertido (Márcia, 17-11)'
+X=por_id['c_k60_k60_bandeja_40x40']; X['tab_start']=X['tab']; X['tab']=[X['tab'][1],X['tab'][0],X['tab'][2]]; X['corrigido']='Tab I e II invertidas (Márcia, 17-11)'
+for o in out: o['preco']=round(max(p for p in o['tab'] if p)*FATOR,2)
+# fora do site (continuam no Sistema Globo para emitir pedidos)
+FORA={'c_k35_k35_17_5x25':'não vende mais',
+      'c_k40_porta_sticks_kraft_pardo_40grs':'produto exclusivo de um cliente (preço negociado)',
+      'c_kb30_kb30_1_2_kg':'produto exclusivo de um cliente (preço negociado)','c_kb40_kb40_900grs':'produto exclusivo de um cliente (preço negociado)',
+      'c_g34sac_churros_grande_8_5_x_21cm':'produto exclusivo de um cliente (preço negociado)','c_g34sac_churros_pequeno_8_5_x_14_cm':'produto exclusivo de um cliente (preço negociado)',
+      'c_g34lam_au_au_14x33':'produto exclusivo de um cliente (preço negociado)'}
+for o in out:
+    if o['id'] in FORA: o['fora_site']=FORA[o['id']]
+assert all(k in por_id for k in FORA), [k for k in FORA if k not in por_id]
 out.sort(key=chave)
 json.dump({'gerado':'fonte de verdade (17-11-2026): '+F1+' + '+F2,'fator':FATOR,'itens':out},
           open(os.path.join(AQUI,'catalogo_tabela.json'),'w',encoding='utf-8'), ensure_ascii=False, indent=1)

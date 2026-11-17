@@ -2137,11 +2137,14 @@ const FOTOS = __FOTOS__;
    Itens SEM personalização online e sem foto. Preço = maior das Tabelas I/II/III × 1,10 (preço de quem não é cliente;
    o cliente terá desconto pelo cupom do vendedor, que também mapeia a comissão). */
 const CAT_TAB = __CATALOGO_TAB__;
-const ITENS_TAB = CAT_TAB.itens;
+/* fora_site: item que continua na tabela (e no Sistema Globo) mas não aparece na loja — exclusivo de um cliente ou fora de linha (Márcia, 17-11-2026). */
+const ITENS_TAB = CAT_TAB.itens.filter(i=>!i.fora_site);
+/* facas OHDE de produtos que a Globo não vende mais (Márcia, 17-11-2026): envelopes de pastel de papel 17×17, 17×21, 17×25 e 20×20 */
+const FACAS_FORA_LOJA = new Set(['e1717','e1721','e1725','e2020']);
 /* Preço de tabela das sacolas personalizáveis: faca → nome no catálogo; papel do site → linha da tabela
    (kraft = kraft pardo K, branco = kraft branco KB; gramatura preferida 35 g, depois 30, depois 40). Sem par → preço ilustrativo. */
 const FACA_TAB = {f05:'Saco ½ kg', f900:'Saco 900 g', f1:'Saco 1 kg', f2:'Saco 2 kg', f3:'Saco 3 kg', f5:'Saco 5 kg', f75:'Saco 7,5 kg', f10:'Saco 10 kg', f15:'Saco 15 kg',
-  fbat120:['Saco batatinha 120 g','Saco batatinha'], fbat180:['Saco batatinha 180 g','Saco batatinha'], fsem:'Saco semente', fhb:'Saco hambúrguer', fham:'Saco hamburgão', f1317:'Saco 13,5 × 17,5 cm',
+  fbat120:'Saco batatinha 120 g', fbat180:'Saco batatinha 180 g', fsem:'Saco semente', fhb:'Saco hambúrguer', fham:'Saco hamburgão', f1317:'Saco 13,5 × 17,5 cm',
   t65:'Porta-talher estreito', t85:'Porta-talher largo'};
 /* FACA_TAB aceita lista de nomes (batatinha: a Antigordura separa 120 g e 180 g; o "Saco batatinha" KB30 da tabela Globo vale para as duas). */
 const nomesFT = fc => [].concat(FACA_TAB[fc]||[]);
@@ -2603,7 +2606,7 @@ function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'
 /* =====================================================================
    VITRINE (17-11-2026): UM card por produto; os papéis da tabela são VARIAÇÕES dentro do card.
    - Produto personalizável = faca OHDE (FACAS) + itens da tabela com o mesmo nome (FACA_TAB).
-     Papel da variação → papel do editor: K… e N… (pardo, semi kraft) → 'kraft'; KB… e G34 → 'branco'.
+     Papel da variação → papel do editor: K… e N… (pardo, semi kraft) → 'kraft'; KB… e G32 (antigordura) → 'branco'.
      Papel do editor sem item na tabela → variação "preço ilustrativo" (o editor continua oferecendo).
    - Produto só de catálogo = itens da tabela agrupados pelo nome; sem personalizar, sem carrinho (impressão com o vendedor).
    - Foto: a da faca; nos itens de catálogo, reaproveitada quando a PROPORÇÃO bate (FOTO_REUSO), mesmo com medida diferente.
@@ -2670,9 +2673,10 @@ const embDe = t => { const m=(t||'').match(/(\d[\d.]*)\s*(unidades|un\b|copos)/i
 function altCm(nome){ const m=nome.match(/(\d+(?:,\d+)?)\s*×\s*(\d+(?:,\d+)?)/); return m?parseFloat(m[2].replace(',','.')):null; }
 const PRODUTOS = (()=>{
   const L=[];
-  FACAS.forEach(f=>{ const its=ITENS_TAB.filter(i=>nomesFT(f.faca).includes(i.nome));
+  FACAS.filter(f=>!FACAS_FORA_LOJA.has(f.faca)).forEach(f=>{ const its=ITENS_TAB.filter(i=>nomesFT(f.faca).includes(i.nome));
     const v=its.map(i=>({k:i.id, papel:i.papel, cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}));
-    ['kraft','branco'].forEach(pp=>{ if(!v.some(x=>x.edit===pp)) v.push({k:'x_'+pp, papel:PAPEIS[pp], cod:pp==='kraft'?'K':'KB', preco:null, un:'milheiro', edit:pp, ilu:true}); });
+    // sem variação "preço ilustrativo": o card mostra só os papéis que a tabela tem (Márcia, 17-11: batatinha, semente, hambúrguer e 13,5×17,5 não existem em pardo)
+    if(!v.length) ['kraft','branco'].forEach(pp=>v.push({k:'x_'+pp, papel:PAPEIS[pp], cod:pp==='kraft'?'K':'KB', preco:null, un:'milheiro', edit:pp, ilu:true}));
     v.sort((a,b)=>(a.edit===b.edit?0:a.edit==='kraft'?-1:1) || (a.ilu?1:0)-(b.ilu?1:0) || (/^G/.test(a.cod)?1:0)-(/^G/.test(b.cod)?1:0) || a.papel.localeCompare(b.papel,'pt',{numeric:true}));
     L.push({key:f.faca, cat:f.cat, nome:f.nome, faca:f, foto:f.fonte, h:f.h, uso:f.uso, vars:v, minimo:(its.find(i=>i.minimo)||{}).minimo, nomeTab:nomesFT(f.faca)[0]}); });
   ITENS_TAB.filter(i=>!NOME_FACA_TAB[i.nome]).forEach(i=>{
@@ -2700,7 +2704,7 @@ function renderLoja(){
   const ps=PRODUTOS.filter(p=>p.cat===design.cat), nPers=ps.filter(p=>p.faca).length;
   const tituloCat = (CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1];
   $('sechT').parentNode.style.display=''; $('sechT').textContent = tituloCat.replace(/^\S+\s/,'');
-  $('sechN').textContent = `${ps.length} produtos${nPers?` · ${nPers} personalizáve${nPers>1?'is':'l'} online`:''} · ${ps[0]&&ps[0].revenda?'preço de referência por embalagem (a confirmar)':'preço por '+(ps[0]&&ps[0].vars[0].un==='kg'?'kg':'milheiro')}`;
+  $('sechN').textContent = `${ps.length} produtos${nPers?` · ${nPers} personalizáve${nPers>1?'is':'l'} online`:''} · ${ps[0]&&ps[0].revenda?'preço por embalagem':'preço por '+(ps[0]&&ps[0].vars[0].un==='kg'?'kg':'milheiro')}`;
   const altMax = Math.max(...ps.map(p=>p.h||0), 1);
   $('vitrine').innerHTML = ps.map(p=>{
     const v=varDe(p), pers=!!p.faca, id=pers?p.faca.faca+'_'+v.edit:null;
@@ -2710,7 +2714,7 @@ function renderLoja(){
     const fo = fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
     const ilu = fo ? `<img class="foto ${fo.cls}" src="${fo.src}" alt="${esc(p.nome)}" style="height:${nat?(/suri/.test(fo.cls)?190:150):hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
-    const med = !pers && !p.revenda && v.it && v.it.medidas ? `Medidas: ${v.it.medidas} cm (largura × altura × sanfona).` : '';
+    const med = !pers && !p.revenda && v.it && v.it.medidas ? `Medidas: ${v.it.medidas} cm (${v.it.medidas.split('×').length>2?'largura × altura × sanfona':'largura × altura'}).` : '';
     const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : med;
     const unQ = v.un==='kg'?'kg':v.un==='milheiro'?'milheiro'+(q>1?'s':''):v.un+(q>1?'s':'');
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
@@ -2719,7 +2723,7 @@ function renderLoja(){
         <div class="cn">${esc(p.nome)}</div>
         ${p.revenda&&!v.papel?'':`<div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>`}
         ${desc?`<div class="cd">${desc}</div>`:''}
-        <div class="cp">${brl(precoVar(p,v))} <span>/ ${v.un}${v.ilu?' · preço ilustrativo':''}${p.revenda?' · referência, a confirmar':''}</span>${p.minimo?`<span class="tabp">Pedido mínimo ${typeof p.minimo==='number'?milhar(p.minimo)+' (1 cor)':p.minimo}</span>`:''}</div>
+        <div class="cp">${brl(precoVar(p,v))} <span>/ ${v.un}${v.ilu?' · preço ilustrativo':''}</span>${p.minimo?`<span class="tabp">Pedido mínimo ${typeof p.minimo==='number'?milhar(p.minimo)+' (1 cor)':p.minimo}</span>`:''}</div>
         <div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">${unQ}</span></div>
         ${pers?`
         <div class="acts">
@@ -2802,7 +2806,7 @@ function mensagemWhatsApp(ped){
   const ls=ped.linhas.map((l,i)=>`${i+1}) ${qtdTxt(l.qtd,l.un)} — ${l.nome}${l.variacao?' · '+l.variacao:''}${l.tipo==='personalizado'?` · personalizado (${ARTE[l.arte]||l.arte})`:''}\n    ${brl(l.preco)}/${l.un} = ${brl(l.total)}${l.cliche?` + clichê novo ${brl(l.cliche)}`:''}\n    [${l.id}]`);
   return `Olá! Quero fazer este pedido pelo site da Embalagens Globo:\n\n${ls.join('\n')}\n\n`+
     (ped.cliches?`Produtos: ${brl(ped.subtotal)}\nClichês novos: ${brl(ped.cliches)}\n`:'')+
-    `*Total: ${brl(ped.total)}*`+(ped.linhas.some(l=>l.tipo==='revenda')?' (descartáveis com preço de referência, a confirmar)':'')+'\n'+
+    `*Total: ${brl(ped.total)}*`+'\n'+
     (ped.cupom?`Cupom do vendedor: ${ped.cupom}\n`:'')+(ped.wa?`Código do atendimento: ${ped.wa}\n`:'');
 }
 function fechaWhatsApp(){
@@ -2838,7 +2842,7 @@ function renderCarrinho(){
         <div class="ciacts"><button data-a="pers" class="${temArte||sempre?'':'pri'}">🎨 ${temArte?'Editar arte':sempre?'Mudar a arte (opcional)':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   const avs = Object.entries(design.itens).filter(([,q])=>q).map(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a) return ''; const {p,v}=a, fo=fotoDe(p,v); tot+=q*v.preco;
     return `<div class="ci av" data-k="${k}"><div class="cil">${fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:`<div class="semfoto" style="font-size:12px"><span style="font-size:28px">${ICONE_CAT[p.cat]||'📦'}</span></div>`}</div>
-      <div class="cim"><b>${esc(p.nome)}</b><div class="cist" style="color:#6b7480">${[esc(v.papel), p.revenda?'preço de referência':''].filter(Boolean).join(' · ')}</div>
+      <div class="cim"><b>${esc(p.nome)}</b><div class="cist" style="color:#6b7480">${esc(v.papel)}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>${v.un==='milheiro'?'milh.':v.un==='kg'?'kg':v.un+(q>1?'s':'')} · ${brl(q*v.preco)}</span></div>
         <div class="ciacts"><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   L.innerHTML = sacs + avs;

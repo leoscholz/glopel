@@ -51,7 +51,8 @@
    "nome": "Saco ½ kg",
    "cat": "pao",
    "minimo": 15000,
-   "medidas": "9,5 × 18,5 × 5,5"
+   "medidas": "9,5 × 18,5 × 5,5",
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_kb35_kb35_1_2_kg",
@@ -106,8 +107,8 @@
   },
   {
    "id": "c_g34sac_1_2_kg",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 122.1,
    "un": "milheiro",
    "tab": [
@@ -135,7 +136,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco 900 g",
    "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000
   },
   {
    "id": "c_kb30_kb30_900grs",
@@ -151,28 +153,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco 900 g",
    "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000
   },
   {
    "id": "c_kb35_kb35_900_grs",
    "papel": "Kraft branco 35 g",
    "cod": "KB35",
-   "preco": 106.7,
-   "un": "milheiro",
-   "tab": [
-    97.0,
-    88.6,
-    78.9
-   ],
-   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
-   "nome": "Saco 900 g",
-   "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
-  },
-  {
-   "id": "c_kb40_kb40_900grs",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
    "preco": 105.6,
    "un": "milheiro",
    "tab": [
@@ -180,10 +167,41 @@
     90.0,
     85.0
    ],
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
+   "nome": "Saco 900 g",
+   "cat": "pao",
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000,
+   "tab_start": [
+    97.0,
+    88.6,
+    78.9
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
+  },
+  {
+   "id": "c_kb40_kb40_900grs",
+   "papel": "Kraft branco 40 g",
+   "cod": "KB40",
+   "preco": 106.7,
+   "un": "milheiro",
+   "tab": [
+    97.0,
+    88.6,
+    78.9
+   ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 sacos de papel",
    "nome": "Saco 900 g",
    "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000,
+   "tab_start": [
+    96.0,
+    90.0,
+    85.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)",
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_n40_n40_900grs",
@@ -199,12 +217,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco 900 g",
    "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000
   },
   {
    "id": "c_g34sac_900grs",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 145.2,
    "un": "milheiro",
    "tab": [
@@ -215,7 +234,8 @@
    "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
    "nome": "Saco 900 g",
    "cat": "pao",
-   "medidas": "9,5 × 23,5 × 5,5"
+   "medidas": "9,5 × 23,5 × 5,5",
+   "minimo": 10000
   },
   {
    "id": "c_k32_k32_1kg",
@@ -321,8 +341,8 @@
   },
   {
    "id": "c_g34sac_1_kg",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 160.05,
    "un": "milheiro",
    "tab": [
@@ -440,8 +460,8 @@
   },
   {
    "id": "c_g34sac_2_kg",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 245.3,
    "un": "milheiro",
    "tab": [
@@ -748,22 +768,6 @@
    "id": "c_k35_k35_baguete_longo",
    "papel": "Kraft pardo 35 g",
    "cod": "K35",
-   "preco": 245.3,
-   "un": "milheiro",
-   "tab": [
-    223.0,
-    209.0,
-    192.0
-   ],
-   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
-   "nome": "Saco baguete",
-   "cat": "pao",
-   "medidas": "10,5 × 56,5 × 5,0"
-  },
-  {
-   "id": "c_kb35_kb35_baguete",
-   "papel": "Kraft branco 35 g",
-   "cod": "KB35",
    "preco": 242.88,
    "un": "milheiro",
    "tab": [
@@ -771,31 +775,45 @@
     196.2,
     189.0
    ],
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
+   "nome": "Saco baguete",
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0",
+   "minimo": 10000,
+   "tab_start": [
+    223.0,
+    209.0,
+    192.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
+  },
+  {
+   "id": "c_kb35_kb35_baguete",
+   "papel": "Kraft branco 35 g",
+   "cod": "KB35",
+   "preco": 245.3,
+   "un": "milheiro",
+   "tab": [
+    223.0,
+    209.0,
+    192.0
+   ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco baguete",
    "cat": "pao",
-   "medidas": "10,5 × 56,5 × 5,0"
+   "medidas": "10,5 × 56,5 × 5,0",
+   "minimo": 10000,
+   "tab_start": [
+    220.8,
+    196.2,
+    189.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
   },
   {
    "id": "c_k35_k35_baguete_visor",
    "papel": "Kraft pardo 35 g",
    "cod": "K35",
-   "preco": 275.0,
-   "un": "milheiro",
-   "tab": [
-    250.0,
-    234.0,
-    217.0
-   ],
-   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
-   "nome": "Saco baguete com visor",
-   "cat": "pao",
-   "medidas": "10,5 × 56,5 × 5,0"
-  },
-  {
-   "id": "c_kb35_kb35_baguete_viso",
-   "papel": "Kraft branco 35 g",
-   "cod": "KB35",
    "preco": 268.95,
    "un": "milheiro",
    "tab": [
@@ -803,10 +821,40 @@
     233.5,
     220.0
    ],
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
+   "nome": "Saco baguete com visor",
+   "cat": "pao",
+   "medidas": "10,5 × 56,5 × 5,0",
+   "minimo": 20000,
+   "tab_start": [
+    250.0,
+    234.0,
+    217.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
+  },
+  {
+   "id": "c_kb35_kb35_baguete_viso",
+   "papel": "Kraft branco 35 g",
+   "cod": "KB35",
+   "preco": 275.0,
+   "un": "milheiro",
+   "tab": [
+    250.0,
+    234.0,
+    217.0
+   ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb35 sacos de papel",
    "nome": "Saco baguete com visor",
    "cat": "pao",
-   "medidas": "10,5 × 56,5 × 5,0"
+   "medidas": "10,5 × 56,5 × 5,0",
+   "minimo": 20000,
+   "tab_start": [
+    244.5,
+    233.5,
+    220.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
   },
   {
    "id": "c_k40_porta_sticks_kraft_pardo_40grs",
@@ -821,7 +869,10 @@
    ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k40 sacos de papel",
    "nome": "Porta-sticks",
-   "cat": "lanche"
+   "cat": "lanche",
+   "medidas": "8,5 × 16,5",
+   "minimo": 20000,
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_kb30_kb30_13_5_x17_5",
@@ -876,8 +927,8 @@
   },
   {
    "id": "c_g34sac_13_5_x_17_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 156.42,
    "un": "milheiro",
    "tab": [
@@ -961,8 +1012,8 @@
   },
   {
    "id": "c_g34sac_13_5_x_21_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 187.66,
    "un": "milheiro",
    "tab": [
@@ -977,21 +1028,6 @@
    "medidas": "13,5 × 21,5 × 5,5"
   },
   {
-   "id": "c_g34sac_13_5_x_27_cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
-   "preco": 244.2,
-   "un": "milheiro",
-   "tab": [
-    222.0,
-    212.0,
-    203.5
-   ],
-   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
-   "nome": "Saco 13,5 × 27 cm",
-   "cat": "lanche"
-  },
-  {
    "id": "c_k35_k35_17_5x25",
    "papel": "Kraft pardo 35 g",
    "cod": "K35",
@@ -1004,29 +1040,14 @@
    ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "cat": "lanche",
-   "nome": "Saco 17,5 × 25 cm"
-  },
-  {
-   "id": "c_kb30_kb30_batatinha",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
-   "preco": 62.15,
-   "un": "milheiro",
-   "tab": [
-    56.5,
-    53.4,
-    49.7
-   ],
-   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
-   "nome": "Saco batatinha",
-   "cat": "lanche",
-   "minimo": 20000,
-   "medidas": "10 × 12 × 6,0"
+   "nome": "Saco 17,5 × 25 cm",
+   "minimo": 10000,
+   "fora_site": "não vende mais"
   },
   {
    "id": "c_g34sac_batatinha_120grs",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 71.5,
    "un": "milheiro",
    "tab": [
@@ -1041,9 +1062,26 @@
    "medidas": "10 × 12 × 4,0"
   },
   {
+   "id": "c_kb30_kb30_batatinha",
+   "papel": "Kraft branco 30 g",
+   "cod": "KB30",
+   "preco": 62.15,
+   "un": "milheiro",
+   "tab": [
+    56.5,
+    53.4,
+    49.7
+   ],
+   "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
+   "nome": "Saco batatinha 180 g",
+   "cat": "lanche",
+   "minimo": 20000,
+   "medidas": "10 × 12 × 6,5"
+  },
+  {
    "id": "c_g34sac_batatinha_180grs",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 74.8,
    "un": "milheiro",
    "tab": [
@@ -1059,8 +1097,8 @@
   },
   {
    "id": "c_g34sac_churros_grande_8_5_x_21cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 109.67,
    "un": "milheiro",
    "tab": [
@@ -1070,12 +1108,14 @@
    ],
    "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
    "nome": "Saco churros grande 8,5 × 21 cm",
-   "cat": "lanche"
+   "cat": "lanche",
+   "minimo": 20000,
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_g34sac_churros_pequeno_8_5_x_14_cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 74.14,
    "un": "milheiro",
    "tab": [
@@ -1085,7 +1125,9 @@
    ],
    "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
    "nome": "Saco churros pequeno 8,5 × 14 cm",
-   "cat": "lanche"
+   "cat": "lanche",
+   "minimo": 20000,
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_k35_k35_hamburg_o",
@@ -1157,8 +1199,8 @@
   },
   {
    "id": "c_g34sac_hamburgao_14_x_14",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 119.13,
    "un": "milheiro",
    "tab": [
@@ -1208,8 +1250,8 @@
   },
   {
    "id": "c_g34sac_hamburger",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 108.9,
    "un": "milheiro",
    "tab": [
@@ -1237,7 +1279,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco miniburger",
    "cat": "lanche",
-   "medidas": "8 × 13,5 × 4,5"
+   "medidas": "8 × 13,5 × 4,5",
+   "minimo": 20000
   },
   {
    "id": "c_k35_k35_pipoca",
@@ -1253,7 +1296,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco pipoca",
    "cat": "lanche",
-   "medidas": "9,5 × 17 × 5,5"
+   "medidas": "9,5 × 17 × 5,5",
+   "minimo": 20000
   },
   {
    "id": "c_n40_n40_pipoca",
@@ -1269,7 +1313,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco pipoca",
    "cat": "lanche",
-   "medidas": "9,5 × 17 × 5,5"
+   "medidas": "9,5 × 17 × 5,5",
+   "minimo": 20000
   },
   {
    "id": "c_k35_k35_pipoquinha",
@@ -1285,7 +1330,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k35 sacos de papel",
    "nome": "Saco pipoquinha",
    "cat": "lanche",
-   "medidas": "9,5 × 13,5 × 5,5"
+   "medidas": "9,5 × 13,5 × 5,5",
+   "minimo": 20000
   },
   {
    "id": "c_n40_n40_pipoquinha",
@@ -1301,7 +1347,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › n40 sacos de papel",
    "nome": "Saco pipoquinha",
    "cat": "lanche",
-   "medidas": "9,5 × 13,5 × 5,5"
+   "medidas": "9,5 × 13,5 × 5,5",
+   "minimo": 20000
   },
   {
    "id": "c_kb30_kb30_semente",
@@ -1322,8 +1369,8 @@
   },
   {
    "id": "c_g34sac_semente",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 61.05,
    "un": "milheiro",
    "tab": [
@@ -1339,8 +1386,8 @@
   },
   {
    "id": "c_g34env_aberto_14cm_x_14cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 113.3,
    "un": "milheiro",
    "tab": [
@@ -1356,8 +1403,8 @@
   },
   {
    "id": "c_g34env_aberto_14cm_x_17_5cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 128.7,
    "un": "milheiro",
    "tab": [
@@ -1373,8 +1420,8 @@
   },
   {
    "id": "c_g34env_aberto_16_5cm_x_17_5cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 159.5,
    "un": "milheiro",
    "tab": [
@@ -1390,8 +1437,8 @@
   },
   {
    "id": "c_g34env_aberto_16_5cm_x_21cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 169.4,
    "un": "milheiro",
    "tab": [
@@ -1407,8 +1454,8 @@
   },
   {
    "id": "c_g34env_aberto_16_5cm_x_25_cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 190.96,
    "un": "milheiro",
    "tab": [
@@ -1424,8 +1471,8 @@
   },
   {
    "id": "c_g34env_aberto_20cm_x_21_5cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 181.5,
    "un": "milheiro",
    "tab": [
@@ -1441,8 +1488,8 @@
   },
   {
    "id": "c_g34env_batatinha_10_x_12",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 67.76,
    "un": "milheiro",
    "tab": [
@@ -1458,8 +1505,8 @@
   },
   {
    "id": "c_g34env_fechado_16cm_x_25cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 213.07,
    "un": "milheiro",
    "tab": [
@@ -1475,8 +1522,8 @@
   },
   {
    "id": "c_g34env_fechado_18cm_x_21_5cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 147.84,
    "un": "milheiro",
    "tab": [
@@ -1492,8 +1539,8 @@
   },
   {
    "id": "c_g34env_padr_o_hot_dog_24_5cm_x_16_5_cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 167.2,
    "un": "milheiro",
    "tab": [
@@ -1509,8 +1556,8 @@
   },
   {
    "id": "c_g34env_padr_o_hot_dog_24_5_x_21_5cm",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 183.26,
    "un": "milheiro",
    "tab": [
@@ -1606,8 +1653,8 @@
   },
   {
    "id": "c_g34lam_10x15",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 28.82,
    "un": "milheiro",
    "tab": [
@@ -1623,8 +1670,8 @@
   },
   {
    "id": "c_g34lam_14x14",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 43.34,
    "un": "milheiro",
    "tab": [
@@ -1640,8 +1687,8 @@
   },
   {
    "id": "c_g34lam_au_au_14x33",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 92.62,
    "un": "milheiro",
    "tab": [
@@ -1653,12 +1700,13 @@
    "cat": "lamina",
    "nome": "Lâmina antigordura 14 × 33 cm (modelo Au Au New York)",
    "minimo": 5000,
-   "ean": "7898929451385"
+   "ean": "7898929451385",
+   "fora_site": "produto exclusivo de um cliente (preço negociado)"
   },
   {
    "id": "c_g34lam_15x12_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 35.75,
    "un": "milheiro",
    "tab": [
@@ -1674,8 +1722,8 @@
   },
   {
    "id": "c_g34lam_16_5x15",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 56.43,
    "un": "milheiro",
    "tab": [
@@ -1691,25 +1739,8 @@
   },
   {
    "id": "c_g34lam_16_5x17_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
-   "preco": 67.32,
-   "un": "milheiro",
-   "tab": [
-    61.2,
-    57.5,
-    55.1
-   ],
-   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
-   "cat": "lamina",
-   "nome": "Lâmina antigordura 16,5 × 17,5 cm",
-   "minimo": 5000,
-   "ean": "7898929449429"
-  },
-  {
-   "id": "c_g34lam_16_5x20",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 60.5,
    "un": "milheiro",
    "tab": [
@@ -1719,14 +1750,43 @@
    ],
    "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
    "cat": "lamina",
+   "nome": "Lâmina antigordura 16,5 × 17,5 cm",
+   "minimo": 5000,
+   "ean": "7898929449429",
+   "tab_start": [
+    61.2,
+    57.5,
+    55.1
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
+  },
+  {
+   "id": "c_g34lam_16_5x20",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
+   "preco": 67.32,
+   "un": "milheiro",
+   "tab": [
+    61.2,
+    57.5,
+    55.1
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › LÂMINAS ANTIGORDURA",
+   "cat": "lamina",
    "nome": "Lâmina antigordura 16,5 × 20 cm",
    "minimo": 5000,
-   "ean": "7898936318534"
+   "ean": "7898936318534",
+   "tab_start": [
+    55.0,
+    51.0,
+    49.0
+   ],
+   "corrigido": "preço invertido (Márcia, 17-11)"
   },
   {
    "id": "c_g34lam_20x12_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 55.22,
    "un": "milheiro",
    "tab": [
@@ -1742,8 +1802,8 @@
   },
   {
    "id": "c_g34lam_20x15",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 74.03,
    "un": "milheiro",
    "tab": [
@@ -1759,8 +1819,8 @@
   },
   {
    "id": "c_g34lam_20x20",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 80.96,
    "un": "milheiro",
    "tab": [
@@ -1776,8 +1836,8 @@
   },
   {
    "id": "c_g34lam_20x25",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 106.48,
    "un": "milheiro",
    "tab": [
@@ -1793,8 +1853,8 @@
   },
   {
    "id": "c_g34lam_20x30",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 128.04,
    "un": "milheiro",
    "tab": [
@@ -1810,8 +1870,8 @@
   },
   {
    "id": "c_g34lam_20x40",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 153.45,
    "un": "milheiro",
    "tab": [
@@ -1827,8 +1887,8 @@
   },
   {
    "id": "c_g34lam_25x12_5",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 75.79,
    "un": "milheiro",
    "tab": [
@@ -1844,8 +1904,8 @@
   },
   {
    "id": "c_g34lam_25x25",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 121.33,
    "un": "milheiro",
    "tab": [
@@ -1861,8 +1921,8 @@
   },
   {
    "id": "c_g34lam_25x33",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 169.4,
    "un": "milheiro",
    "tab": [
@@ -1878,8 +1938,8 @@
   },
   {
    "id": "c_g34lam_28x15",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 83.27,
    "un": "milheiro",
    "tab": [
@@ -1895,8 +1955,8 @@
   },
   {
    "id": "c_g34lam_28x28",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 150.37,
    "un": "milheiro",
    "tab": [
@@ -1912,8 +1972,8 @@
   },
   {
    "id": "c_g34lam_28x30",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 159.06,
    "un": "milheiro",
    "tab": [
@@ -1929,8 +1989,8 @@
   },
   {
    "id": "c_g34lam_28x35",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 185.9,
    "un": "milheiro",
    "tab": [
@@ -1946,8 +2006,8 @@
   },
   {
    "id": "c_g34lam_28x40",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 211.53,
    "un": "milheiro",
    "tab": [
@@ -1963,8 +2023,8 @@
   },
   {
    "id": "c_g34lam_30x20",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 128.04,
    "un": "milheiro",
    "tab": [
@@ -1980,8 +2040,8 @@
   },
   {
    "id": "c_g34lam_30x40",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 226.49,
    "un": "milheiro",
    "tab": [
@@ -1997,8 +2057,8 @@
   },
   {
    "id": "c_g34lam_33x30",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 200.75,
    "un": "milheiro",
    "tab": [
@@ -2014,8 +2074,8 @@
   },
   {
    "id": "c_g34lam_33x35",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 230.78,
    "un": "milheiro",
    "tab": [
@@ -2031,8 +2091,8 @@
   },
   {
    "id": "c_g34lam_33x50",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 327.47,
    "un": "milheiro",
    "tab": [
@@ -2048,8 +2108,8 @@
   },
   {
    "id": "c_g34lam_35x40",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 264.0,
    "un": "milheiro",
    "tab": [
@@ -2065,8 +2125,8 @@
   },
   {
    "id": "c_g34lam_40x40",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 298.1,
    "un": "milheiro",
    "tab": [
@@ -2082,8 +2142,8 @@
   },
   {
    "id": "c_g34lam_40x50",
-   "papel": "Antigordura 34 g",
-   "cod": "G34",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
    "preco": 388.3,
    "un": "milheiro",
    "tab": [
@@ -2472,14 +2532,20 @@
    "preco": 233.2,
    "un": "milheiro",
    "tab": [
-    208.0,
     212.0,
+    208.0,
     197.0
    ],
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › k60 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "tab_start": [
+    208.0,
+    212.0,
+    197.0
+   ],
+   "corrigido": "Tab I e II invertidas (Márcia, 17-11)"
   },
   {
    "id": "c_kb30_bandeja_kb30_40x50",
@@ -2671,7 +2737,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco bijuteria",
    "cat": "outros",
-   "medidas": "6,5 × 14 × 5,0"
+   "medidas": "6,5 × 14 × 5,0",
+   "minimo": 20000
   },
   {
    "id": "c_kb30_kb30_farmacia",
@@ -2687,7 +2754,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco farmácia",
    "cat": "outros",
-   "medidas": "6,5 × 17 × 5,0"
+   "medidas": "6,5 × 17 × 5,0",
+   "minimo": 20000
   },
   {
    "id": "c_kb30_kb30_n_2",
@@ -2703,7 +2771,25 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 sacos de papel",
    "nome": "Saco nº 2",
    "cat": "outros",
-   "medidas": "13,5 × 26,5 × 5,5"
+   "medidas": "13,5 × 26,5 × 5,5",
+   "minimo": 10000
+  },
+  {
+   "id": "c_g34sac_13_5_x_27_cm",
+   "papel": "Antigordura 32 g",
+   "cod": "G32",
+   "preco": 244.2,
+   "un": "milheiro",
+   "tab": [
+    222.0,
+    212.0,
+    203.5
+   ],
+   "fonte": "5c6537b6-TABELA_ANTIGORDURA_2026.xlsx › SACOS ANTIGORDURA",
+   "nome": "Saco nº 2",
+   "cat": "outros",
+   "medidas": "13,5 × 26,5 × 5,5",
+   "minimo": 10000
   }
  ]
 }
