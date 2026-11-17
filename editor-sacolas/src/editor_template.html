@@ -152,7 +152,12 @@ body.vloja #app{display:none} body.veditor #loja{display:none}
 #vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
 .semfoto{display:flex;flex-direction:column;align-items:center;gap:6px;color:#9aa3ae} .semfoto span{font-size:46px;opacity:.55} .semfoto small{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
 .card .soband{margin-top:auto;font-size:12.5px;color:#6b7480;background:#f4f7fb;border:1px dashed #d6dce4;border-radius:10px;padding:8px 10px;text-align:center}
-.card.cat-only .ilu{height:170px}
+.card.cat-only .ilu{height:200px}
+.ilu img.foto.natural.suri{max-height:186px;max-width:92%;border-radius:8px}
+.cil img.foto.suri{max-width:64px;object-fit:contain;mix-blend-mode:multiply}
+.cil img.foto.suri.branco{filter:grayscale(1) brightness(1.4)}
+button.wa{background:#1fa855!important;border-color:#1a9149!important;color:#fff!important} button.wa:disabled{opacity:.45}
+#carfoot .cupom{display:flex;align-items:center;gap:6px;font-size:14px} #carfoot .cupom input{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;text-transform:uppercase}
 #linha .lh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px} #linha .lh h3{margin:0;font-size:19px;text-transform:none;letter-spacing:0;color:#1f2933} #linha .lh span{color:#6b7480;font-size:13px}
 #linha .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 #linha .ft{background:#fff;border:1px solid #e3e8ee;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,40,80,.04)}
@@ -412,7 +417,7 @@ details.avanc summary{cursor:pointer;color:var(--mute);font-size:13px;padding:4p
   <div id="veu"></div>
   <aside id="carrinho"><div class="dh">🛒 Seu carrinho <button id="fechacar" title="Fechar">×</button></div>
     <div id="carlista"></div>
-    <div id="carfoot"><div class="tot"><span>Total</span><b id="cartotal">R$ 0,00</b></div><div id="carmsg"></div><button id="finalizar" class="pri" disabled>Finalizar compra</button><div class="carsav so-nuvem"><button id="carLoad">📦 Carregar pedido salvo</button><button id="carSave">⭐ Salvar carrinho como pedido</button></div></div></aside>
+    <div id="carfoot"><label class="cupom">🏷️ <input id="cupom" placeholder="Cupom do vendedor (opcional)" autocomplete="off" maxlength="30"></label><div class="tot"><span>Total</span><b id="cartotal">R$ 0,00</b></div><div id="carmsg"></div><button id="fechaWa" class="pri wa" disabled>📲 Fechar pedido no WhatsApp</button><button id="finalizar" disabled title="Fluxo de demonstração do site (registra o pedido e gera o kit da gráfica)">Finalizar no site (demonstração)</button><div class="carsav so-nuvem"><button id="carLoad">📦 Carregar pedido salvo</button><button id="carSave">⭐ Salvar carrinho como pedido</button></div></div></aside>
 </div>
 <div id="toast"></div>
 <div id="app">
@@ -2096,7 +2101,8 @@ function geraGabarito(o){
 // Facas reais (OHDE), medidas extraídas dos PDFs em escala 1:1
 const CATEGORIAS = [
   ['pao','🥖 Sacos de pão'], ['lanche','🍔 Lanches e porções'], ['envelope','✉️ Envelopes'], ['talher','🍴 Porta-talher'],
-  ['lamina','🧻 Lâminas antigordura'], ['bandeja','🍰 Fundos de bandeja'], ['bobina','🎞️ Bobinas'], ['outros','🛍️ Outros sacos']
+  ['lamina','🧻 Lâminas antigordura'], ['bandeja','🍰 Fundos de bandeja'], ['bobina','🎞️ Bobinas'], ['outros','📦 Outros sacos'],
+  ['plastico','🛍️ Sacolas e sacos plásticos'], ['gerais','🥤 Descartáveis e gerais']
 ];
 const FACAS = [
   // Sacos de pão (sanfonados)
@@ -2619,7 +2625,45 @@ const FOTO_REUSO = {
 };
 const FOTO_CAT_POR_CAT = {lamina:'cat:real_lamina', bandeja:'cat:real_bandeja', bobina:'cat:real_bobina'};
 const fotoSrc = k => !k ? null : k.startsWith('cat:') ? FOTOS_CAT[k.slice(4)] : FOTOS[k];
-const ICONE_CAT = {pao:'🥖', lanche:'🍔', envelope:'✉️', talher:'🍴', lamina:'🧻', bandeja:'🍰', bobina:'🎞️', outros:'🛍️'};
+const ICONE_CAT = {pao:'🥖', lanche:'🍔', envelope:'✉️', talher:'🍴', lamina:'🧻', bandeja:'🍰', bobina:'🎞️', outros:'📦', plastico:'🛍️', gerais:'🥤'};
+/* Fotos do antigo Suri Shop (TOTVS, 2025) — com as MEDIDAS DESENHADAS na foto (o Leo gosta desse padrão, 17-11).
+   editor-sacolas/fotos_suri/<idSuri>.webp (gerado por catalogo/baixa_surishop.py). Medida oficial = a do texto do card.
+   Por produto (faca ou nome do catálogo) → foto por papel do editor. Sem a do papel: usa a foto antiga do produto,
+   ou a do outro papel (kraft → branco por filtro). Fora de propósito (não usar): ½ kg kraft (foto é a do 2 kg)
+   e ½ kg branco (cota 28 cm, o saco tem 19); batatinha 120 g (foto é 10×12, a faca 10×9). */
+const FOTOS_SURI = __FOTOS_SURI__;
+const FOTO_SURI = {
+  f900:{kraft:'143132474', branco:'143149728'}, f1:{kraft:'143131290', branco:'143150507'}, f2:{kraft:'143131424', branco:'143150333'},
+  f3:{kraft:'143131585', branco:'143150150'}, f5:{kraft:'143132019', branco:'143150029'}, f75:{kraft:'143132322', branco:'143149884'},
+  f10:{kraft:'143131132', branco:'143150719'}, f15:{kraft:'143133816'}, fbat180:{branco:'145267201'}, fsem:{branco:'145266897'},
+  fhb:{kraft:'145268881', branco:'143151781'}, fham:{kraft:'145268557', branco:'145267376'}, f1317:{kraft:'145268408', branco:'145268110'},
+  'Saco 13,5 × 21,5 cm':{kraft:'143127470', branco:'145268258'}, 'Saco baguete':{kraft:'143133499', branco:'143149579'},
+  'Saco pipoca':{kraft:'145269069'}, 'Saco pipoquinha':{kraft:'145269228'}, 'Saco miniburger':{branco:'145267811'}, 'Saco farmácia':{branco:'145267591'},
+};
+/* bobinas: foto por variação (strong / lisa = branca / timbrada) */
+const FOTO_SURI_VAR = {
+  c_bobinas_bobina_de_papel_strong_com_25cm:'120736161', c_bobinas_kb40_bobina_25cm_lisa_kraft:'122263323',
+  c_bobinas_bobina_de_papel_strong_com_40cm:'120736313', c_bobinas_kb40_bobina_40cm_lisa_kraft:'122263323', c_bobinas_kb40_bobina_40cm_timbrada_kraft:'122264646',
+  c_bobinas_bobina_de_papel_strong_com_60cm:'120736477', c_bobinas_kb40_bobina_60cm_lisa_kraft:'122263674', c_bobinas_kb40_bobina_60cm_timbrada_kraft:'122264881',
+};
+/* foto do card para a variação escolhida → {src, cls} (cls '' = foto natural, sem filtro) */
+function fotoDe(p, v){
+  const S=k=>k&&FOTOS_SURI[k]?{src:FOTOS_SURI[k], cls:'natural suri'}:null;
+  if(p.revenda) return S(p.revenda.id);
+  const vv=v&&FOTO_SURI_VAR[v.k]; if(vv) return S(vv);
+  const m=FOTO_SURI[p.faca?p.faca.faca:p.nome]||{}, ed=v?v.edit:'kraft';
+  if(m[ed]) return S(m[ed]);
+  if(p.foto && fotoSrc(p.foto)) return {src:fotoSrc(p.foto), cls:p.foto.startsWith('cat:')?'natural':ed};
+  if(m.kraft) return {src:FOTOS_SURI[m.kraft], cls:'suri '+ed};
+  if(m.branco) return S(m.branco);
+  return null;
+}
+/* Revenda (plásticos e "Gerais", decisão do Leo 17-11: entram no site). Não estão nas tabelas 2026.
+   Preço = preço do antigo Suri Shop (2025) como REFERÊNCIA PROVISÓRIA — falta o Leo dizer a fonte de preço oficial. */
+const REVENDA = __REVENDA__;
+const REVENDA_FATOR = 1;   // trocar quando houver regra (ex.: 1,10 como nas tabelas)
+const descCurta = t => { const l=(t||'').replace(/\*[^\n]*/g,'').split(/\n+/).map(x=>x.replace(/^[-•\d.\s]+/,'').trim()).filter(x=>x && !/^caracter/i.test(x)); let r=l.slice(0,2).join('. '); return r.length>120?r.slice(0,117).replace(/\s+\S*$/,'')+'…':r; };
+const embDe = t => { const m=(t||'').match(/(\d[\d.]*)\s*(unidades|un\b|copos)/i); return m?`pacote c/ ${m[1]} un.`:'embalagem'; };
 function altCm(nome){ const m=nome.match(/(\d+(?:,\d+)?)\s*×\s*(\d+(?:,\d+)?)/); return m?parseFloat(m[2].replace(',','.')):null; }
 const PRODUTOS = (()=>{
   const L=[];
@@ -2634,7 +2678,12 @@ const PRODUTOS = (()=>{
     let p=L.find(x=>!x.faca && x.nome===gNome);
     if(!p) L.push(p={key:i.id, cat:i.cat, nome:gNome, foto:FOTO_REUSO[gNome]||FOTO_CAT_POR_CAT[i.cat]||null, h:altCm(gNome), vars:[], minimo:i.minimo});
     p.vars.push({k:i.id, papel:i.papel+(acab?' · '+acab:''), cod:i.cod, preco:i.preco, un:i.un, edit:FAMILIA(i.cod), it:i}); if(!p.minimo && i.minimo) p.minimo=i.minimo; });
+  REVENDA.forEach(r=>{ let nome=r.nome.trim().replace(/\s+/g,' ').toLowerCase().replace(/(\d)\s*x\s*(\d)/g,'$1 × $2').replace(/(\d)\s*(cm|ml|kg)\b/g,'$1 $2').replace(/\(|\)/g,''); nome=nome[0].toUpperCase()+nome.slice(1);
+    const it={id:'s_'+r.id, nome, papel:embDe(r.desc)==='embalagem'?'':embDe(r.desc), cod:'SURI '+r.id, preco:Math.round(r.preco*REVENDA_FATOR*100)/100, un:embDe(r.desc)==='embalagem'?'embalagem':'pacote', cat:r.cat, revenda:true};
+    L.push({key:it.id, cat:r.cat, nome, revenda:r, desc:descCurta(r.desc), vars:[{k:it.id, papel:it.papel, cod:'', preco:it.preco, un:it.un, edit:'kraft', it}]}); });
   return L; })();
+/* item vendido sem personalização (catálogo da tabela ou revenda) — pelo id estável da linha */
+const ITEM_AVULSO = id => { const p=PRODUTOS.find(x=>!x.faca && x.vars.some(v=>v.k===id)); if(!p) return null; const v=p.vars.find(x=>x.k===id); return {p, v}; };
 const produtoDaFaca = fc => PRODUTOS.find(p=>p.faca && p.faca.faca===fc);
 /* preço ilustrativo antigo (por área) — só para papel do editor que a tabela não tem */
 function precoIlustrativo(id){ const g=CATALOGO[id]; if(!g) return 0; const area=(g.contorno.reduce((m,p)=>Math.max(m,p[0]),0))*(g.paineis.verso.h+3); return Math.round((35+area*0.085)*(g.papel==='branco'?1.18:1)); }
@@ -2648,32 +2697,40 @@ function renderLoja(){
   const ps=PRODUTOS.filter(p=>p.cat===design.cat), nPers=ps.filter(p=>p.faca).length;
   const tituloCat = (CATEGORIAS.find(c=>c[0]===design.cat)||['',''])[1];
   $('sechT').parentNode.style.display=''; $('sechT').textContent = tituloCat.replace(/^\S+\s/,'');
-  $('sechN').textContent = `${ps.length} produtos${nPers?` · ${nPers} personalizáve${nPers>1?'is':'l'} online`:''} · preço por ${ps[0]&&ps[0].vars[0].un==='kg'?'kg':'milheiro'}`;
+  $('sechN').textContent = `${ps.length} produtos${nPers?` · ${nPers} personalizáve${nPers>1?'is':'l'} online`:''} · ${ps[0]&&ps[0].revenda?'preço de referência por embalagem (a confirmar)':'preço por '+(ps[0]&&ps[0].vars[0].un==='kg'?'kg':'milheiro')}`;
   const altMax = Math.max(...ps.map(p=>p.h||0), 1);
   $('vitrine').innerHTML = ps.map(p=>{
-    const v=varDe(p), pers=!!p.faca, id=pers?p.faca.faca+'_'+v.edit:null, q=pers?((design.qtd&&design.qtd[id])||1):0, dentro=pers&&noCarrinho(id);
+    const v=varDe(p), pers=!!p.faca, id=pers?p.faca.faca+'_'+v.edit:null;
+    design.qtdItem=design.qtdItem||{}; design.itens=design.itens||{};
+    const q=pers?((design.qtd&&design.qtd[id])||1):(design.itens[v.k]||design.qtdItem[v.k]||1), dentro=pers?noCarrinho(id):!!design.itens[v.k];
     const hFoto = Math.round(105+80*(p.h||altMax*0.6)/altMax);
-    const src = fotoSrc(p.foto), nat = p.foto && p.foto.startsWith('cat:');
-    const ilu = src ? `<img class="foto ${nat?'natural':v.edit}" src="${src}" alt="${esc(p.nome)}" style="height:${nat?150:hFoto}px">`
+    const fo = fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
+    const ilu = fo ? `<img class="foto ${fo.cls}" src="${fo.src}" alt="${esc(p.nome)}" style="height:${nat?(/suri/.test(fo.cls)?190:150):hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
-    const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : '';
+    const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : '';
+    const unQ = v.un==='kg'?'kg':v.un==='milheiro'?'milheiro'+(q>1?'s':''):v.un+(q>1?'s':'');
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
       <div class="ilu">${ilu}</div>
       <div class="cb">
         <div class="cn">${esc(p.nome)}</div>
-        <div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>
+        ${p.revenda&&!v.papel?'':`<div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>`}
         ${desc?`<div class="cd">${desc}</div>`:''}
-        <div class="cp">${brl(precoVar(p,v))} <span>/ ${v.un}${v.ilu?' · preço ilustrativo':''}</span>${p.minimo?`<span class="tabp">Pedido mínimo ${typeof p.minimo==='number'?milhar(p.minimo)+' (1 cor)':p.minimo}</span>`:''}</div>
-        ${pers?`<div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">milheiro${q>1?'s':''}</span></div>
+        <div class="cp">${brl(precoVar(p,v))} <span>/ ${v.un}${v.ilu?' · preço ilustrativo':''}${p.revenda?' · referência, a confirmar':''}</span>${p.minimo?`<span class="tabp">Pedido mínimo ${typeof p.minimo==='number'?milhar(p.minimo)+' (1 cor)':p.minimo}</span>`:''}</div>
+        <div class="qtdrow"><span>Quantidade</span><div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button></div><span class="mil">${unQ}</span></div>
+        ${pers?`
         <div class="acts">
           <button data-a="add" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button>
           <button data-a="pers">🎨 Personalizar</button>
-        </div>`:`<div class="soband">Impressão com a sua marca sob pedido com o vendedor.</div>`}
+        </div>`:`<div class="acts"><button data-a="addi" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button></div>${p.revenda?'':'<div class="soband">Impressão com a sua marca sob pedido com o vendedor.</div>'}`}
       </div></div>`; }).join('');
   $('vitrine').querySelectorAll('.card').forEach(c=>{
     const p=PRODUTOS.find(x=>x.key===c.dataset.k);
     c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
       if(bt.dataset.a==='var'){ design.varSel[p.key]=bt.dataset.v; agendaSalvar(); renderLoja(); return; }
+      if(!p.faca){ const v=varDe(p), k=v.k, qi=design.itens[k]||design.qtdItem[k]||1, a=bt.dataset.a, set=n=>{ design.qtdItem[k]=n; if(design.itens[k]) design.itens[k]=n; agendaSalvar(); renderLoja(); };
+        if(a==='m') set(Math.max(1,qi-1)); if(a==='p') set(Math.min(999,qi+1));
+        if(a==='addi'){ if(design.itens[k]){ abreCarrinho(); return; } design.itens[k]=qi; agendaSalvar(); renderLoja(); toast(`🛒 <b>${esc(p.nome)}${p.vars.length>1?' · '+esc(v.papel):''}</b> adicionado ao carrinho.`); }
+        return; }
       const v=varDe(p), id=p.faca.faca+'_'+v.edit; design.qtd=design.qtd||{}; const q=design.qtd[id]||1;
       const marca=()=>{ design.variante=design.variante||{}; if(v.ilu) delete design.variante[id]; else design.variante[id]=v.k; };
       if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
@@ -2684,28 +2741,85 @@ function renderLoja(){
           <div style="display:flex;justify-content:flex-end;gap:8px"><button id="psX">Cancelar</button><button id="psOk" class="pri">🛒 Colocar no carrinho e personalizar</button></div>`); $('psX').onclick=fecha; $('psOk').onclick=()=>{ fecha(); vai(); }; } }
     });
   });
-  const n=design.carrinho.length; $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
   renderCarrinho();
 }
 const milhar = q => q>=1000 && q%1000===0 ? (q/1000)+' mil un.' : q.toLocaleString('pt-BR')+' un.';
 /* variação escolhida de uma sacola do carrinho (gramatura). Vale só se o papel do editor ainda bate (mudaPapel troca kraft↔branco). */
 function variacaoDe(id){ const b=idBase(id), k=design.variante&&design.variante[b], it=k&&ITENS_TAB.find(i=>i.id===k), g=CATALOGO[id];
   if(it && g && FAMILIA(it.cod)===g.papel) return it; const f=facaDe(id); return f&&g?itemTab(f.faca,g.papel):null; }
+/* =====================================================================
+   PEDIDO (17-11-2026): o carrinho fecha o pedido no WhatsApp (padrão do antigo Suri Shop).
+   Cada linha tem um id ESTÁVEL:
+     - item da tabela 2026: o id do catálogo (c_<cod>_<produto>, ex. c_k35_k35_pipoca) — gerado por gera_catalogo.py;
+     - revenda (plásticos/gerais): s_<idSuri>;
+     - sacola personalizada: <id do item da tabela>#arte (+ ~2, ~3 nas cópias). Sem item na tabela: faca_<faca>_<papel>#arte.
+   design.itens = {idItem: qtd} (sem personalização); sacolas personalizadas seguem em design.carrinho/design.qtd.
+   O botão "Fechar pedido no WhatsApp" por enquanto só MONTA a mensagem (copiar / abrir wa.me se WA_NUMERO existir).
+   A integração (gravar o pedido, código GLB-XXXX, número oficial, robô) é da sessão Site↔WhatsApp
+   (claude/Site-WhatsApp-HANDOFF.md): ela pode usar pedidoAtual() e o evento 'globo:pedido'.
+   ===================================================================== */
+const WA_NUMERO = '';   // número oficial da Glopel (só dígitos, com 55) — definido na integração
+const URLP = new URLSearchParams(location.search);
+const WA_TOKEN = URLP.get('wa') || null;
+const qtdTxt = (q,un) => un==='kg' ? q+' kg' : un==='milheiro' ? q+' milheiro'+(q>1?'s':'') : q+' '+un+(q>1?'s':'');
+function linhasPedido(){
+  const L=[];
+  design.carrinho.forEach(id=>{ const g=CATALOGO[id]; if(!g) return; const it=variacaoDe(id), q=(design.qtd&&design.qtd[id])||1, b=design.sacolas[id], cop=(String(id).match(/~\d+$/)||[''])[0], c=cliche(id);
+    L.push({id:(it?it.id:'faca_'+idBase(id))+'#arte'+cop, sacola:id, tipo:'personalizado', nome:g.nome.replace(/ · (Kraft|Branco)$/,''), variacao:it?it.papel:PAPEIS[g.papel]+' (preço ilustrativo)',
+      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:b?b.estado:'nenhum', cliche:c&&c.novo?c.valor:0}); });
+  Object.entries(design.itens||{}).forEach(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a||!q) return; const {p,v}=a;
+    L.push({id:k, tipo:p.revenda?'revenda':'catalogo', nome:p.nome, variacao:v.papel, cod:v.cod||'', qtd:q, un:v.un, preco:v.preco, total:Math.round(q*v.preco*100)/100}); });
+  return L;
+}
+function pedidoAtual(){
+  const linhas=linhasPedido(), sub=linhas.reduce((t,l)=>t+l.total,0), cli=linhas.reduce((t,l)=>t+(l.cliche||0),0);
+  return {versao:1, origem:'site', wa:WA_TOKEN, cupom:(design.cupom||'').trim()||null, linhas, subtotal:+sub.toFixed(2), cliches:+cli.toFixed(2), total:+(sub+cli).toFixed(2), criado:new Date().toISOString()};
+}
+function mensagemWhatsApp(ped){
+  const ARTE={conferida:'arte aprovada', auto:'arte a aprovar', nenhum:'sem arte'};
+  const ls=ped.linhas.map((l,i)=>`${i+1}) ${qtdTxt(l.qtd,l.un)} — ${l.nome}${l.variacao?' · '+l.variacao:''}${l.tipo==='personalizado'?` · personalizado (${ARTE[l.arte]||l.arte})`:''}\n    ${brl(l.preco)}/${l.un} = ${brl(l.total)}${l.cliche?` + clichê novo ${brl(l.cliche)}`:''}\n    [${l.id}]`);
+  return `Olá! Quero fazer este pedido pelo site da Embalagens Globo:\n\n${ls.join('\n')}\n\n`+
+    (ped.cliches?`Produtos: ${brl(ped.subtotal)}\nClichês novos: ${brl(ped.cliches)}\n`:'')+
+    `*Total: ${brl(ped.total)}*`+(ped.linhas.some(l=>l.tipo==='revenda')?' (descartáveis com preço de referência, a confirmar)':'')+'\n'+
+    (ped.cupom?`Cupom do vendedor: ${ped.cupom}\n`:'')+(ped.wa?`Código do atendimento: ${ped.wa}\n`:'');
+}
+function fechaWhatsApp(){
+  sincroniza(); const ped=pedidoAtual(); if(!ped.linhas.length) return;
+  const msg=mensagemWhatsApp(ped); window.ultimoPedidoWA={pedido:ped, mensagem:msg};
+  try{ window.dispatchEvent(new CustomEvent('globo:pedido',{detail:{pedido:ped, mensagem:msg}})); }catch(_){}
+  modal(`${H3('📲 Fechar pedido no WhatsApp')}<div style="margin-bottom:8px;color:var(--mute);font-size:13px">Esta é a mensagem que vai para o WhatsApp da Embalagens Globo. O atendimento confirma os preços, o desconto do cupom e o prazo.</div>
+    <textarea id="waMsg" readonly style="width:100%;height:240px;font:12.5px/1.45 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical">${esc(msg)}</textarea>
+    ${WA_NUMERO?'':'<div style="font-size:12px;color:#8a6d00;margin-top:6px">⚠️ Versão de teste: o número do WhatsApp da Glopel ainda não foi ligado ao site. Copie a mensagem e envie pelo seu WhatsApp.</div>'}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="waX">Voltar</button><button id="waCp">📋 Copiar mensagem</button><button id="waGo" class="pri wa" ${WA_NUMERO?'':'disabled'}>Abrir o WhatsApp</button></div>`);
+  $('waX').onclick=fecha;
+  $('waCp').onclick=async()=>{ try{ await navigator.clipboard.writeText(msg); }catch(_){ const t=$('waMsg'); t.select(); try{ document.execCommand('copy'); }catch(__){} } toast('📋 Mensagem copiada.'); };
+  $('waGo').onclick=()=>{ if(WA_NUMERO) window.open('https://wa.me/'+WA_NUMERO+'?text='+encodeURIComponent(msg),'_blank'); };
+}
+function contaCarrinho(){ return design.carrinho.length + Object.values(design.itens||{}).filter(Boolean).length; }
 function renderCarrinho(){
-  const L=$('carlista');
-  if(!design.carrinho.length){ L.innerHTML='<div class="empty" style="padding:20px 4px">Seu carrinho está vazio. Escolha uma sacola ao lado.</div>'; $('cartotal').textContent=brl(0); $('finalizar').disabled=true; $('carmsg').textContent=''; return; }
+  const L=$('carlista'); design.itens=design.itens||{};
+  const n=contaCarrinho(); $('carcount').textContent=n; $('carcount').style.display=n?'':'none';
+  if($('cupom') && document.activeElement!==$('cupom')) $('cupom').value=design.cupom||'';
+  if(!n){ L.innerHTML='<div class="empty" style="padding:20px 4px">Seu carrinho está vazio. Escolha os produtos ao lado.</div>'; $('cartotal').textContent=brl(0); $('finalizar').disabled=true; $('fechaWa').disabled=true; $('carmsg').textContent=''; return; }
   let tot=0;
-  L.innerHTML = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
+  const sacs = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
     const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
-    return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id); return FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
+    return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id), p=produtoDaFaca(f.faca), fo=p&&fotoDe(p,{edit:g.papel,k:''}); return fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
       <div class="cim"><b>${esc(g.nome.replace(/ · (Kraft|Branco)$/,''))}</b><div class="cist" style="color:#6b7480">${esc((variacaoDe(id)||{}).papel||PAPEIS[g.papel]+' · preço ilustrativo')}</div><div class="cist" style="color:${cor}">${ic} ${txt}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>${linhaCliche(id)}
         <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
-  const tc=totalCliches(); $('cartotal').innerHTML=brl(tot+tc)+(tc?`<small style="display:block;font-weight:400;font-size:11.5px;color:var(--mute);text-align:right">sacolas ${brl(tot)} + clichês ${brl(tc)}</small>`:'');
+  const avs = Object.entries(design.itens).filter(([,q])=>q).map(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a) return ''; const {p,v}=a, fo=fotoDe(p,v); tot+=q*v.preco;
+    return `<div class="ci av" data-k="${k}"><div class="cil">${fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:`<div class="semfoto" style="font-size:12px"><span style="font-size:28px">${ICONE_CAT[p.cat]||'📦'}</span></div>`}</div>
+      <div class="cim"><b>${esc(p.nome)}</b><div class="cist" style="color:#6b7480">${[esc(v.papel), p.revenda?'preço de referência':''].filter(Boolean).join(' · ')}</div>
+        <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>${v.un==='milheiro'?'milh.':v.un==='kg'?'kg':v.un+(q>1?'s':'')} · ${brl(q*v.preco)}</span></div>
+        <div class="ciacts"><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+  L.innerHTML = sacs + avs;
+  const tc=totalCliches(); $('cartotal').innerHTML=brl(tot+tc)+(tc?`<small style="display:block;font-weight:400;font-size:11.5px;color:var(--mute);text-align:right">produtos ${brl(tot)} + clichês ${brl(tc)}</small>`:'');
   const pend = design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
-  $('finalizar').disabled = !!pend.length;
-  $('carmsg').innerHTML = pend.length ? `Para finalizar, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : '✅ Todas as artes aprovadas.';
-  L.querySelectorAll('.ci').forEach(c=>{ const id=c.dataset.id;
+  $('finalizar').disabled = !!pend.length || !design.carrinho.length;
+  $('fechaWa').disabled = !!pend.length;
+  $('carmsg').innerHTML = pend.length ? `Para fechar o pedido, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : design.carrinho.length ? '✅ Todas as artes aprovadas.' : '';
+  L.querySelectorAll('.ci:not(.av)').forEach(c=>{ const id=c.dataset.id;
     c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
       const q=design.qtd[id]||1;
       if(bt.dataset.a==='m'){ design.qtd[id]=Math.max(1,q-1); agendaSalvar(); renderLoja(); }
@@ -2713,6 +2827,11 @@ function renderCarrinho(){
       if(bt.dataset.a==='rem'){ const tinha=design.sacolas[id]&&design.sacolas[id].camadas.length; remCarrinho(id); novaHistoria(); renderLoja(); if(!tinha) toast('Removida do carrinho.'); }
       if(bt.dataset.a==='pers'){ vaiEditor(id); }
     }); });
+  L.querySelectorAll('.ci.av').forEach(c=>{ const k=c.dataset.k;
+    c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{ const q=design.itens[k]||1, a=bt.dataset.a;
+      if(a==='m') design.itens[k]=Math.max(1,q-1); if(a==='p') design.itens[k]=Math.min(999,q+1);
+      if(a==='rem'){ const ant=q; delete design.itens[k]; setTimeout(()=>toast(`Removido do carrinho. <button class="lnk" style="color:#fff;text-decoration:underline;margin-left:6px" id="desfAv">↶ Desfazer</button>`,6000),0); setTimeout(()=>{ const d=$('desfAv'); if(d) d.onclick=()=>{ design.itens[k]=ant; agendaSalvar(); renderLoja(); toast('↶ De volta ao carrinho.'); }; },20); }
+      agendaSalvar(); renderLoja(); }); });
 }
 function abreCarrinho(){ $('carrinho').classList.add('show'); $('veu').classList.add('show'); }
 function fechaCarrinho(){ $('carrinho').classList.remove('show'); $('veu').classList.remove('show'); }
@@ -3756,18 +3875,22 @@ nuvemInit(); $('wzBtn').onclick=assistente;  $('conta').onclick=menuConta; $('co
 document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); if(NUVEM) salvar(); } });
 $('voltaloja').onclick=()=>vaiLoja(true);
 $('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').onclick=()=>{ fechaCarrinho(); salvarPedido(false); };
+$('fechaWa').onclick=fechaWhatsApp;
+$('cupom').oninput=e=>{ design.cupom=e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g,''); agendaSalvar(); };
+if(URLP.get('cupom')){ design.cupom=URLP.get('cupom').toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,30); }
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
 $('finalizar').onclick=()=>{
   sincroniza(); const num='GL-'+Date.now().toString(36).toUpperCase().slice(-6), itens=design.carrinho.map(id=>({id, nome:CATALOGO[id].nome, qtd:(design.qtd&&design.qtd[id])||1}));
   const clis=Object.fromEntries(itens.map(i=>[i.id, cliche(i.id)])), tcli=Object.values(clis).reduce((t,c)=>t+(c.novo?c.valor:0),0);
   design.cliches=design.cliches||{}; itens.forEach(i=>{ const c=clis[i.id]; if(c && c.h){ const l=design.cliches[idBase(i.id)]=design.cliches[idBase(i.id)]||[]; if(!l.includes(c.h)) l.push(c.h); } });
   design.pedidos=(design.pedidos||[]).concat({num, data:new Date().toISOString(), itens, cliches:tcli});
-  registraPedidoFeito(num, pacoteArte(), itens.map(i=>`${i.qtd} mil × ${i.nome}`).join(' · '));
+  const avs=linhasPedido().filter(l=>l.tipo!=='personalizado');
+  registraPedidoFeito(num, pacoteArte(), itens.map(i=>`${i.qtd} mil × ${i.nome}`).concat(avs.map(l=>`${qtdTxt(l.qtd,l.un)} × ${l.nome}`)).join(' · '));
   const aprovadas=itens.filter(i=>design.sacolas[i.id]&&design.sacolas[i.id].estado==='conferida').map(i=>i.id);
   itens.forEach(i=>{ const b=design.sacolas[i.id]; if(b && b.estado==='conferida') b.estado='auto'; });   // arte fica guardada; num novo pedido, aprova de novo
-  design.carrinho=[]; novaHistoria(); agendaSalvar(); renderLoja();
+  design.carrinho=[]; design.itens={}; novaHistoria(); agendaSalvar(); renderLoja();
   $('mbox').innerHTML=`<h3 style="margin:0 0 8px;color:var(--ink);font-size:17px;text-transform:none;letter-spacing:0">🎉 Pedido <b>${num}</b> enviado</h3>
-    <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>${clis[i.id]&&clis[i.id].novo?` <span style="color:var(--mute)">+ clichê novo ${brl(clis[i.id].valor)}</span>`:''}`).join('<br>')}${tcli?`<div style="margin-top:6px">Clichês novos: <b>${brl(tcli)}</b> (nos próximos pedidos destas artes, sem custo).</div>`:''}</div>
+    <div style="margin:6px 0 10px">${itens.map(i=>`• ${i.qtd} mil × <b>${esc(i.nome)}</b>${clis[i.id]&&clis[i.id].novo?` <span style="color:var(--mute)">+ clichê novo ${brl(clis[i.id].valor)}</span>`:''}`).concat(avs.map(l=>`• ${qtdTxt(l.qtd,l.un)} × <b>${esc(l.nome)}</b> <span style="color:var(--mute)">${esc(l.variacao)}</span>`)).join('<br>')}${tcli?`<div style="margin-top:6px">Clichês novos: <b>${brl(tcli)}</b> (nos próximos pedidos destas artes, sem custo).</div>`:''}</div>
     <div style="color:var(--mute);line-height:1.5">Guarde o número do pedido. Sua arte continua salva para o próximo pedido.<br><i>(Demonstração: no site real vem o pagamento e as artes aprovadas vão para a gráfica.)</i></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="kitPed" class="kitbtn" title="Só para funcionários da Embalagens Globo">🔒 Kit</button><button class="pri" onclick="document.getElementById('modal').style.display='none'">Ok</button></div>`;
   $('kitPed').onclick=()=>senhaKit(()=>baixarKit({ids:itens.map(i=>i.id), num, aprovadas}));

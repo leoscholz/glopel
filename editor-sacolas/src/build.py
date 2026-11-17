@@ -13,6 +13,12 @@ fotos = {os.path.basename(f)[:-5]+'.pdf': 'data:image/webp;base64,'+base64.b64en
 t = t.replace('__FOTOS__', json.dumps(fotos))
 fcat = {os.path.basename(f)[:-5]: 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos_catalogo','*.webp')))}
 t = t.replace('__FOTOS_CAT__', json.dumps(fcat))
+# fotos do antigo Suri Shop (com as medidas desenhadas) — catalogo/baixa_surishop.py
+fsuri = {os.path.basename(f)[:-5]: 'data:image/webp;base64,'+base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fotos_suri','*.webp')))}
+t = t.replace('__FOTOS_SURI__', json.dumps(fsuri))
+suri = json.load(open(os.path.join(AQUI,'catalogo','surishop_2025.json'),encoding='utf-8'))['itens']
+rev = [{'id':i['id'], 'nome':i['nome'], 'cat':'plastico' if 'Plást' in i['cat_suri'] else 'gerais', 'preco':i['preco_suri'], 'desc':i['desc']} for i in suri if i['cat_suri'] in ('Gerais','Sacos e Sacolas Plásticas')]
+t = t.replace('__REVENDA__', json.dumps(rev, ensure_ascii=False))
 t = t.replace('__CATALOGO_TAB__', json.dumps(json.load(open(os.path.join(AQUI,'catalogo','catalogo_tabela.json'),encoding='utf-8')), ensure_ascii=False))
 fontes = {os.path.basename(f)[:-5]: base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob(os.path.join(AQUI,'..','fontes','*.woff')))}
 kit = open(os.path.join(AQUI,'kit.js'), encoding='utf-8').read().replace('__FONTES_CURVA__', json.dumps(fontes))
