@@ -123,9 +123,13 @@ const PERGUNTAS = [
   ], txt:'Se algum estiver errado: qual é o preço certo?'},
   {id:'proposito', t:'Algum produto tem preço mais baixo de propósito (para atrair cliente)?', ops:['Sim (escreva qual)','Não',...NS], txt:'Qual produto e por quê?'},
  ]},
- {sec:'5. Custo do papel', itens:[
-  {id:'custos', t:'Quanto a Globo paga hoje pelo papel? (R$ por kg)', c:'Isso serve para montar o cálculo novo de preços. Pode ser aproximado. Deixe em branco o que não souber.', grade:[
-   'Kraft branco Irani (KB)','Kraft pardo Irani (K)','Semi kraft (N40)','Antigordura (G34)','Strong','Monolúcido (M)'], gradeTipo:'text', txt:'Se você não souber, quem sabe? (nome)'},
+ {sec:'5. Papel e frete', itens:[
+  {id:'custos2', t:'Custo destes papéis (R$ por kg)', c:'Já temos os preços da Irani e da Lutepel pelas notas fiscais. Faltam estes. Deixe em branco o que não souber.', grade:[
+   'Semi kraft 38 g (N40)','Strong (bobina)','Kraft pardo 60 g (K60)'], gradeTipo:'text', txt:'De qual fornecedor? Se não souber, quem sabe?'},
+  {id:'frete', t:'O frete do papel (Irani e Lutepel) é pago pela Globo. Quanto custa, mais ou menos?', ops:['Até R$ 0,30 por kg','Entre R$ 0,30 e R$ 0,60 por kg','Mais de R$ 0,60 por kg',...NS], txt:'Valor de um frete recente (R$ e quantos kg)'},
+  {id:'kb30_tipo', t:'A Irani vende o kraft branco 30 g em dois tipos: "3x4" (R$ 14,25/kg) e o comum (R$ 12,95/kg). Qual vai em cada produto?', ops:['O "3x4" é para impressão melhor; o comum para o resto','Tanto faz, usamos os dois',...NS], txt:'Observação'},
+  {id:'antigordura_papel', t:'O papel antigordura que compramos é o Greasepack 32 g da Lutepel. A tabela fala em "Graesepel 34 g". É o mesmo?', ops:['Sim, é o mesmo papel','Não, o 34 g vem de outro fornecedor',...NS], txt:'Observação'},
+  {id:'mono_uso', t:'Em setembro a Globo comprou 6 toneladas de monolúcido (30 g e 40 g) da Lutepel. Para quais produtos?', ops:null, txt:'Produtos e preço de venda (se souber)'},
  ]},
  {sec:'6. Plásticos e descartáveis (revenda)', itens:[
   {id:'revenda_preco', t:'O site mostra os preços de plásticos e descartáveis do antigo Suri Shop (2025). Qual preço usar?',
