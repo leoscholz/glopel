@@ -2175,8 +2175,8 @@
   },
   {
    "id": "c_kb30_bandeja_kb30_20x20",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 57.64,
    "un": "milheiro",
    "tab": [
@@ -2187,12 +2187,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 20 × 20 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb30_bandeja_kb30_20x25",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 56.1,
    "un": "milheiro",
    "tab": [
@@ -2203,12 +2204,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 20 × 25 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb30_bandeja_kb30_25x35",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 102.08,
    "un": "milheiro",
    "tab": [
@@ -2219,12 +2221,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 35 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_25x35",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 125.95,
    "un": "milheiro",
    "tab": [
@@ -2235,12 +2238,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 35 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_kb30_bandeja_kb30_25x40",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 115.5,
    "un": "milheiro",
    "tab": [
@@ -2251,12 +2255,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_25x40",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 130.68,
    "un": "milheiro",
    "tab": [
@@ -2267,12 +2272,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 25 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_kb30_bandeja_kb30_28x35",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 108.68,
    "un": "milheiro",
    "tab": [
@@ -2283,12 +2289,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 35 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_28x35",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 126.5,
    "un": "milheiro",
    "tab": [
@@ -2299,7 +2306,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 35 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_k40_k40_bandeja_28x40cm",
@@ -2335,8 +2343,8 @@
   },
   {
    "id": "c_kb30_bandeja_kb30_28x40",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 126.5,
    "un": "milheiro",
    "tab": [
@@ -2347,12 +2355,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_28x40",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 142.67,
    "un": "milheiro",
    "tab": [
@@ -2363,7 +2372,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 28 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_k60_k60_bandeja_30x40",
@@ -2431,8 +2441,8 @@
   },
   {
    "id": "c_kb40_bandeja_kb40_35x35",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 160.6,
    "un": "milheiro",
    "tab": [
@@ -2443,12 +2453,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 35 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_kb30_bandeja_kb30_35x40",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 154.0,
    "un": "milheiro",
    "tab": [
@@ -2459,12 +2470,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_35x40",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 177.1,
    "un": "milheiro",
    "tab": [
@@ -2475,7 +2487,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 35 × 40 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_k40_k40_bandeja_40x25cm",
@@ -2549,8 +2562,8 @@
   },
   {
    "id": "c_kb30_bandeja_kb30_40x50",
-   "papel": "Kraft branco 30 g",
-   "cod": "KB30",
+   "papel": "Monolúcido 30 g",
+   "cod": "M30",
    "preco": 203.5,
    "un": "milheiro",
    "tab": [
@@ -2561,12 +2574,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb30 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 50 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB30"
   },
   {
    "id": "c_kb40_bandeja_kb40_40x60",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 246.4,
    "un": "milheiro",
    "tab": [
@@ -2577,12 +2591,13 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 40 × 60 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_kb40_bandeja_kb40_72x70",
-   "papel": "Kraft branco 40 g",
-   "cod": "KB40",
+   "papel": "Monolúcido 40 g",
+   "cod": "M40",
    "preco": 645.7,
    "un": "milheiro",
    "tab": [
@@ -2593,7 +2608,8 @@
    "fonte": "16eba1de-TABELA_PRE_OS_GLOBO_2026_.xlsx › kb40 bandejas",
    "cat": "bandeja",
    "nome": "Fundo de bandeja 72 × 70 cm",
-   "minimo": 10000
+   "minimo": 10000,
+   "cod_start": "KB40"
   },
   {
    "id": "c_bobinas_bobina_de_papel_strong_com_25cm",

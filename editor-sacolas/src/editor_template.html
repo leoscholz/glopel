@@ -2611,8 +2611,8 @@ function toast(t, ms){ const d=$('toast'); d.innerHTML=t; d.classList.add('show'
    - Produto só de catálogo = itens da tabela agrupados pelo nome; sem personalizar, sem carrinho (impressão com o vendedor).
    - Foto: a da faca; nos itens de catálogo, reaproveitada quando a PROPORÇÃO bate (FOTO_REUSO), mesmo com medida diferente.
    ===================================================================== */
-const FAMILIA = cod => /^KB/.test(cod) ? 'branco' : /^G/.test(cod) ? 'branco' : 'kraft';
-const COR_VAR = cod => /^KB/.test(cod) ? '#f3f0ea' : /^G/.test(cod) ? '#fbfaf6' : /^N/.test(cod) ? '#d9b98c' : /^STRONG/.test(cod) ? '#e9e6df' : '#c89a62';
+const FAMILIA = cod => /^(KB|M\d)/.test(cod) ? 'branco' : /^G/.test(cod) ? 'branco' : 'kraft';
+const COR_VAR = cod => /^KB/.test(cod) ? '#f3f0ea' : /^M\d/.test(cod) ? '#fdfdfb' : /^G/.test(cod) ? '#fbfaf6' : /^N/.test(cod) ? '#d9b98c' : /^STRONG/.test(cod) ? '#e9e6df' : '#c89a62';
 const NOME_FACA_TAB = {}; Object.keys(FACA_TAB).forEach(fc=>nomesFT(fc).forEach(n=>(NOME_FACA_TAB[n]=NOME_FACA_TAB[n]||[]).push(fc)));
 /* Foto emprestada (chave = nome do PDF da faca). Proporção largura/altura do item ≈ a da faca (±10%). */
 /* "cat:<arquivo>" = foto/render de editor-sacolas/fotos_catalogo (renders 3D de 2016 da Glopel e fotos de estúdio de 2016,

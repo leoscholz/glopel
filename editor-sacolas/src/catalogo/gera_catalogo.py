@@ -161,6 +161,9 @@ for o in out:
     if o['nome']=='Saco batatinha': o['nome']='Saco batatinha 180 g'          # a batatinha KB30 da tabela é a de 180 g
     if o['nome'] in TAM_NOME and TAM_NOME[o['nome']] in TAM: o['medidas']=TAM[TAM_NOME[o['nome']]]
     if o['nome']=='Porta-sticks': o['medidas']='8,5 × 16,5'                     # sem sanfona; bobina de 20 cm
+    # monolúcido (Márcia, 17-11): "A troca do KB pelo M30 e M40 é só nos fundos de bandeja e lâminas, se houver. Nos sacos não mexe."
+    if o['cat'] in ('bandeja','lamina') and o['cod'] in ('KB30','KB40'):
+        o['cod_start']=o['cod']; o['cod']='M'+o['cod'][2:]; o['papel']='Monolúcido '+o['cod'][1:]+' g'
 MIN_MARCIA={'Saco 900 g':10000,'Saco baguete':10000,'Saco baguete com visor':20000,'Saco pipoca':20000,'Saco pipoquinha':20000,'Saco miniburger':20000,
   'Saco 17,5 × 25 cm':10000,'Saco nº 2':10000,'Saco churros grande 8,5 × 21 cm':20000,'Saco churros pequeno 8,5 × 14 cm':20000,'Porta-sticks':20000,
   'Saco bijuteria':20000,'Saco farmácia':20000}
