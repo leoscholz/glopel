@@ -774,6 +774,7 @@ function vComissoes(){
 let fEdit = null;
 const SETORES = ['Produção','Escritório','Comercial','Expedição','Outro'];
 const VINC = ['CLT','PJ','Sócia','Diarista','Representante','Estágio',''];
+const nascMD = v => { const m = /^(\d{1,2})\/(\d{1,2})/.exec(String(v||'').trim()); return m ? String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0') : null; };
 function tempoCasa(d){ if (!d) return '—'; const m = Math.floor(diffD(iso(hoje()), d)/30.44); return m<12 ? m+' m' : Math.floor(m/12)+' a '+(m%12)+' m'; }
 function deFerias(f, dia){ return f.ferias_ini && f.ferias_fim && f.ferias_ini <= dia && dia <= f.ferias_fim; }
 function vFuncionarios(){
@@ -781,33 +782,36 @@ function vFuncionarios(){
   const folha = F.reduce((a,f)=>a+(num(f.salario)||0),0), comSal = F.filter(f=>num(f.salario)).length;
   const ferias = F.filter(f => deFerias(f,H));
   const prox = F.filter(f => f.ferias_ini && f.ferias_ini > H && f.ferias_ini <= addD(H,60));
+  const aniv = F.filter(f => (nascMD(f.nascimento)||'').slice(0,2)===H.slice(5,7)).sort((a,b)=>nascMD(a.nascimento)<nascMD(b.nascimento)?-1:1);
   const porSetor = SETORES.map(s => [s, F.filter(f=>(f.setor||'Outro')===s).length]).filter(x=>x[1]);
   const e = fEdit==='novo' ? {id:uid(), nome:'', funcao:'', setor:'Produção', vinculo:'', admissao:'', salario:'', telefone:'', ferias_ini:'', ferias_fim:'', obs:''} : F.find(f=>f.id===fEdit);
   const inp = (k, lab, t='text', w=150) => `<label>${lab}<input name="${k}" type="${t}" value="${esc(e[k]||'')}" style="min-width:${w}px"></label>`;
   const sel = (k, lab, ops) => `<label>${lab}<select name="${k}">${ops.map(o=>`<option ${o===(e[k]||'')?'selected':''} value="${o}">${o||'—'}</option>`).join('')}</select></label>`;
   return `
-  <div class="banner">Lista inicial: quem aparece nos grupos de produção e nos pedidos. <b>Admissão, salário, telefone e férias estão em branco</b> — preencha aqui. As edições ficam salvas <b>neste navegador</b>; para valer para todos, use <b>Exportar</b> e mande o arquivo para o Claude publicar no cofre.</div>
+  <div class="banner">Lista inicial: quem aparece nos grupos de produção e nos pedidos. <b>Admissão, aniversário, salário, telefone e férias estão em branco</b> — preencha aqui. As edições ficam salvas <b>neste navegador</b>; para valer para todos, use <b>Exportar</b> e mande o arquivo para o Claude publicar no cofre.</div>
   <div class="grid kpis">
     <div class="card kpi"><div class="v">${F.length}</div><div class="l">pessoas · ${porSetor.map(([s,n])=>n+' '+s.toLowerCase()).join(' · ')}</div></div>
     <div class="card kpi"><div class="v">${folha?brl(folha):'—'}</div><div class="l">folha mensal (salários cadastrados: ${comSal} de ${F.length})</div></div>
     <div class="card kpi ${ferias.length?'warn':''}"><div class="v">${ferias.length}</div><div class="l">de férias hoje${ferias.length?': '+ferias.map(f=>esc(f.nome)).join(', '):''}</div></div>
     <div class="card kpi"><div class="v">${prox.length}</div><div class="l">saem de férias em 60 dias</div></div>
+    <div class="card kpi"><div class="v">${aniv.length}</div><div class="l">🎂 aniversários em ${MESES[Number(H.slice(5,7))-1]}${aniv.length?': '+aniv.map(f=>esc(f.nome)+' ('+nascMD(f.nascimento).slice(3)+')').join(', '):''}</div></div>
   </div>
   <div class="filtros"><button class="btn pri" onclick="fEdit='novo';render()">+ Novo funcionário</button><button class="btn" onclick="baixar('funcionarios-glopel.json', funcs())">Exportar</button>${L.func?`<button class="btn" onclick="if(confirm('Descartar as edições deste navegador e voltar à lista publicada?')){delete L.func;salvaL();fEdit=null;render()}">Voltar à lista publicada</button>`:''}</div>
   ${e?`<div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">${fEdit==='novo'?'Novo funcionário':'Editar — '+esc(e.nome)}</h3>
-    <form class="inline" onsubmit="salvaFunc(event,'${e.id}')">${inp('nome','Nome','text',180)}${inp('funcao','Função','text',170)}${sel('setor','Setor',SETORES)}${sel('vinculo','Vínculo',VINC)}${inp('admissao','Admissão','date')}${inp('salario','Salário (R$/mês)','text',110)}${inp('telefone','Telefone','tel',130)}${inp('ferias_ini','Férias de','date')}${inp('ferias_fim','até','date')}${inp('obs','Obs.','text',220)}
+    <form class="inline" onsubmit="salvaFunc(event,'${e.id}')">${inp('nome','Nome','text',180)}${inp('funcao','Função','text',170)}${sel('setor','Setor',SETORES)}${sel('vinculo','Vínculo',VINC)}${inp('admissao','Admissão','date')}${inp('salario','Salário (R$/mês)','text',110)}${inp('telefone','Telefone','tel',130)}<label>Aniversário<input name="nascimento" value="${esc(e.nascimento||'')}" placeholder="dd/mm" style="min-width:90px"></label>${inp('ferias_ini','Férias de','date')}${inp('ferias_fim','até','date')}${inp('obs','Obs.','text',220)}
     <button class="btn pri">Salvar</button><button type="button" class="btn" onclick="fEdit=null;render()">Cancelar</button>${fEdit!=='novo'?`<button type="button" class="btn" style="color:var(--bad)" onclick="apagaFunc('${e.id}')">Remover</button>`:''}</form></div>`:''}
   <div class="card" style="padding:0"><div class="tw"><table>
-    <thead><tr><th>Nome</th><th>Função</th><th>Setor</th><th>Vínculo</th><th>Admissão</th><th class="n">Tempo de casa</th><th>Férias</th><th>Telefone</th><th class="n">Salário</th><th>Obs.</th></tr></thead>
+    <thead><tr><th>Nome</th><th>Função</th><th>Setor</th><th>Vínculo</th><th>Admissão</th><th class="n">Tempo de casa</th><th>Férias</th><th>Aniversário</th><th>Telefone</th><th class="n">Salário</th><th>Obs.</th></tr></thead>
     <tbody>${F.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'')||a.nome.localeCompare(b.nome)).map(f=>`<tr style="cursor:pointer" onclick="fEdit='${f.id}';render();scrollTo(0,0)"><td><b>${esc(f.nome)}</b></td><td>${esc(f.funcao)}</td><td>${esc(f.setor)}</td><td>${esc(f.vinculo)||'<span class="mut">—</span>'}</td><td>${dmy(f.admissao)}</td><td class="n">${tempoCasa(f.admissao)}</td>
-      <td>${f.ferias_ini?`${deFerias(f,H)?'<span class="pill warn">agora</span> ':''}${dm(f.ferias_ini)}–${dm(f.ferias_fim)}`:'<span class="mut">—</span>'}</td><td>${esc(f.telefone)||'<span class="mut">—</span>'}</td><td class="n">${num(f.salario)?brl(num(f.salario)):'<span class="mut">—</span>'}</td><td class="mut">${esc(f.obs)}</td></tr>`).join('')}</tbody>
+      <td>${f.ferias_ini?`${deFerias(f,H)?'<span class="pill warn">agora</span> ':''}${dm(f.ferias_ini)}–${dm(f.ferias_fim)}`:'<span class="mut">—</span>'}</td><td>${nascMD(f.nascimento)?(nascMD(f.nascimento)===H.slice(5)?'🎂 ':'')+esc(f.nascimento):'<span class="mut">—</span>'}</td><td>${esc(f.telefone)||'<span class="mut">—</span>'}</td><td class="n">${num(f.salario)?brl(num(f.salario)):'<span class="mut">—</span>'}</td><td class="mut">${esc(f.obs)}</td></tr>`).join('')}</tbody>
   </table></div></div>
-  <p class="note">Clique numa pessoa para editar. Férias e aniversário de admissão aparecem no <a href="#calendario" onclick="ir('calendario')">Calendário</a>; a soma dos salários entra em <a href="#apagar" onclick="ir('apagar')">A pagar</a> no dia ${L.diaFolha||5}. Próximo passo: ligar as faltas do grupo AUSENCIAS GLOBO.</p>`;
+  <p class="note">Clique numa pessoa para editar. Aniversários, férias e anos de casa aparecem no <a href="#calendario" onclick="ir('calendario')">Calendário</a>; a soma dos salários entra em <a href="#apagar" onclick="ir('apagar')">A pagar</a> no dia ${L.diaFolha||5}. Próximo passo: ligar as faltas do grupo AUSENCIAS GLOBO.</p>`;
 }
 function salvaFunc(ev, id){
   const f = fd(ev); const F = funcs().map(x=>({...x}));
   const i = F.findIndex(x=>x.id===id);
   if (!f.nome.trim()) return alert('Falta o nome.');
+  if (f.nascimento && !nascMD(f.nascimento)) return alert('Aniversário: use dd/mm (ex.: 07/03).');
   if (i<0) F.push({id, ...f}); else F[i] = {...F[i], ...f};
   L.func = F; salvaL(); fEdit = null; render();
 }
@@ -923,6 +927,8 @@ function eventos(de, ate){
   funcs().forEach(f => {
     if (f.ferias_ini && f.ferias_ini>=de && f.ferias_ini<=ate) E.push({data:f.ferias_ini, tipo:'pessoas', txt:f.nome+' sai de férias (até '+dm(f.ferias_fim)+')'});
     if (f.ferias_fim && f.ferias_fim>=de && f.ferias_fim<=ate) E.push({data:addD(f.ferias_fim,1), tipo:'pessoas', txt:f.nome+' volta de férias'});
+    const md = nascMD(f.nascimento);
+    if (md) for (let y=Number(de.slice(0,4)); y<=Number(ate.slice(0,4)); y++) { const d = y+'-'+md; if (d>=de && d<=ate) E.push({data:d, tipo:'pessoas', txt:'Aniversário de '+f.nome, ic:'🎂'}); }
     if (f.admissao) for (let y=Number(de.slice(0,4)); y<=Number(ate.slice(0,4)); y++) { const d = y+f.admissao.slice(4); const n = y-Number(f.admissao.slice(0,4)); if (n>0 && d>=de && d<=ate) E.push({data:d, tipo:'pessoas', txt:f.nome+' — '+n+' ano'+(n>1?'s':'')+' de casa'}); }
   });
   for (let y=Number(de.slice(0,4)); y<=Number(ate.slice(0,4)); y++) feriados(y).forEach(([d,n]) => { if (d>=de && d<=ate) E.push({data:d, tipo:'feriado', txt:n}); });
@@ -937,7 +943,7 @@ function vCalendario(){
   const nSem = Math.ceil((dow + ultDia(calMes))/7);
   const g1 = addD(g0, nSem*7-1);
   const E = eventos(g0, addD(H,14) > g1 ? addD(H,14) : g1);
-  const chip = e => `<div title="${esc(e.txt)}" style="font-size:11px;line-height:1.3;padding:1px 5px;border-radius:4px;margin-top:2px;background:${TIPOS[e.tipo][2]}1a;color:${TIPOS[e.tipo][2]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${e.ok?'text-decoration:line-through;opacity:.6':''}">${TIPOS[e.tipo][0]} ${esc(e.txt)}</div>`;
+  const chip = e => `<div title="${esc(e.txt)}" style="font-size:11px;line-height:1.3;padding:1px 5px;border-radius:4px;margin-top:2px;background:${TIPOS[e.tipo][2]}1a;color:${TIPOS[e.tipo][2]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${e.ok?'text-decoration:line-through;opacity:.6':''}">${e.ic||TIPOS[e.tipo][0]} ${esc(e.txt)}</div>`;
   let grid = '';
   for (let i=0; i<nSem*7; i++) {
     const d = addD(g0,i), ev = E.filter(e=>e.data===d), fora = d.slice(0,7)!==calMes, fer = ev.some(e=>e.tipo==='feriado');
@@ -961,15 +967,15 @@ function vCalendario(){
     </div>
     <div>
       <div class="card" style="margin-bottom:12px"><h3 style="margin:0 0 6px;font-size:15px">${dmy(dSel)}</h3>
-        ${evSel.length?evSel.map(e=>`<div style="padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;${e.ok?'text-decoration:line-through;color:var(--mute)':''}">${TIPOS[e.tipo][0]} ${esc(e.txt)}${e.id?` <a href="javascript:void 0" style="color:var(--bad);font-size:11px" onclick="L.eventos=L.eventos.filter(x=>x.id!=='${e.id}');salvaL();render()">apagar</a>`:''}</div>`).join(''):'<div class="mut" style="font-size:13px">Nada neste dia.</div>'}
+        ${evSel.length?evSel.map(e=>`<div style="padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;${e.ok?'text-decoration:line-through;color:var(--mute)':''}">${e.ic||TIPOS[e.tipo][0]} ${esc(e.txt)}${e.id?` <a href="javascript:void 0" style="color:var(--bad);font-size:11px" onclick="L.eventos=L.eventos.filter(x=>x.id!=='${e.id}');salvaL();render()">apagar</a>`:''}</div>`).join(''):'<div class="mut" style="font-size:13px">Nada neste dia.</div>'}
         <form onsubmit="event.preventDefault();const t=this.t.value.trim();if(t){L.eventos.push({id:uid(),data:'${dSel}',titulo:t});salvaL();render()}" style="display:flex;gap:6px;margin-top:8px"><input name="t" placeholder="Anotar neste dia…" style="flex:1;border:1px solid var(--line);border-radius:6px;padding:5px 8px"><button class="btn">+</button></form>
       </div>
       <div class="card"><h3 style="margin:0 0 6px;font-size:15px">Próximos 14 dias</h3>
-        ${prox.length?prox.map(e=>`<div style="padding:4px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="mut" style="display:inline-block;width:42px">${dm(e.data)}</span>${TIPOS[e.tipo][0]} ${esc(e.txt)}</div>`).join(''):'<div class="mut" style="font-size:13px">Nada.</div>'}
+        ${prox.length?prox.map(e=>`<div style="padding:4px 0;border-bottom:1px solid var(--line);font-size:13px"><span class="mut" style="display:inline-block;width:42px">${dm(e.data)}</span>${e.ic||TIPOS[e.tipo][0]} ${esc(e.txt)}</div>`).join(''):'<div class="mut" style="font-size:13px">Nada.</div>'}
       </div>
     </div>
   </div>
-  <p class="note">Junta as datas dos outros módulos: contas e parcelas de <a href="#apagar" onclick="ir('apagar')">A pagar</a> (riscadas quando pagas), quando pedir bobina (<a href="#bobinas" onclick="ir('bobinas')">Bobinas</a>), férias e tempo de casa (<a href="#funcionarios" onclick="ir('funcionarios')">Funcionários</a>), feriados nacionais e de Curitiba. Anotações ficam salvas neste navegador.</p>`;
+  <p class="note">Junta as datas dos outros módulos: contas e parcelas de <a href="#apagar" onclick="ir('apagar')">A pagar</a> (riscadas quando pagas), quando pedir bobina (<a href="#bobinas" onclick="ir('bobinas')">Bobinas</a>), aniversários, férias e tempo de casa (<a href="#funcionarios" onclick="ir('funcionarios')">Funcionários</a>), feriados nacionais e de Curitiba. Anotações ficam salvas neste navegador.</p>`;
 }
 
 /* ações (só no navegador) */
