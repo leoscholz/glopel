@@ -15,7 +15,7 @@ Uso (na pasta sistema/):
 A pasta _privado/ está no .gitignore: NUNCA commitar o dados.json.
 Trocar a senha = abrir com a antiga e fechar com a nova.
 """
-import base64, json, os, re, sys
+import base64, gzip, json, os, re, sys
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -44,8 +44,9 @@ def fechar():
     dados = DADOS.read_bytes()
     json.loads(dados)  # valida
     salt, iv = os.urandom(16), os.urandom(12)
-    ct = AESGCM(chave(senha(), salt)).encrypt(iv, dados, None)
-    bloco = json.dumps({'v': 1, 'it': ITER, 'salt': b64(salt), 'iv': b64(iv), 'ct': b64(ct)})
+    # v2: gzip antes de cifrar (o navegador descomprime com DecompressionStream)
+    ct = AESGCM(chave(senha(), salt)).encrypt(iv, gzip.compress(dados, 9, mtime=0), None)
+    bloco = json.dumps({'v': 2, 'z': 1, 'it': ITER, 'salt': b64(salt), 'iv': b64(iv), 'ct': b64(ct)})
     html = HTML.read_text()
     if not RX.search(html):
         sys.exit('Bloco COFRE não encontrado no index.html')
@@ -57,6 +58,8 @@ def abrir():
     c = json.loads(RX.search(HTML.read_text()).group(1))
     d = base64.b64decode
     dados = AESGCM(chave(senha(), d(c['salt']), c['it'])).decrypt(d(c['iv']), d(c['ct']), None)
+    if c.get('z'):
+        dados = gzip.decompress(dados)
     DADOS.parent.mkdir(exist_ok=True)
     DADOS.write_bytes(dados)
     print(f'Decifrado em {DADOS}')
