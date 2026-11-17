@@ -537,7 +537,7 @@ function vBobinas(){
   const ban = DB.fonte==='exemplo'
     ? `<div class="banner">Dados <b>fictícios</b> para testar a tela. Para ver os reais: na planilha da Secretaria, <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>. O arquivo é lido só neste navegador — nada é enviado.</div>`
     : DB.fonte==='publicado'
-    ? `<div class="banner ok"><b>Dados reais</b> da planilha da Secretaria, publicados em ${dmy(DB.atualizado)}: contagem física de 17/11 (Márcia) + saídas do GLOBO CONTROLE. Para ver o mais recente: <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>.</div>`
+    ? `<div class="banner ok"><b>Dados reais</b> da planilha da Secretaria, publicados em ${dmy(DB.atualizado)}: contagem física de 17/11 (Márcia) + saídas do GLOBO CONTROLE. Para ver o mais recente: <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>.<br>⚠️ Pedidos, chegadas e contagens registrados <b>nesta</b> página ficam só neste navegador. Para gravar na planilha, use o Sistema Globo dentro do Claude.</div>`
     : `<div class="banner ok">Dados da planilha <b>${esc(DB.fonte)}</b>, lidos neste navegador. Edições feitas aqui não voltam para a planilha.</div>`;
   const body = {estoque:bEstoque, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
   return ban + t + body();
