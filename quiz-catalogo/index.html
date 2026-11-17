@@ -90,8 +90,6 @@ const PERGUNTAS = [
    ops:['Existe e vende','Não existe / não vende mais',...NS]},
   {id:'pardo_peq', t:'Batatinha, semente, hambúrguer e saco 13,5×17,5 em kraft PARDO', c:'A tabela só traz esses sacos em kraft branco e antigordura.',
    ops:['Fazemos todos em pardo também','Fazemos só alguns em pardo (escreva quais)','Não, só branco e antigordura',...NS], txt:'Quais? Preço?'},
-  {id:'monolucido', t:'Papel monolúcido (M30, M40, M60)', c:'Está na planilha de medidas, mas não tem preço na tabela.',
-   ops:['Vende normalmente','Só sob encomenda','Não vende mais',...NS], txt:'Preço ou observação'},
   {id:'bandejas_sem_preco', t:'Bandejas que estão na planilha de medidas mas não têm preço', c:'14×14, 25×25, 33×25, 25×28, 33×28, 33×35, 33×40, 28×50, 35×50, 60×60 e 60×120. Como o site deve mostrar?',
    ops:['Mostrar com "preço sob consulta"','Não mostrar no site','Vou mandar os preços',...NS], txt:'Observação ou preços'},
   {id:'saco_1725', t:'Saco 17,5×25 em kraft pardo 35 g (R$ 143,00 na tabela)', c:'Está na tabela, mas não está na planilha de medidas.',
@@ -129,7 +127,7 @@ const PERGUNTAS = [
   {id:'frete', t:'O frete do papel (Irani e Lutepel) é pago pela Globo. Quanto custa, mais ou menos?', ops:['Até R$ 0,30 por kg','Entre R$ 0,30 e R$ 0,60 por kg','Mais de R$ 0,60 por kg',...NS], txt:'Valor de um frete recente (R$ e quantos kg)'},
   {id:'kb30_tipo', t:'A Irani vende o kraft branco 30 g em dois tipos: "3x4" (R$ 14,25/kg) e o comum (R$ 12,95/kg). Qual vai em cada produto?', ops:['O "3x4" é para impressão melhor; o comum para o resto','Tanto faz, usamos os dois',...NS], txt:'Observação'},
   {id:'antigordura_papel', t:'O papel antigordura que compramos é o Greasepack 32 g da Lutepel. A tabela fala em "Graesepel 34 g". É o mesmo?', ops:['Sim, é o mesmo papel','Não, o 34 g vem de outro fornecedor',...NS], txt:'Observação'},
-  {id:'mono_uso', t:'Em setembro a Globo comprou 6 toneladas de monolúcido (30 g e 40 g) da Lutepel. Para quais produtos?', ops:null, txt:'Produtos e preço de venda (se souber)'},
+  {id:'mono_uso', t:'Papel monolúcido (30 g e 40 g)', c:'Em setembro a Globo comprou 6 toneladas da Lutepel, mas a tabela não tem nenhum produto em monolúcido. Como é vendido?', ops:['Produtos normais, só falta pôr na tabela','Só sob encomenda / clientes específicos',...NS], txt:'Quais produtos e preço de venda (se souber)'},
  ]},
  {sec:'6. Plásticos e descartáveis (revenda)', itens:[
   {id:'revenda_preco', t:'O site mostra os preços de plásticos e descartáveis do antigo Suri Shop (2025). Qual preço usar?',
