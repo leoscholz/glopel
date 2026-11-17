@@ -2548,7 +2548,7 @@ function cliche(id){
   const n=Math.max(1, coresDaSacola(id).size), area=(xmaxDe(g)-xminDe(g))*(ymaxDe(g)-yminDe(g)), uma=Math.max(CLICHE_MIN, Math.round(area*CLICHE_CM2/5)*5);
   return {novo:true, h, cores:n, valor:n*uma, uma, motivo: conhecidos.size ? 'a arte mudou desde o último pedido' : 'primeiro pedido deste tamanho'};
 }
-function linhaCliche(id){ const c=cliche(id);
+function linhaCliche(id){ if(arteDeSempre(id)) return `<div class="clc ok">✓ Clichê da arte de sempre: sem custo</div>`; const c=cliche(id);
   if(c.pend) return `<div class="clc">🧩 Clichê: calculado quando a arte ficar pronta</div>`;
   if(!c.novo) return `<div class="clc ok">✓ Clichê já existe: sem custo</div>`;
   return `<div class="clc novo" title="Clichê é a chapa de impressão de cada cor. Paga uma vez; nos próximos pedidos desta arte e tamanho ele é reaproveitado.">🆕 Clichê novo (${c.motivo}): ${c.cores} cor${c.cores>1?'es':''} × ${brl(c.uma)} = <b>${brl(c.valor)}</b></div>`; }
@@ -2572,6 +2572,7 @@ function sacolaIlustra(id, alt=150){
 }
 function statusArte(id){
   const b=design.sacolas[id]; if(!b) return ['⚪','Sem arte','#a49a8e'];
+  if(arteDeSempre(id)) return ['🔁','Arte de sempre (já aprovada)','#2f6b3f'];
   return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Falta aprovar a arte','#b07f00'], conferida:['✅','Arte aprovada','#2f6b3f']})[b.estado];
 }
 function novaHistoria(){ hist=[snap()]; hpos=0; histSacolas(); ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
@@ -2772,18 +2773,23 @@ async function registraPedidoSite(ped){
   const wa=(ped.wa && /^[A-Za-z0-9]{8,16}$/.test(ped.wa))?ped.wa:null, cupom=ped.cupom?String(ped.cupom).slice(0,20):null;
   if(typeof SB!=='undefined' && SB) for(let t=0;t<3 && !salvo;t++){
     try{ const {error}=await SB.from('pedidos_site').insert({codigo, wa_token:wa, cupom, itens:ped.linhas, total_itens:ped.subtotal, total_cliches:ped.cliches, total:ped.total,
-        tem_arte:ped.linhas.some(l=>l.tipo==='personalizado'), arte_nova:false});
+        tem_arte:ped.linhas.some(l=>l.tipo==='personalizado'), arte_nova:ped.linhas.some(l=>l.tipo==='personalizado' && l.arte!=='de_sempre')});
       if(!error) salvo=true; else if(error.code==='23505') codigo=codigoGLS(); else break; }catch(_){ break; } }
   return {codigo, salvo};
 }
 const URLP = new URLSearchParams(location.search);
 const WA_TOKEN = URLP.get('wa') || null;
+/* Pedido RECORRENTE (decisão Leo 17-11): quem chega pelo link do WhatsApp (?wa=) já é cliente e usa a arte de sempre,
+   já aprovada. Personalizar vira opcional; só é obrigatório para cliente novo (acesso direto ao site). */
+const recorrente = () => !!(WA_TOKEN || (typeof design!=='undefined' && design && design.wa));
+const arteDeSempre = id => recorrente() && design.sacolas[id] && design.sacolas[id].estado==='nenhum';
+const faltaAprovar = () => design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida' && !arteDeSempre(id));
 const qtdTxt = (q,un) => un==='kg' ? q+' kg' : un==='milheiro' ? q+' milheiro'+(q>1?'s':'') : q+' '+un+(q>1?'s':'');
 function linhasPedido(){
   const L=[];
   design.carrinho.forEach(id=>{ const g=CATALOGO[id]; if(!g) return; const it=variacaoDe(id), q=(design.qtd&&design.qtd[id])||1, b=design.sacolas[id], cop=(String(id).match(/~\d+$/)||[''])[0], c=cliche(id);
     L.push({id:(it?it.id:'faca_'+idBase(id))+'#arte'+cop, sacola:id, tipo:'personalizado', nome:g.nome.replace(/ · (Kraft|Branco)$/,''), variacao:it?it.papel:PAPEIS[g.papel]+' (preço ilustrativo)',
-      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:b?b.estado:'nenhum', cliche:c&&c.novo?c.valor:0}); });
+      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:arteDeSempre(id)?'de_sempre':(b?b.estado:'nenhum'), cliche:c&&c.novo?c.valor:0}); });
   Object.entries(design.itens||{}).forEach(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a||!q) return; const {p,v}=a;
     L.push({id:k, tipo:p.revenda?'revenda':'catalogo', nome:p.nome, variacao:v.papel, cod:v.cod||'', qtd:q, un:v.un, preco:v.preco, total:Math.round(q*v.preco*100)/100}); });
   return L;
@@ -2793,7 +2799,7 @@ function pedidoAtual(){
   return {versao:1, origem:'site', wa:WA_TOKEN, cupom:(design.cupom||'').trim()||null, linhas, subtotal:+sub.toFixed(2), cliches:+cli.toFixed(2), total:+(sub+cli).toFixed(2), criado:new Date().toISOString()};
 }
 function mensagemWhatsApp(ped){
-  const ARTE={conferida:'arte aprovada', auto:'arte a aprovar', nenhum:'sem arte'};
+  const ARTE={conferida:'arte aprovada', auto:'arte a aprovar', nenhum:'sem arte', de_sempre:'arte de sempre'};
   const ls=ped.linhas.map((l,i)=>`${i+1}) ${qtdTxt(l.qtd,l.un)} — ${l.nome}${l.variacao?' · '+l.variacao:''}${l.tipo==='personalizado'?` · personalizado (${ARTE[l.arte]||l.arte})`:''}\n    ${brl(l.preco)}/${l.un} = ${brl(l.total)}${l.cliche?` + clichê novo ${brl(l.cliche)}`:''}\n    [${l.id}]`);
   return `Olá! Quero fazer este pedido pelo site da Embalagens Globo:\n\n${ls.join('\n')}\n\n`+
     (ped.cliches?`Produtos: ${brl(ped.subtotal)}\nClichês novos: ${brl(ped.cliches)}\n`:'')+
@@ -2826,11 +2832,11 @@ function renderCarrinho(){
   if(!n){ L.innerHTML='<div class="empty" style="padding:20px 4px">Seu carrinho está vazio. Escolha os produtos ao lado.</div>'; $('cartotal').textContent=brl(0); $('finalizar').disabled=true; $('fechaWa').disabled=true; $('carmsg').textContent=''; return; }
   let tot=0;
   const sacs = design.carrinho.map(id=>{ const g=CATALOGO[id], q=(design.qtd&&design.qtd[id])||1, [ic,txt,cor]=statusArte(id); tot+=q*PRECO[id];
-    const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum';
+    const temArte = design.sacolas[id] && design.sacolas[id].estado!=='nenhum', sempre=arteDeSempre(id);
     return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id), p=produtoDaFaca(f.faca), fo=p&&fotoDe(p,{edit:g.papel,k:''}); return fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
       <div class="cim"><b>${esc(g.nome.replace(/ · (Kraft|Branco)$/,''))}</b><div class="cist" style="color:#6b7480">${esc((variacaoDe(id)||{}).papel||PAPEIS[g.papel]+' · preço ilustrativo')}</div><div class="cist" style="color:${cor}">${ic} ${txt}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>${linhaCliche(id)}
-        <div class="ciacts"><button data-a="pers" class="${temArte?'':'pri'}">🎨 ${temArte?'Editar arte':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+        <div class="ciacts"><button data-a="pers" class="${temArte||sempre?'':'pri'}">🎨 ${temArte?'Editar arte':sempre?'Mudar a arte (opcional)':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   const avs = Object.entries(design.itens).filter(([,q])=>q).map(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a) return ''; const {p,v}=a, fo=fotoDe(p,v); tot+=q*v.preco;
     return `<div class="ci av" data-k="${k}"><div class="cil">${fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:`<div class="semfoto" style="font-size:12px"><span style="font-size:28px">${ICONE_CAT[p.cat]||'📦'}</span></div>`}</div>
       <div class="cim"><b>${esc(p.nome)}</b><div class="cist" style="color:#6b7480">${[esc(v.papel), p.revenda?'preço de referência':''].filter(Boolean).join(' · ')}</div>
@@ -2838,10 +2844,10 @@ function renderCarrinho(){
         <div class="ciacts"><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   L.innerHTML = sacs + avs;
   const tc=totalCliches(); $('cartotal').innerHTML=brl(tot+tc)+(tc?`<small style="display:block;font-weight:400;font-size:11.5px;color:var(--mute);text-align:right">produtos ${brl(tot)} + clichês ${brl(tc)}</small>`:'');
-  const pend = design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
+  const pend = faltaAprovar();
   $('finalizar').disabled = !!pend.length || !design.carrinho.length;
   $('fechaWa').disabled = !!pend.length;
-  $('carmsg').innerHTML = pend.length ? `Para fechar o pedido, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : design.carrinho.length ? '✅ Todas as artes aprovadas.' : '';
+  $('carmsg').innerHTML = pend.length ? `Para fechar o pedido, personalize e aprove a arte de ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão <b>✅ Aprovar esta arte</b> no editor).` : design.carrinho.length ? (recorrente() && design.carrinho.some(arteDeSempre) ? '🔁 Pedido com a arte de sempre — pode fechar no WhatsApp.' : '✅ Todas as artes aprovadas.') : '';
   L.querySelectorAll('.ci:not(.av)').forEach(c=>{ const id=c.dataset.id;
     c.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
       const q=design.qtd[id]||1;
@@ -3481,7 +3487,7 @@ function gavetaCarrinho(){
     return `<div class="gp gc${id===design.atual?' on':''}" data-id="${id}"><div class="ft">${FOTOS[f.fonte]?`<img class="foto ${g.papel}" src="${FOTOS[f.fonte]}">`:''}</div><div style="flex:1;min-width:0"><b>${esc(g.nome)}</b><div class="st" style="color:${cor};margin:1px 0">${ic} ${txt}</div>
       <div class="step"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span class="st" style="margin:0">milh. · ${brl(q*PRECO[id])}</span></div>
       ${linhaCliche(id)}<div class="bt">${id===design.atual?'':'<button data-a="abr">Abrir</button>'}<button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
-  const pend=design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida');
+  const pend=faltaAprovar();
   L.innerHTML=`${itens}<button id="gcMais">＋ Adicionar outra sacola</button>
     ${(()=>{ const tc=totalCliches(); return tc?`<div class="tot" style="font-size:12.5px"><span>Sacolas</span><span>${brl(tot)}</span></div><div class="tot" style="font-size:12.5px"><span>Clichês novos</span><span>${brl(tc)}</span></div><div class="tot"><span>Total</span><b>${brl(tot+tc)}</b></div>`:`<div class="tot"><span>Total</span><b>${brl(tot)}</b></div>`; })()}
     <div class="hint">${pend.length?`Falta aprovar ${pend.length===1?'1 sacola':pend.length+' sacolas'} (botão ✅ Aprovar esta arte).`:'✅ Todas as artes aprovadas.'}</div>
@@ -4155,6 +4161,7 @@ $('voltaloja').onclick=()=>vaiLoja(true);
 $('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').onclick=()=>{ fechaCarrinho(); salvarPedido(false); };
 $('fechaWa').onclick=fechaWhatsApp;
 $('cupom').oninput=e=>{ design.cupom=e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g,''); agendaSalvar(); };
+if(WA_TOKEN && /^[A-Za-z0-9]{8,16}$/.test(WA_TOKEN)) design.wa=WA_TOKEN;   // lembra que veio do WhatsApp (recarregar mantém)
 if(URLP.get('cupom')){ design.cupom=URLP.get('cupom').toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,30); }
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
 $('finalizar').onclick=()=>{
