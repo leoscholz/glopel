@@ -2762,7 +2762,20 @@ function variacaoDe(id){ const b=idBase(id), k=design.variante&&design.variante[
    A integração (gravar o pedido, código GLB-XXXX, número oficial, robô) é da sessão Site↔WhatsApp
    (claude/Site-WhatsApp-HANDOFF.md): ela pode usar pedidoAtual() e o evento 'globo:pedido'.
    ===================================================================== */
-const WA_NUMERO = '';   // número oficial da Glopel (só dígitos, com 55) — definido na integração
+const WA_NUMERO = '554191455539';   // chip da empresa (decisão Leo 17-11; mesmo do Suri Shop e do LetsBot)
+/* Ponte Site↔WhatsApp (contrato v1, claude/Site-WhatsApp-HANDOFF.md): grava em pedidos_site (só insert, RLS) e
+   prefixa a mensagem com o código GLS-XXXXX. Se o banco falhar, a mensagem vai igual e avisa. */
+const WA_PREFIXO = 'Olá, gostaria de continuar o meu pedido:';
+function codigoGLS(){ const A='23456789ABCDEFGHJKLMNPQRSTUVWXYZ', a=new Uint8Array(5); crypto.getRandomValues(a); return 'GLS-'+Array.from(a,b=>A[b%32]).join(''); }
+async function registraPedidoSite(ped){
+  let codigo=codigoGLS(), salvo=false;
+  const wa=(ped.wa && /^[A-Za-z0-9]{8,16}$/.test(ped.wa))?ped.wa:null, cupom=ped.cupom?String(ped.cupom).slice(0,20):null;
+  if(typeof SB!=='undefined' && SB) for(let t=0;t<3 && !salvo;t++){
+    try{ const {error}=await SB.from('pedidos_site').insert({codigo, wa_token:wa, cupom, itens:ped.linhas, total_itens:ped.subtotal, total_cliches:ped.cliches, total:ped.total,
+        tem_arte:ped.linhas.some(l=>l.tipo==='personalizado'), arte_nova:false});
+      if(!error) salvo=true; else if(error.code==='23505') codigo=codigoGLS(); else break; }catch(_){ break; } }
+  return {codigo, salvo};
+}
 const URLP = new URLSearchParams(location.search);
 const WA_TOKEN = URLP.get('wa') || null;
 const qtdTxt = (q,un) => un==='kg' ? q+' kg' : un==='milheiro' ? q+' milheiro'+(q>1?'s':'') : q+' '+un+(q>1?'s':'');
@@ -2794,10 +2807,16 @@ function fechaWhatsApp(){
   modal(`${H3('📲 Fechar pedido no WhatsApp')}<div style="margin-bottom:8px;color:var(--mute);font-size:13px">Esta é a mensagem que vai para o WhatsApp da Embalagens Globo. O atendimento confirma os preços, o desconto do cupom e o prazo.</div>
     <textarea id="waMsg" readonly style="width:100%;height:240px;font:12.5px/1.45 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical">${esc(msg)}</textarea>
     ${WA_NUMERO?'':'<div style="font-size:12px;color:#8a6d00;margin-top:6px">⚠️ Versão de teste: o número do WhatsApp da Glopel ainda não foi ligado ao site. Copie a mensagem e envie pelo seu WhatsApp.</div>'}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="waX">Voltar</button><button id="waCp">📋 Copiar mensagem</button><button id="waGo" class="pri wa" ${WA_NUMERO?'':'disabled'}>Abrir o WhatsApp</button></div>`);
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="waX">Voltar</button><button id="waCp">📋 Copiar mensagem</button><button id="waGo" class="pri wa" ${WA_NUMERO?'':'disabled'}>Confirmar pedido e retornar ao WhatsApp</button></div>`);
   $('waX').onclick=fecha;
   $('waCp').onclick=async()=>{ try{ await navigator.clipboard.writeText(msg); }catch(_){ const t=$('waMsg'); t.select(); try{ document.execCommand('copy'); }catch(__){} } toast('📋 Mensagem copiada.'); };
-  $('waGo').onclick=()=>{ if(WA_NUMERO) window.open('https://wa.me/'+WA_NUMERO+'?text='+encodeURIComponent(msg),'_blank'); };
+  $('waGo').onclick=async()=>{ if(!WA_NUMERO) return; const bt=$('waGo'); bt.disabled=true; bt.textContent='Enviando…';
+    const w=window.open('','_blank');   // abre já no clique (celular bloqueia popup depois do await)
+    const r=await registraPedidoSite(ped); window.ultimoPedidoWA.codigo=r.codigo; window.ultimoPedidoWA.salvo=r.salvo;
+    const txt=`${WA_PREFIXO} *${r.codigo}*\n\n`+msg.replace(/^Olá! Quero fazer este pedido pelo site da Embalagens Globo:\n\n/,'')+(r.salvo?'':'\n_(pedido não ficou salvo no sistema — o atendente confere por esta mensagem)_');
+    const url='https://wa.me/'+WA_NUMERO+'?text='+encodeURIComponent(txt.slice(0,3500));
+    if(w) w.location.href=url; else location.href=url;
+    bt.disabled=false; bt.textContent='Abrir o WhatsApp de novo'; toast(`Pedido ${r.codigo} — envie a mensagem no WhatsApp.`); };
 }
 function contaCarrinho(){ return design.carrinho.length + Object.values(design.itens||{}).filter(Boolean).length; }
 function renderCarrinho(){
