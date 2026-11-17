@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Precificador Globo — teste</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#1f5fae;--azulcl:#eaf2fb;--tx:#1d2733;--cz:#6b7684;--ln:#dfe5ec;--bg:#f5f7fa;--ok:#1d8a4e;--okcl:#e6f4ec;--am:#b7791f;--amcl:#fdf3e1;--vm:#c0392b;--vmcl:#fbeae8}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+header{background:var(--azul);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px;font-weight:800}
+.tag{background:#fff3;border:1px solid #fff6;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600}
+.wrap{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:16px;align-items:start}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+aside{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:4px 14px 14px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+aside h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--azul);margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center}
+aside h3 small{text-transform:none;letter-spacing:0;color:var(--cz);font-weight:500}
+.lin{display:grid;grid-template-columns:1fr 92px;gap:6px;align-items:center;margin-bottom:5px}
+.lin label{font-size:13px}
+.lin.est label::after{content:" ⚠";color:var(--am)}
+input[type=number]{width:100%;font:inherit;padding:5px 7px;border:1.5px solid var(--ln);border-radius:7px;text-align:right}
+input[type=number]:focus{border-color:var(--azul);outline:none}
+.tbm{width:100%;border-collapse:collapse;font-size:12px}
+.tbm th{text-align:left;color:var(--cz);font-weight:600;padding:3px 2px}
+.tbm td{padding:2px}.tbm td:first-child{font-size:11.5px;line-height:1.2;width:110px}
+.tbm input{padding:4px 5px;font-size:12px}
+.tog{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+.nota{font-size:12px;color:var(--cz);margin:4px 0 8px;line-height:1.4}
+.btns{display:flex;gap:8px;margin-top:14px}
+button{font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px;border:1.5px solid var(--azul);background:#fff;color:var(--azul);cursor:pointer}
+button.pri{background:var(--azul);color:#fff}
+main{min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px}
+.kpi b{display:block;font-size:22px;font-weight:800;margin-top:2px}
+.kpi span{font-size:12px;color:var(--cz)}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.filtros select,.filtros input[type=search]{font:inherit;font-size:13px;padding:6px 9px;border:1.5px solid var(--ln);border-radius:8px;background:#fff}
+.card{background:#fff;border:1px solid var(--ln);border-radius:14px;overflow:hidden}
+.tb{width:100%;border-collapse:collapse;font-size:13px}
+.tb th{position:sticky;top:0;background:#f0f3f7;text-align:right;padding:8px 8px;font-size:12px;color:var(--cz);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--ln)}
+.tb th:first-child,.tb th:nth-child(2){text-align:left}
+.tb td{padding:6px 8px;text-align:right;border-bottom:1px solid #eef1f5;white-space:nowrap}
+.tb td:first-child,.tb td:nth-child(2){text-align:left}
+.tb td:first-child{white-space:normal;min-width:180px}
+.tb tr:hover td{background:#f7faff;cursor:pointer}
+.tb tr.sel td{background:var(--azulcl)}
+.pill{display:inline-block;border-radius:20px;padding:2px 8px;font-weight:700;font-size:12px}
+.pill.ok{background:var(--okcl);color:var(--ok)}.pill.am{background:var(--amcl);color:var(--am)}.pill.vm{background:var(--vmcl);color:var(--vm)}
+.mini{font-size:11px;color:var(--cz)}
+.flag{font-size:11px;margin-left:4px}
+.det{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:none}
+.det h4{margin:0 0 8px;font-size:15px}
+.barra{display:flex;height:26px;border-radius:7px;overflow:hidden;margin:8px 0 6px;border:1px solid var(--ln)}
+.barra div{display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden}
+.leg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--cz)}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:4px 18px;font-size:13px;margin-top:8px}
+.grid2 div{display:flex;justify-content:space-between;border-bottom:1px dashed #e8ecf1;padding:3px 0}
+.aviso{background:var(--amcl);border:1px solid #f2d9a6;color:#7a5410;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:12px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1d2733;color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .25s}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header><h1>🧮 Precificador Globo</h1><span class="tag">TESTE · 17-11-2026</span><span class="tag">papel: notas fiscais Irani/Lutepel · máquina: estimativa</span></header>
+<div class="wrap">
+<aside id="painel"></aside>
+<main>
+  <div class="aviso">⚠️ <b>Os custos de máquina, tinta e cola são chutes iniciais</b> (marcados com ⚠). Ajuste no painel até o "custo" bater com o que a fábrica conhece. Papel e frete vêm das notas fiscais e da Márcia. Impostos: o regime da Embalagens Globo em 2025–26 ainda não foi confirmado.</div>
+  <div class="kpis" id="kpis"></div>
+  <div class="det" id="det"></div>
+  <div class="filtros">
+    <select id="fCat"></select>
+    <select id="fPap"></select>
+    <select id="fLoja"><option value="loja">Só o que está na loja</option><option value="todos">Todos (inclui exclusivos)</option></select>
+    <select id="fAlvo"><option value="">Todas as margens</option><option value="neg">Margem Tab III negativa</option><option value="baixa">Margem Tab III abaixo da meta</option></select>
+    <input type="search" id="fBusca" placeholder="Buscar produto…">
+    <button id="btnCsv">📄 Copiar tabela (CSV)</button>
+  </div>
+  <div class="card"><div style="overflow:auto;max-height:70vh"><table class="tb" id="tb"></table></div></div>
+  <p class="mini" style="margin-top:10px">Margem = o que sobra do preço depois de papel (com frete e perda), máquina, tinta, cola, impostos e comissão. "Sugerido" = custo ÷ (1 − impostos − comissão − margem meta). Clique numa linha para ver a composição do custo.</p>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/* Artifact: catálogo embutido. GitHub (sistema/precificador.html): null → lê o catalogo_tabela.json do repositório, sempre atualizado. */
+let ITENS = null;
+const CAT_NOME={pao:'🥖 Sacos de pão',lanche:'🍔 Lanches',outros:'📦 Outros sacos',envelope:'✉️ Envelopes',talher:'🍴 Porta-talher',lamina:'🧻 Lâminas',bandeja:'🍰 Bandejas',bobina:'🎞️ Bobinas'};
+/* largura da folha (cm) dos sacos — aba TAMANHOS / 1ª aba de MEDIDAS SACOS GLOBO */
+const FOLHA={'Saco ½ kg':33,'Saco 900 g':33,'Saco 1 kg':33,'Saco 2 kg':40,'Saco 3 kg':46,'Saco 5 kg':54,'Saco 7,5 kg':60,'Saco 10 kg':63,'Saco 15 kg':72,
+ 'Saco 13,5 × 17,5 cm':40,'Saco 13,5 × 21,5 cm':40,'Saco hamburgão':40,'Saco hambúrguer':33,'Saco semente':22,'Saco batatinha 120 g':30,'Saco batatinha 180 g':33,
+ 'Saco pipoca':33,'Saco pipoquinha':33,'Saco miniburger':28,'Saco baguete':33,'Saco baguete com visor':33,'Saco bijuteria':25,'Saco farmácia':25,'Saco nº 2':40,'Porta-sticks':20,
+ 'Saco churros grande 8,5 × 21 cm':20,'Saco churros pequeno 8,5 × 14 cm':20,'Saco 17,5 × 25 cm':54};
+const ALT_EXTRA={'Saco churros grande 8,5 × 21 cm':21.5,'Saco churros pequeno 8,5 × 14 cm':13.5,'Saco 17,5 × 25 cm':25,'Porta-sticks':16.5};
+const PAPEIS=[ // R$/kg da nota; est = sem nota (chute)
+ ['K32','Kraft pardo 32 g',32,11.12,0],['K35','Kraft pardo 35 g',35,11.12,0],['K40','Kraft pardo 40 g',40,10.02,0],['K60','Kraft pardo 60 g',60,10.02,1],
+ ['KB30','Kraft branco 30 g',30,13.61,0],['KB35','Kraft branco 35 g',35,12.59,0],['KB40','Kraft branco 40 g',40,12.24,0],
+ ['M30','Monolúcido 30 g',30,11.00,0],['M40','Monolúcido 40 g',40,11.00,0],['N40','Semi kraft 38 g',38,7.50,1],['G32','Antigordura 32 g',32,17.00,0],['STRONG','Strong',55,7.00,1]];
+const FAM=[ // família de máquina: R$/hora, unidades/min, setup (h), lote típico (un)
+ ['sp','Saco pequeno (< 27 cm)',150,300,1,30000],['sg','Saco grande (≥ 27 cm)',150,120,1,10000],['env','Envelope',150,250,1,20000],
+ ['tal','Porta-talher / sticks',150,250,1,20000],['lam','Lâmina (corte)',120,600,0.5,10000],['band','Bandeja (corte)',120,400,0.5,10000]];
+const PADRAO={papel:Object.fromEntries(PAPEIS.map(p=>[p[0],p[3]])), frete:5, ipi:3.25, ipiCred:true, perda:8, fundo:0.75, aba:1.5,
+ fam:Object.fromEntries(FAM.map(f=>[f[0],{h:f[2],v:f[3],s:f[4],l:f[5]}])), rebob:1.5, cores:1, tinta:1.5, cola:0.5,
+ imp:15, com:5, meta:10, d2:5, d3:10, site:10, reaj:0};
+let P; try{ P=Object.assign(structuredClone(PADRAO), JSON.parse(localStorage.getItem('precificador_globo')||'{}')); }catch(e){ P=structuredClone(PADRAO); }
+const salva=()=>{ try{ localStorage.setItem('precificador_globo', JSON.stringify(P)); }catch(e){} };
+const brl=v=>v==null||isNaN(v)?'—':v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const n2=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=v=>isNaN(v)?'—':(v*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+const num=s=>parseFloat(String(s).replace(',','.'));
+const gram=c=>(PAPEIS.find(p=>p[0]===c)||[])[2]||0;
+const dims=n=>{ const m=n.match(/(\d+(?:,\d+)?) × (\d+(?:,\d+)?)/); return m?[num(m[1]),num(m[2])]:null; };
+/* consumo de papel (m² por milheiro) e família de máquina */
+/* bandejas "KB" da tabela são monolúcido (Márcia, 17-11): custo e gramatura do M30/M40 */
+const papelReal=i=>i.cat==='bandeja'&&/^KB/.test(i.cod)?'M'+i.cod.slice(2):i.cod;
+function consumo(i){
+  const g=gram(papelReal(i));
+  if(i.cat==='bobina') return {kg:1, fam:null, how:'vendido por kg'};
+  if(i.cat==='lamina'||i.cat==='bandeja'){ const [w,h]=dims(i.nome); const m2=w*h/10; return {m2, kg:m2*g/1000, fam:i.cat==='lamina'?'lam':'band', how:`folha ${n2(w)} × ${n2(h)} cm`}; }
+  if(i.cat==='envelope'){ const [w,h]=dims(i.nome); const m2=(2*w+1.5)*(h+2.5)/10; return {m2, kg:m2*g/1000, fam:'env', how:`aprox. (2 × ${n2(w)} + 1,5) × (${n2(h)} + 2,5) cm`, aprox:true}; }
+  if(i.cat==='talher'){ const f=/largo/.test(i.nome)?20:15; const m2=f*(26.5+2)/10; return {m2, kg:m2*g/1000, fam:'tal', how:`folha ${f} cm × 28,5 cm (aprox.)`, aprox:true}; }
+  const f=FOLHA[i.nome]; let a,s;
+  if(i.medidas){ const p=i.medidas.split(' × ').map(num); a=p[1]; s=p[2]||0; } else { a=ALT_EXTRA[i.nome]; s=0; }
+  if(!f||!a) return {kg:NaN, fam:'sp', how:'sem medida'};
+  const comp=a+P.fundo*s+P.aba, m2=f*comp/10;
+  return {m2, kg:m2*g/1000, fam:(i.nome==='Porta-sticks'?'tal':a>=27?'sg':'sp'), how:`folha ${n2(f)} cm × (${n2(a)} + ${P.fundo} × ${n2(s)} + ${P.aba}) cm`};
+}
+function calcula(i){
+  const c=consumo(i), base=P.papel[papelReal(i)]||0;
+  const rkg=base*(1+P.reaj/100)*(1+P.frete/100)*(P.ipiCred?1:1+P.ipi/100);
+  let papel, maq=0, setup=0, tinta=0, cola=0;
+  if(i.cat==='bobina'){ papel=rkg*(1+P.perda/200); maq=P.rebob; }
+  else {
+    papel=c.kg*rkg*(1+P.perda/100);
+    const f=P.fam[c.fam]; if(f){ maq=f.h/(f.v*60/1000); setup=f.s*f.h/(Math.max(f.l, i.minimo||0)/1000); }
+    tinta=P.cores*P.tinta; cola=['pao','lanche','outros','envelope','talher'].includes(i.cat)?P.cola:0;
+  }
+  const custo=papel+maq+setup+tinta+cola, desc=(P.imp+P.com)/100;
+  const sug1=custo/(1-desc-P.meta/100), sug2=sug1*(1-P.d2/100), sug3=sug1*(1-P.d3/100);
+  const [t1,t2,t3]=i.tab, m=(pr)=>pr?1-desc-custo/pr:NaN;
+  return {...c, rkg, papel, maq, setup, tinta, cola, custo, sug1, sug2, sug3, site:sug1*(1+P.site/100), t1,t2,t3, m1:m(t1), m3:m(t3), dif:(sug1-t1)/t1};
+}
+/* inversões na tabela atual (mesmo produto: papel mais grosso ou branco não pode custar menos) */
+function inversoes(){ const r={}, g=ITENS.reduce((a,i)=>((a[i.nome]=a[i.nome]||[]).push(i),a),{});
+  Object.values(g).forEach(L=>L.forEach(a=>L.forEach(b=>{ if(a===b) return;
+    const fa=a.cod.replace(/\d+/,''), fb=b.cod.replace(/\d+/,''), ga=gram(a.cod), gb=gram(b.cod);
+    if(fa===fb && ga>gb && a.tab[0]<b.tab[0]) r[a.id]=`${a.cod} mais barato que ${b.cod}`;
+    if(fa==='KB'&&fb==='K'&&ga===gb && a.tab[0]<b.tab[0]) r[a.id]=`branco mais barato que pardo`; })));
+  ITENS.forEach(i=>{ if(i.tab[1]>i.tab[0]) r[i.id]='Tab II > Tab I'; }); return r; }
+let ord={k:'m3',d:1}, sel=null;
+function painel(){
+  const L=(id,lab,val,est,step)=>`<div class="lin${est?' est':''}"><label for="${id}">${lab}</label><input type="number" id="${id}" value="${val}" step="${step||'any'}"></div>`;
+  let h=`<h3>Papel <small>R$/kg na nota</small></h3>`+PAPEIS.map(p=>L('pp_'+p[0],p[1],P.papel[p[0]],p[4])).join('')+
+   `<div class="nota">Notas fiscais de fev–nov/2026. ⚠ = sem nota (chute): pedir a nota. Bandejas "KB" usam o custo do monolúcido (são M30/M40).</div>`+
+   L('reaj','Reajuste do papel (%)',P.reaj)+L('frete','Frete (% da nota)',P.frete)+L('ipi','IPI (%)',P.ipi)+
+   `<label class="tog"><input type="checkbox" id="ipiCred" ${P.ipiCred?'checked':''}> IPI vira crédito (não soma ao custo)</label>`+
+   `<h3>Consumo de papel</h3>`+L('perda','Perda / refugo (%)',P.perda,1)+L('fundo','Fundo do saco (× sanfona)',P.fundo,1)+L('aba','Aba / cola (cm)',P.aba,1)+
+   `<div class="nota">Comprimento do saco = altura + fundo × sanfona + aba. Envelopes e porta-talheres: medida aproximada.</div>`+
+   `<h3>Máquinas <small>⚠ estimativas</small></h3><table class="tbm"><tr><th></th><th>R$/h</th><th>un/min</th><th>setup h</th><th>lote un</th></tr>`+
+   FAM.map(f=>`<tr><td>${f[1]}</td>${['h','v','s','l'].map(k=>`<td><input type="number" id="fm_${f[0]}_${k}" value="${P.fam[f[0]][k]}" step="any"></td>`).join('')}</tr>`).join('')+`</table>`+
+   `<div class="nota">R$/h = operador + energia + manutenção + depreciação. Lote: usa o maior entre este e o pedido mínimo do item.</div>`+
+   L('rebob','Bobina: rebobinar (R$/kg)',P.rebob,1)+
+   `<h3>Impressão e cola <small>⚠</small></h3>`+L('cores','Cores',P.cores,0,1)+L('tinta','Tinta (R$/milheiro por cor)',P.tinta,1)+L('cola','Cola (R$/milheiro)',P.cola,1)+
+   `<h3>Venda</h3>`+L('imp','Impostos sobre a venda (%)',P.imp,1)+L('com','Comissão (%)',P.com)+L('meta','Margem meta (%)',P.meta)+
+   L('d2','Desconto Tab II (%)',P.d2)+L('d3','Desconto Tab III (%)',P.d3)+L('site','Acréscimo do site sobre Tab I (%)',P.site)+
+   `<div class="nota">Site: hoje = Tab I + 10% (decisão de 16-11). A Márcia pediu Tab I sem acréscimo → pôr 0 para simular.</div>`+
+   `<div class="btns"><button id="btnPad">↺ Voltar ao padrão</button></div>`;
+  const a=document.getElementById('painel'); a.innerHTML=h;
+  a.querySelectorAll('input').forEach(inp=>inp.oninput=()=>{ const id=inp.id, v=inp.type==='checkbox'?inp.checked:num(inp.value); if(inp.type!=='checkbox'&&isNaN(v)) return;
+    if(id.startsWith('pp_')) P.papel[id.slice(3)]=v; else if(id.startsWith('fm_')){ const [,f,k]=id.split('_'); P.fam[f][k]=v; } else P[id]=v;
+    salva(); tudo(); });
+  document.getElementById('btnPad').onclick=()=>{ P=structuredClone(PADRAO); salva(); painel(); tudo(); toast('Parâmetros voltaram ao padrão'); };
+}
+function filtros(){
+  const cats=[...new Set(ITENS.map(i=>i.cat))], paps=[...new Set(ITENS.map(i=>i.cod))];
+  document.getElementById('fCat').innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option value="${c}">${CAT_NOME[c]||c}</option>`).join('');
+  document.getElementById('fPap').innerHTML='<option value="">Todos os papéis</option>'+paps.map(c=>`<option value="${c}">${(PAPEIS.find(p=>p[0]===c)||[0,c])[1]}</option>`).join('');
+  ['fCat','fPap','fLoja','fAlvo','fBusca'].forEach(id=>document.getElementById(id).oninput=tudo);
+}
+let LINHAS=[];
+function tudo(){
+  const fc=fCat.value, fp=fPap.value, fl=fLoja.value, fa=fAlvo.value, fb=fBusca.value.trim().toLowerCase(), inv=inversoes();
+  LINHAS=ITENS.filter(i=>(!fc||i.cat===fc)&&(!fp||i.cod===fp)&&(fl==='todos'||!i.fora_site)&&(!fb||i.nome.toLowerCase().includes(fb)))
+    .map(i=>({i, r:calcula(i), inv:inv[i.id]}))
+    .filter(x=>!fa||(fa==='neg'?x.r.m3<0:x.r.m3<P.meta/100));
+  const k=ord.k; LINHAS.sort((a,b)=>{ const va=k==='nome'?a.i.nome:a.r[k], vb=k==='nome'?b.i.nome:b.r[k]; return (va>vb?1:va<vb?-1:0)*ord.d; });
+  const ok=LINHAS.filter(x=>!isNaN(x.r.m3)), med=a=>{ const s=[...a].sort((x,y)=>x-y); return s.length?s[Math.floor(s.length/2)]:NaN; };
+  document.getElementById('kpis').innerHTML=[
+    ['Itens na lista',LINHAS.length,''],
+    ['Margem mediana · Tab I',pct(med(ok.map(x=>x.r.m1))),'preço atual'],
+    ['Margem mediana · Tab III',pct(med(ok.map(x=>x.r.m3))),'preço atual, maior desconto'],
+    ['Tab III no prejuízo',ok.filter(x=>x.r.m3<0).length,'margem negativa'],
+    ['Tab III abaixo da meta',ok.filter(x=>x.r.m3<P.meta/100).length,`meta ${P.meta}%`],
+    ['Inversões na tabela',LINHAS.filter(x=>x.inv).length,'⚠ na coluna Produto']].map(([t,v,s])=>`<div class="kpi"><span>${t}</span><b>${v}</b><span>${s}</span></div>`).join('');
+  const cl=m=>isNaN(m)?'':m<0?'vm':m<P.meta/100?'am':'ok';
+  const C=[['nome','Produto'],['cod','Papel'],['kg','kg/mil'],['papel','Papel R$'],['maqT','Máquina R$'],['custo','Custo R$'],['t1','Tab I atual'],['sug1','Tab I sugerida'],['dif','Diferença'],['m1','Margem Tab I'],['m3','Margem Tab III']];
+  document.getElementById('tb').innerHTML='<tr>'+C.map(([k,t])=>`<th data-k="${k}">${t}${ord.k===k?(ord.d>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+
+    LINHAS.map(({i,r,inv})=>`<tr data-id="${i.id}" class="${sel===i.id?'sel':''}"><td>${i.nome}${i.fora_site?` <span class="mini">· ${/exclusivo/.test(i.fora_site)?'exclusivo':'fora de linha'}</span>`:''}${inv?`<span class="flag" title="${inv}">⚠</span>`:''}${i.corrigido?`<span class="flag" title="${i.corrigido}">✎</span>`:''}${r.aprox?'<span class="flag" title="consumo aproximado">≈</span>':''}</td>
+      <td>${i.cod}${papelReal(i)!==i.cod?` <span class="mini">(${papelReal(i)})</span>`:''}</td><td>${i.cat==='bobina'?'—':isNaN(r.kg)?'?':n2(r.kg)}</td><td>${brl(r.papel)}</td><td>${brl(r.maq+r.setup)}</td><td><b>${brl(r.custo)}</b></td>
+      <td>${brl(r.t1)}${i.un==='kg'?'<span class="mini">/kg</span>':''}</td><td>${brl(r.sug1)}</td><td>${isNaN(r.dif)?'—':(r.dif>0?'+':'')+pct(r.dif)}</td>
+      <td><span class="pill ${cl(r.m1)}">${pct(r.m1)}</span></td><td><span class="pill ${cl(r.m3)}">${pct(r.m3)}</span></td></tr>`).join('');
+  document.querySelectorAll('#tb th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k==='maqT'?'maq':th.dataset.k; ord={k, d:ord.k===k?-ord.d:1}; tudo(); });
+  document.querySelectorAll('#tb tr[data-id]').forEach(tr=>tr.onclick=()=>{ sel=sel===tr.dataset.id?null:tr.dataset.id; tudo(); });
+  detalhe();
+}
+function detalhe(){
+  const el=document.getElementById('det'), x=ITENS.find(i=>i.id===sel); if(!x){ el.style.display='none'; return; }
+  const r=calcula(x), imp=r.t1*(P.imp/100), com=r.t1*(P.com/100), sobra=r.t1-r.custo-imp-com;
+  const partes=[['Papel',r.papel,'#8a6d3b'],['Máquina',r.maq,'#1f5fae'],['Setup',r.setup,'#5a8fd6'],['Tinta + cola',r.tinta+r.cola,'#7d5ba6'],['Impostos',imp,'#9aa5b1'],['Comissão',com,'#c3cbd4'],[sobra>=0?'Margem':'Prejuízo',Math.abs(sobra),sobra>=0?'#1d8a4e':'#c0392b']];
+  const tot=partes.reduce((s,p)=>s+p[1],0);
+  el.style.display='block';
+  el.innerHTML=`<h4>${x.nome} · ${(PAPEIS.find(p=>p[0]===x.cod)||[0,x.cod])[1]} <span class="mini">— preço atual Tab I ${brl(r.t1)}${x.un==='kg'?'/kg':'/milheiro'}</span></h4>
+   <div class="barra">${partes.map(([n,v,c])=>v>0?`<div style="flex:${v/tot};background:${c}" title="${n}: ${brl(v)}">${v/tot>0.07?n:''}</div>`:'').join('')}</div>
+   <div class="leg">${partes.map(([n,v,c])=>`<span><i style="background:${c}"></i>${n} ${brl(v)}</span>`).join('')}</div>
+   <div class="grid2">
+    <div><span>Consumo</span><b>${x.cat==='bobina'?'—':isNaN(r.kg)?'?':n2(r.kg)+' kg/mil'}</b></div>
+    <div><span>Como</span><span class="mini">${r.how}</span></div>
+    <div><span>Papel efetivo</span><b>${brl(r.rkg)}/kg</b></div>
+    <div><span>Custo total</span><b>${brl(r.custo)}</b></div>
+    <div><span>Sugerido Tab I / II / III</span><b>${brl(r.sug1)} · ${brl(r.sug2)} · ${brl(r.sug3)}</b></div>
+    <div><span>Atual Tab I / II / III</span><b>${brl(r.t1)} · ${brl(r.t2)} · ${brl(r.t3)}</b></div>
+    <div><span>Site (sugerido)</span><b>${brl(r.site)}</b></div>
+    <div><span>Margem atual Tab I / III</span><b>${pct(r.m1)} · ${pct(r.m3)}</b></div>
+    ${x.minimo?`<div><span>Pedido mínimo</span><b>${typeof x.minimo==='number'?x.minimo.toLocaleString('pt-BR')+' un.':x.minimo}</b></div>`:''}
+    ${x.corrigido?`<div><span>Correção</span><span class="mini">${x.corrigido} (Start: ${x.tab_start.map(brl).join(' · ')})</span></div>`:''}
+    ${x.fora_site?`<div><span>Fora da loja</span><span class="mini">${x.fora_site}</span></div>`:''}
+   </div>`;
+}
+document.getElementById('btnCsv').onclick=async()=>{
+  const cab=['produto','papel','kg_mil','papel_R$','maquina_R$','custo_R$','tabI_atual','tabIII_atual','tabI_sugerida','margem_tabI','margem_tabIII'];
+  const L=LINHAS.map(({i,r})=>[i.nome,i.cod,n2(r.kg||0),n2(r.papel),n2(r.maq+r.setup),n2(r.custo),n2(r.t1),n2(r.t3),n2(r.sug1),pct(r.m1),pct(r.m3)].map(v=>`"${v}"`).join(';'));
+  const t=[cab.join(';'),...L].join('\n');
+  try{ await navigator.clipboard.writeText(t); toast('✅ Tabela copiada — cole no Excel/Sheets'); }catch(e){ toast('Não consegui copiar neste navegador'); } };
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); }
+(async()=>{ if(!ITENS){ try{ const r=await fetch('../editor-sacolas/src/catalogo/catalogo_tabela.json',{cache:'no-store'}); ITENS=(await r.json()).itens; }catch(e){ document.querySelector('main').innerHTML='<div class="aviso">Não consegui ler o catálogo ('+e.message+').</div>'; return; } }
+  painel(); filtros(); tudo(); })();
+</script>
+</body>
+</html>
