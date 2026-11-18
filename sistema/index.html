@@ -1130,6 +1130,7 @@ let FP = null, fpVer = null, fpFilt = 'abertas', fpBusca = '', FP_DL = null;
 const fpProd = id => CATALOGO.itens.find(p => p.id === id);
 const fpRot = p => p ? `${p.cod} ${p.nome.replace(/^Saco /,'')} — ${p.nome} · ${p.papel}` : '';
 const fpStartId = p => p ? (p.cod + ' ' + p.nome.replace(/^Saco /,'')).toUpperCase() : '';
+const fpUn = it => { const m = /un\. (\S+)/.exec(it.obs || ''); return m && m[1] !== 'MIL' ? m[1].toLowerCase() : 'mil'; };
 const fpN = v => { const x = nV(v); return x == null ? 0 : x; };
 const fpR2 = v => Math.round(v * 100) / 100;
 const fichas = () => (REM && REM.fichas) ? REM.fichas : (L.fichas || []);
@@ -1250,7 +1251,7 @@ function fpSalvar(){
   if (FP.itens.some(it => it.prod && !fpN(it.preco))) falta.push('preço de algum item');
   if (falta.length){ avisoGrav('Falta: ' + falta.join(', ') + '.', 'erro'); return; }
   FP.itens = its;
-  if (!FP.id){ FP.num = fichas().reduce((a, x) => Math.max(a, x.num || 0), 0) + 1; FP.id = 'FP-' + String(FP.num).padStart(4, '0'); FP.criado_em = new Date().toISOString(); }
+  if (!FP.id){ FP.num = fichas().filter(x => /^FP-/.test(x.id)).reduce((a, x) => Math.max(a, x.num || 0), 0) + 1; FP.id = 'FP-' + String(FP.num).padStart(4, '0'); FP.criado_em = new Date().toISOString(); }
   fpCalc(FP);
   const f = FP; FP = null; fpVer = f.id;
   fpGrava(f, `Ficha ${f.id} salva.`);
@@ -1315,7 +1316,7 @@ function fpRoteiro(f){
 function vPedidos(){
   if (FP) return vFpEditor();
   if (fpVer){ const f = fichas().find(x => x.id === fpVer); if (f) return vFpVer(f); fpVer = null; }
-  const F = fichas().slice().sort((a, b) => b.num - a.num), H = iso(hoje());
+  const F = fichas().slice().sort((a, b) => (b.data || '').localeCompare(a.data || '') || b.num - a.num), H = iso(hoje());
   const ab = F.filter(f => f.status !== 'ENTREGUE' && f.status !== 'CANCELADA' && !fpTeste(f));
   const nTeste = F.filter(fpTeste).length;
   const bq = fpBusca.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -1339,7 +1340,7 @@ function vPedidos(){
   ${F.length ? `<div class="card" style="padding:0"><div class="tw"><table>
     <thead><tr><th>Ficha</th><th>Data</th><th>Cliente</th><th>Itens</th><th class="n">Total</th><th>Pagamento</th><th>Entrega</th><th>Status</th><th>Start</th></tr></thead>
     <tbody>${Lf.map(f => `<tr style="cursor:pointer" onclick="fpVer='${f.id}';render();scrollTo(0,0)"><td class="cod">${esc(f.id)}</td><td>${dBR(f.data)}</td><td><b>${esc(f.cli_nome)}</b>${fpTeste(f) ? ' <span class="pill grey">🧪 teste</span>' : ''}<div class="mut" style="font-size:11px">${esc(f.vendedor)} · ${esc(f.origem)}</div></td>
-      <td style="white-space:normal;min-width:220px;font-size:13px">${f.itens.map(it => `${fmt(fpN(it.mil), 1)} mil ${esc(fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod)}${it.arte_nova ? ' <span class="pill warn">arte nova</span>' : ''}`).join('<br>')}</td>
+      <td style="white-space:normal;min-width:220px;font-size:13px">${f.itens.map(it => `${fmt(fpN(it.mil), 1)} ${fpUn(it)} ${esc(fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod)}${it.arte_nova ? ' <span class="pill warn">arte nova</span>' : ''}`).join('<br>')}</td>
       <td class="n">${brl(f.total)}</td><td style="font-size:12px">${esc(f.pag)}${f.venc ? `<div class="mut">venc. ${dBR(f.venc)}</div>` : ''}</td>
       <td>${f.entrega ? (f.entrega < H && FP_FLUXO.indexOf(f.status) < 4 && f.status !== 'CANCELADA' ? `<span class="pill bad">${dBR(f.entrega)}</span>` : dBR(f.entrega)) : '—'}</td>
       <td><span class="pill ${FP_ST[f.status] || 'grey'}">${esc(f.status)}</span></td><td class="cod">${esc(f.start_num || '—')}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Nenhuma ficha neste filtro.</td></tr>'}</tbody></table></div></div>`
@@ -1361,7 +1362,7 @@ function vFpVer(f){
     <span class="sp"></span><span class="pill ${FP_ST[f.status] || 'grey'}" style="font-size:14px">${esc(f.status)}</span></div>
   <div class="two" style="margin-top:0">
     <div class="card fpTela">${fpFolha(f, false)}</div>
-    <div class="card"><h3 style="margin-top:0">Roteiro para o Start</h3>${fpRoteiro(f)}
+    <div class="card">${/^ST-/.test(f.id) ? `<h3 style="margin-top:0">Cópia do Start</h3><p>Esta ficha foi copiada do pedido <b>${esc(f.start_num)}</b> do Start; não precisa ser lançada lá.</p>` : `<h3 style="margin-top:0">Roteiro para o Start</h3>${fpRoteiro(f)}`}
       <p class="note">Registrado por ${esc(f.por || '—')}${f.atualizado_em ? ' · ' + new Date(f.atualizado_em).toLocaleString('pt-BR') : ''}.</p></div>
   </div>`;
 }
