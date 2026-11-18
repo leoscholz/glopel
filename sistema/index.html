@@ -1133,12 +1133,16 @@ const fpStartId = p => p ? (p.cod + ' ' + p.nome.replace(/^Saco /,'')).toUpperCa
 const fpN = v => { const x = nV(v); return x == null ? 0 : x; };
 const fpR2 = v => Math.round(v * 100) / 100;
 const fichas = () => (REM && REM.fichas) ? REM.fichas : (L.fichas || []);
-const fpCli = (chave) => (SEG && SEG.cli && chave) ? kBase().find(c => c.chave === chave) : null;
+/* Cliente fictício para testes: nunca conta (KPIs, calendário, comissões, produção, papel, NF-e ignoram cliente_chave TESTE).
+   Telefone = WhatsApp de testes do Leo (351935021232). */
+const FP_TESTE = {chave:'TESTE', nome:'CLIENTE TESTE', razao:'CLIENTE FICTÍCIO — DADOS NÃO CONTAM', doc:'000.000.000-00', cel:'+351 93 502 1232', tel:'', bairro:'TESTE', cidade:'Curitiba', uf:'PR', vn:'MARCIA', emp:1, peds:[], sit:'teste', ciclo:null, abTot:0};
+const fpTeste = f => f && (f.cli_chave === 'TESTE' || f.cliente_chave === 'TESTE');
+const fpCli = (chave) => chave === 'TESTE' ? FP_TESTE : (SEG && SEG.cli && chave) ? kBase().find(c => c.chave === chave) : null;
 
 /* listas de autocompletar (montadas uma vez) */
 function fpDL(){
   if (FP_DL) return FP_DL;
-  const cli = {}, prod = {};
+  const cli = {'🧪 CLIENTE TESTE — fictício, não conta': 'TESTE'}, prod = {};
   if (SEG && SEG.cli) kBase().forEach(c => { cli[`${c.nome} — ${c.doc || c.bairro || c.cidade || 'sem doc'}`] = c.chave; });
   CATALOGO.itens.forEach(p => { prod[fpRot(p)] = p.id; });
   const op = o => Object.keys(o).map(k => `<option value="${esc(k)}">`).join('');
@@ -1266,7 +1270,7 @@ function fpEditar(id){ const f = fichas().find(x => x.id === id); FP = JSON.pars
 /* impressão: via comercial + via da fábrica (OS, sem preços) */
 function fpFolha(f, fabrica){
   const its = f.itens;
-  return `<div class="fpFolha">
+  return `<div class="fpFolha">${fpTeste(f) ? '<div style="border:2px dashed #b7791f;color:#b7791f;font-weight:700;text-align:center;padding:4px;margin-bottom:6px">TESTE — CLIENTE FICTÍCIO · NÃO PRODUZIR · NÃO FATURAR</div>' : ''}
    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px">
      <div><b style="font-size:17px">EMBALAGENS ${f.empresa === 'Impressos' ? 'GLOBO IMPRESSOS' : 'GLOBO'}</b><div style="font-size:12px">${fabrica ? 'ORDEM DE SERVIÇO — via da fábrica' : 'FICHA DE PEDIDO — via comercial'}</div></div>
      <div style="text-align:right"><b style="font-size:20px">${esc(f.id)}</b><div style="font-size:12px">${dBR(f.data)}${f.start_num ? ' · Start nº ' + esc(f.start_num) : ''}</div></div></div>
@@ -1312,9 +1316,10 @@ function vPedidos(){
   if (FP) return vFpEditor();
   if (fpVer){ const f = fichas().find(x => x.id === fpVer); if (f) return vFpVer(f); fpVer = null; }
   const F = fichas().slice().sort((a, b) => b.num - a.num), H = iso(hoje());
-  const ab = F.filter(f => f.status !== 'ENTREGUE' && f.status !== 'CANCELADA');
+  const ab = F.filter(f => f.status !== 'ENTREGUE' && f.status !== 'CANCELADA' && !fpTeste(f));
+  const nTeste = F.filter(fpTeste).length;
   const bq = fpBusca.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  let Lf = fpFilt === 'abertas' ? ab : fpFilt === 'todas' ? F : F.filter(f => f.status === fpFilt);
+  let Lf = fpFilt === 'abertas' ? F.filter(f => f.status !== 'ENTREGUE' && f.status !== 'CANCELADA') : fpFilt === 'todas' ? F : fpFilt === 'testes' ? F.filter(fpTeste) : F.filter(f => f.status === fpFilt);
   if (bq) Lf = Lf.filter(f => [f.id, f.cli_nome, f.cli_doc, f.vendedor, f.start_num, f.itens.map(i => i.prod + ' ' + i.arte).join(' ')].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(bq));
   const atras = ab.filter(f => f.entrega && f.entrega < H);
   return `${remBanner()}${gravBox()}
@@ -1328,17 +1333,18 @@ function vPedidos(){
     <div class="card kpi"><div class="v">${brl(ab.reduce((a, f) => a + f.total, 0))}</div><div class="l">em aberto (${ab.length} fichas)</div></div>
   </div>
   <div class="filtros"><button class="btn pri" onclick="fpNova()">+ Nova ficha</button>
-    <select onchange="fpFilt=this.value;render()">${[['abertas','Abertas'],['todas','Todas'],...Object.keys(FP_ST).map(s => [s, s])].map(([v, t]) => `<option value="${v}" ${v === fpFilt ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <select onchange="fpFilt=this.value;render()">${[['abertas','Abertas'],['todas','Todas'],['testes','🧪 Só testes'],...Object.keys(FP_ST).map(s => [s, s])].map(([v, t]) => `<option value="${v}" ${v === fpFilt ? 'selected' : ''}>${t}</option>`).join('')}</select>
     <input placeholder="buscar cliente, nº, produto, arte…" value="${esc(fpBusca)}" oninput="fpBusca=this.value;clearTimeout(window._fpb);window._fpb=setTimeout(()=>{render();const e=document.querySelector('.filtros input');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},250)">
     <label style="display:flex;gap:6px;align-items:center" class="mut">Quem está registrando<input value="${esc(quem())}" placeholder="seu nome" onchange="defQuem(this.value)" style="min-width:120px;max-width:160px"></label></div>
   ${F.length ? `<div class="card" style="padding:0"><div class="tw"><table>
     <thead><tr><th>Ficha</th><th>Data</th><th>Cliente</th><th>Itens</th><th class="n">Total</th><th>Pagamento</th><th>Entrega</th><th>Status</th><th>Start</th></tr></thead>
-    <tbody>${Lf.map(f => `<tr style="cursor:pointer" onclick="fpVer='${f.id}';render();scrollTo(0,0)"><td class="cod">${esc(f.id)}</td><td>${dBR(f.data)}</td><td><b>${esc(f.cli_nome)}</b><div class="mut" style="font-size:11px">${esc(f.vendedor)} · ${esc(f.origem)}</div></td>
+    <tbody>${Lf.map(f => `<tr style="cursor:pointer" onclick="fpVer='${f.id}';render();scrollTo(0,0)"><td class="cod">${esc(f.id)}</td><td>${dBR(f.data)}</td><td><b>${esc(f.cli_nome)}</b>${fpTeste(f) ? ' <span class="pill grey">🧪 teste</span>' : ''}<div class="mut" style="font-size:11px">${esc(f.vendedor)} · ${esc(f.origem)}</div></td>
       <td style="white-space:normal;min-width:220px;font-size:13px">${f.itens.map(it => `${fmt(fpN(it.mil), 1)} mil ${esc(fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod)}${it.arte_nova ? ' <span class="pill warn">arte nova</span>' : ''}`).join('<br>')}</td>
       <td class="n">${brl(f.total)}</td><td style="font-size:12px">${esc(f.pag)}${f.venc ? `<div class="mut">venc. ${dBR(f.venc)}</div>` : ''}</td>
       <td>${f.entrega ? (f.entrega < H && FP_FLUXO.indexOf(f.status) < 4 && f.status !== 'CANCELADA' ? `<span class="pill bad">${dBR(f.entrega)}</span>` : dBR(f.entrega)) : '—'}</td>
       <td><span class="pill ${FP_ST[f.status] || 'grey'}">${esc(f.status)}</span></td><td class="cod">${esc(f.start_num || '—')}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Nenhuma ficha neste filtro.</td></tr>'}</tbody></table></div></div>`
   : `<div class="empty"><div class="ic">🧾</div><b>Nenhuma ficha ainda</b><div>Clique em <b>+ Nova ficha</b>. Ex.: Panetelli Filial, 2 milheiros de K35 5 kg com a arte Panetelli.</div></div>`}
+  ${nTeste ? `<p class="note">🧪 ${nTeste} ficha(s) do CLIENTE TESTE aparecem na lista mas ficam fora dos números acima e de todas as saídas.</p>` : ''}
   <p class="note">Caminho: <b>NOVA</b> (alguém anotou o pedido) → <b>CONFERIDA</b> (Márcia/Daiane conferiram preço e arte) → <b>NO START</b> (lançado, com o nº do Start) → <b>EM PRODUÇÃO</b> → <b>ENTREGUE</b>. Cada ficha imprime a via comercial e a ordem de serviço da fábrica.</p>`;
 }
 
@@ -1382,7 +1388,7 @@ function vFpEditor(){
   </form>
   ${f.cli_nome ? `<div style="margin-top:10px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px">
      <div><span class="mut">Doc</span> ${esc(f.cli_doc || '—')}</div><div><span class="mut">Telefone</span> ${esc(f.cli_fone || '—')}</div><div><span class="mut">Local</span> ${esc(f.cli_local || '—')}</div>
-     ${c ? `<div><span class="mut">Situação</span> ${kPill(c.sit)}${c.ciclo ? ` <span class="mut">compra a cada ~${c.ciclo} dias</span>` : ''}</div>` : `<div class="pill warn">cliente fora da base do Start (novo?)</div>`}</div>
+     ${c && c.chave === 'TESTE' ? `<div class="pill warn">🧪 cliente fictício: esta ficha não conta em nada</div>` : c ? `<div><span class="mut">Situação</span> ${kPill(c.sit)}${c.ciclo ? ` <span class="mut">compra a cada ~${c.ciclo} dias</span>` : ''}</div>` : `<div class="pill warn">cliente fora da base do Start (novo?)</div>`}</div>
    ${c && c.peds.length ? `<div class="mut" style="font-size:12px;margin-top:6px">Últimos pedidos no Start: ${c.peds.slice().sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 5).map(p => `${dBR(p.data)} nº ${p.num} ${brl(p.total)}`).join(' · ')}${c.abTot ? ` · <b style="color:var(--warn)">aguardando recebimento ${brl(c.abTot)}</b>` : ''}</div>` : ''}
    ${ant.length ? `<div style="margin-top:8px;font-size:13px">Fichas anteriores: ${ant.map(a => `<button class="btn" style="font-size:12px;padding:3px 8px" onclick="FP.itens=fichas().find(x=>x.id==='${a.id}').itens.map(i=>({...i}));fpTabela(${a.tabela})">copiar itens de ${esc(a.id)} (${dBR(a.data)}, ${brl(a.total)})</button>`).join(' ')}</div>` : ''}` : ''}
   </div>
