@@ -115,6 +115,12 @@ table.heat td{padding:5px 6px;font-size:12px} table.heat th{padding:5px 6px}
   .burger{display:inline-block}
   main{padding:16px}
 }
+/* ficha de pedido */
+.fpFolha table{margin-top:6px} .fpKV td{border:0;padding:2px 10px 2px 0;white-space:normal} .fpKV td:nth-child(odd){color:var(--mute);font-size:12px;width:1%;white-space:nowrap}
+.fpIt th,.fpIt td{white-space:normal}
+#printBox{display:none}
+@media print{body.imprimindo>*:not(#printBox){display:none!important} body.imprimindo{display:block;background:#fff} body.imprimindo #printBox{display:block;font:12px system-ui,sans-serif;color:#000}
+ #printBox th{background:#fff;color:#000;position:static} #printBox td,#printBox th{border-bottom:1px solid #999;padding:4px 6px} #printBox .fpKV td{border:0} .fpFolha{page-break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -153,7 +159,7 @@ const MODS = [
   {id:'calendario', ic:'📅', nome:'Calendário', tag:'novo'},
   {id:'relatorios', ic:'📊', nome:'Relatórios', tag:'novo'},
   {grp:'Comercial'},
-  {id:'pedidos', ic:'🧾', nome:'Pedidos', ph:true},
+  {id:'pedidos', ic:'🧾', nome:'Pedidos', tag:'novo'},
   {id:'clientes', ic:'👥', nome:'Clientes', tag:'novo'},
   {id:'produtos', ic:'📦', nome:'Produtos', tag:'catálogo'},
   {id:'precificador', ic:'🧮', nome:'Precificador', tag:'teste'},
@@ -342,7 +348,7 @@ function menu(){
   document.getElementById('menu').innerHTML = MODS.map(m => m.sep ? '<hr>' : m.grp ? `<div class="grp">${m.grp}</div>` :
     `<button class="${m.id===atual?'on':''}" onclick="ir('${m.id}')"><span>${m.ic}</span>${m.nome}${m.tag?`<span class="tag">${m.tag}</span>`:(m.ph?'<span class="tag">em breve</span>':'')}</button>`).join('');
 }
-function ir(id, s){ if (id==='clientes') kSel = null; atual = id; if (s) sub = s; location.hash = id + (id==='bobinas' ? '/'+sub : ''); document.getElementById('side').classList.remove('open'); render(); }
+function ir(id, s){ if (id==='clientes') kSel = null; if (id==='pedidos' && !FP) fpVer = null; atual = id; if (s) sub = s; location.hash = id + (id==='bobinas' ? '/'+sub : ''); document.getElementById('side').classList.remove('open'); render(); }
 window.addEventListener('hashchange', () => { const [a,b] = location.hash.slice(1).split('/'); if (a && a!==atual){ atual=a; if(b) sub=b; render(); } });
 
 function badgeFonte(){
@@ -371,6 +377,7 @@ function render(){
   else if (atual==='producao') v.innerHTML = vProducao();
   else if (atual==='comissoes') v.innerHTML = vComissoes();
   else if (atual==='relatorios') v.innerHTML = vRelatorios();
+  else if (atual==='pedidos') v.innerHTML = vPedidos();
   else if (atual==='clientes') v.innerHTML = vClientes();
   else if (atual==='funcionarios') v.innerHTML = vFuncionarios();
   else if (atual==='apagar') v.innerHTML = vApagar();
@@ -638,7 +645,7 @@ function oraContexto(){
   } catch(e) { C.bobinas = {erro: String(e)}; }
   try { C.funcionarios = {fonte: REM?'planilha do site':'navegador/cofre', lista: funcs()}; } catch(e) {}
   try { C.contas_fixas = {fonte: REM?'planilha do site':'navegador/cofre', lista: contas()}; } catch(e) {}
-  try { C.a_pagar = {de: addD(H,-30), ate: addD(H,90), obs:'pago=true se marcado como pago; vencidas antes de '+DESDE_SIS+' contam como pagas; comissões são estimadas (taxa de 5% é chute)',
+  try { C.a_pagar = {de: addD(H,-30), ate: addD(H,90), obs:'pago=true se marcado como pago; vencidas antes de '+DESDE_SIS+' contam como pagas; comissões são estimadas (8% = padrão do Start; taxa por vendedor não confirmada)',
       itens: ocorrencias(addD(H,-30), addD(H,90)).map(o=>({vencimento:o.data, conta:o.nome, categoria:o.cat, valor:o.valor, origem:o.fonte, pago:pago(o), pagamento:REM&&REM.pagos[o.id]||null}))}; } catch(e) {}
   return C;
 }
@@ -1051,7 +1058,7 @@ function relProdutos(R, PR, A, U, cMd){
    Comissões
    ========================================================= */
 const TAXA0 = {'Márcia':0, 'Daiane':0};
-const taxa = v => L.taxas[v] ?? TAXA0[v] ?? 5;
+const taxa = v => L.taxas[v] ?? TAXA0[v] ?? 8; // 8% = comissão padrão do Start (Preferências › Vendas, 18-11)
 let cMes = null, cBase = null, cEmp = 'todas';
 function comBase(){ return cBase || L.baseCom || 'quitado'; }
 function vendasDe(mes, emp){
@@ -1082,7 +1089,7 @@ function vComissoes(){
   const chute = R.some(x => L.taxas[x.v]==null && TAXA0[x.v]==null);
   return `
   <div class="banner ok">Vendas por vendedor do <b>Start</b> (export de 16/11/2026, pedidos desde jan/2024). O mês é a <b>data do pedido</b>. "Quitado" é o status de recebimento do pedido no dia do export — pedidos recentes ainda aparecem como "Aguardando" porque a parcela não venceu.</div>
-  ${chute?`<div class="banner">⚠️ <b>Taxas de 5% são chute.</b> Ajuste a % de cada vendedor na tabela (fica salva neste navegador). Márcia e Daiane começam em 0%.</div>`:''}
+  ${chute?`<div class="banner">⚠️ <b>8% é a comissão padrão do Start</b> (Preferências › Vendas); o cadastro de cada vendedor pode ter outra. Ajuste a % na tabela (fica salva neste navegador). Márcia e Daiane começam em 0%.</div>`:''}
   <div class="filtros">
     <label class="mut">Mês do pedido <select onchange="cMes=this.value;render()">${meses.map(m=>`<option value="${m}" ${m===cMes?'selected':''}>${mesNome(m)}</option>`).join('')}</select></label>
     <label class="mut">Comissão sobre <select onchange="L.baseCom=cBase=this.value;salvaL();render()"><option value="quitado" ${base==='quitado'?'selected':''}>o que foi recebido (quitado)</option><option value="vendido" ${base==='vendido'?'selected':''}>o total vendido</option></select></label>
@@ -1107,6 +1114,307 @@ function vComissoes(){
     <tbody>${vends.map(v=>`<tr><td><b>${esc(v)}</b></td>${ult12.map(m=>{const c=cel(v,m);return `<td class="n" style="${m===cMes?'background:var(--acc2)':''}">${c?fmt(c/1000,1)+' mil':'—'}</td>`;}).join('')}<td class="n"><b>${fmt(tot12(v)/1000,0)} mil</b></td></tr>`).join('')}</tbody>
   </table></div></div>
   <p class="note">Edson Tonet junta "EDSON LUIS TONET" (Globo) e "EDSON TONET" (Impressos); Daiane junta os dois nomes dela. Walmor e Mariane também compram como clientes/revenda — confirmar com a Márcia se recebem comissão ou desconto. Pedidos com recebimento "(Nenhum)" entram no vendido, não no quitado. A comissão de cada mês aparece em <a href="#apagar" onclick="ir('apagar')">A pagar</a> no dia ${L.diaCom||10} do mês seguinte.</p>`;
+}
+
+/* =========================================================
+   Pedidos — ficha de pedido própria (roda em paralelo ao Pedido de Venda do Start)
+   Grava na planilha do site (aba Fichas_pedido) pelo porteiro; sem porteiro, fica só neste navegador.
+   Preço por milheiro vem do CATALOGO (Tabela I/II/III = tab[0..2]).
+   ========================================================= */
+const FP_ST = {'NOVA':'warn','CONFERIDA':'ok','NO START':'ok','EM PRODUÇÃO':'grey','ENTREGUE':'grey','CANCELADA':'bad'};
+const FP_FLUXO = ['NOVA','CONFERIDA','NO START','EM PRODUÇÃO','ENTREGUE'];
+const FP_ORIG = ['WhatsApp','Telefone','Vendedor (visita)','Balcão','E-mail','Site'];
+const FP_PAG = [['ITAÚ 28 DIAS (boleto)',28],['VALE 7 DIAS',7],['VALE 14 DIAS',14],['VALE 21 DIAS',21],['VALE 30 DIAS',30],['PIX',0],['DINHEIRO',0],['CHEQUE À VISTA',0],['PAGSEGURO',0],['A COMBINAR',null]];
+const FP_TAB = ['I','II','III'];
+let FP = null, fpVer = null, fpFilt = 'abertas', fpBusca = '', FP_DL = null;
+const fpProd = id => CATALOGO.itens.find(p => p.id === id);
+const fpRot = p => p ? `${p.cod} ${p.nome.replace(/^Saco /,'')} — ${p.nome} · ${p.papel}` : '';
+const fpStartId = p => p ? (p.cod + ' ' + p.nome.replace(/^Saco /,'')).toUpperCase() : '';
+const fpN = v => { const x = nV(v); return x == null ? 0 : x; };
+const fpR2 = v => Math.round(v * 100) / 100;
+const fichas = () => (REM && REM.fichas) ? REM.fichas : (L.fichas || []);
+const fpCli = (chave) => (SEG && SEG.cli && chave) ? kBase().find(c => c.chave === chave) : null;
+
+/* listas de autocompletar (montadas uma vez) */
+function fpDL(){
+  if (FP_DL) return FP_DL;
+  const cli = {}, prod = {};
+  if (SEG && SEG.cli) kBase().forEach(c => { cli[`${c.nome} — ${c.doc || c.bairro || c.cidade || 'sem doc'}`] = c.chave; });
+  CATALOGO.itens.forEach(p => { prod[fpRot(p)] = p.id; });
+  const op = o => Object.keys(o).map(k => `<option value="${esc(k)}">`).join('');
+  FP_DL = {cli, prod, html: `<datalist id="dlCli">${op(cli)}</datalist><datalist id="dlProd">${op(prod)}</datalist>`};
+  return FP_DL;
+}
+function fpCalc(f){
+  f.itens.forEach(it => { it.total = fpR2(fpN(it.mil) * fpN(it.preco)); });
+  f.bruto = fpR2(f.itens.reduce((a, it) => a + it.total, 0));
+  f.total = fpR2(f.bruto + fpN(f.acresc) - fpN(f.desc));
+  const pg = FP_PAG.find(x => x[0] === f.pag);
+  if (pg && pg[1] != null && !f.vencManual) f.venc = addD(f.data, pg[1]);
+  return f;
+}
+function fpNova(base){
+  const H = iso(hoje());
+  FP = {id:null, num:null, data:H, status:'NOVA', origem:'WhatsApp', cli_chave:'', cli_nome:'', cli_doc:'', cli_fone:'', cli_local:'', empresa:'Globo', vendedor:'MARCIA', tabela:0,
+        itens:[], acresc:0, desc:0, pag:FP_PAG[0][0], venc:'', vencManual:false, entrega:addD(H, 7), obs:'', start_num:'', criado_em:''};
+  if (base){
+    Object.assign(FP, {origem:base.origem, cli_chave:base.cli_chave, cli_nome:base.cli_nome, cli_doc:base.cli_doc, cli_fone:base.cli_fone, cli_local:base.cli_local,
+      empresa:base.empresa, vendedor:base.vendedor, tabela:base.tabela, pag:base.pag, obs:''});
+    FP.itens = base.itens.map(it => ({...it}));
+  } else FP.itens.push(fpItemVazio());
+  fpCalc(FP); fpVer = null; render(); scrollTo(0,0);
+}
+const fpArteBase = n => String(n || '').replace(/\s+(FILIAL|MATRIZ)\b.*$/i, '').trim();
+const fpItemVazio = () => ({pid:'', prod:'', arte:FP && FP.cli_nome ? fpArteBase(FP.cli_nome) : '', arte_nova:false, cores:'', mil:'', preco:'', total:0, obs:''});
+
+/* edição sem redesenhar a tela inteira (não perde o foco) */
+function fpSet(k, v){ FP[k] = v; if (k === 'venc') FP.vencManual = true; if (k === 'pag' || k === 'data') FP.vencManual = false; fpCalc(FP); fpPinta(); }
+function fpIt(i, k, v){ FP.itens[i][k] = v; fpCalc(FP); fpPinta(); }
+function fpPinta(){
+  FP.itens.forEach((it, i) => { const el = document.getElementById('fpT' + i); if (el) el.textContent = brl(it.total); const m = document.getElementById('fpM' + i); if (m) m.innerHTML = fpAvisoMin(it); });
+  const t = document.getElementById('fpTot'); if (t) t.innerHTML = fpTotHtml(FP);
+  const v = document.getElementById('fpVenc'); if (v && !FP.vencManual) v.value = FP.venc || '';
+}
+function fpAvisoMin(it){
+  const p = fpProd(it.pid); if (!p || !p.minimo || !fpN(it.mil)) return '';
+  return fpN(it.mil) * 1000 < p.minimo ? `<span class="pill warn" title="mínimo da tabela">abaixo do mínimo (${fmt(p.minimo / 1000)} mil)</span>` : '';
+}
+const fpTotHtml = f => `<div style="display:grid;grid-template-columns:auto auto;gap:4px 18px;justify-content:end;text-align:right">
+  <span class="mut">Itens</span><b>${brl(f.bruto)}</b>
+  ${fpN(f.acresc) ? `<span class="mut">+ acréscimo</span><span>${brl(fpN(f.acresc))}</span>` : ''}
+  ${fpN(f.desc) ? `<span class="mut">− desconto</span><span>${brl(fpN(f.desc))}</span>` : ''}
+  <span style="font-size:16px">Total líquido</span><b style="font-size:20px;color:var(--acc)">${brl(f.total)}</b></div>`;
+
+function fpEscolheCli(txt){
+  const ch = fpDL().cli[txt];
+  if (!ch){ FP.cli_chave = ''; FP.cli_nome = txt.trim().toUpperCase(); FP.cli_doc = ''; FP.cli_fone = ''; FP.cli_local = ''; render(); return; }
+  const c = fpCli(ch);
+  const ult = c.peds.slice().sort((a, b) => a.data < b.data ? 1 : -1)[0] || null;
+  Object.assign(FP, {cli_chave:c.chave, cli_nome:c.nome, cli_doc:c.doc || '', cli_fone:[c.cel, c.tel].filter(Boolean).join(' · '),
+    cli_local:[c.bairro, c.cidade && c.cidade + (c.uf ? '/' + c.uf : '')].filter(Boolean).join(' · '),
+    empresa: ult ? (ult.emp ? 'Impressos' : 'Globo') : (c.emp === 2 ? 'Impressos' : 'Globo'),
+    vendedor: c.vn && c.vn !== '—' && c.vn !== 'VENDEDOR PADRÃO' ? c.vn : FP.vendedor});
+  FP.itens.forEach(it => { if (!it.arte) it.arte = fpArteBase(c.nome); });
+  render();
+}
+function fpEscolheProd(i, txt){
+  const it = FP.itens[i], id = fpDL().prod[txt];
+  if (!id){ it.pid = ''; it.prod = txt; render(); return; }
+  const p = fpProd(id);
+  it.pid = id; it.prod = fpRot(p); it.preco = p.tab ? p.tab[FP.tabela] : p.preco;
+  if (!it.arte) it.arte = fpArteBase(FP.cli_nome);
+  fpCalc(FP); render();
+}
+function fpTabela(t){
+  FP.tabela = Number(t);
+  FP.itens.forEach(it => { const p = fpProd(it.pid); if (p && p.tab) it.preco = p.tab[FP.tabela]; });
+  fpCalc(FP); render();
+}
+function fpAddItem(){ FP.itens.push(fpItemVazio()); render(); }
+function fpDelItem(i){ FP.itens.splice(i, 1); if (!FP.itens.length) FP.itens.push(fpItemVazio()); fpCalc(FP); render(); }
+
+/* registro ⇄ planilha (tudo como texto; itens em JSON numa célula) */
+function fpReg(f){
+  const its = f.itens.filter(it => it.prod && fpN(it.mil) > 0);
+  return {id:f.id, num:String(f.num), data:f.data, status:f.status, origem:f.origem, empresa:f.empresa,
+    cliente:f.cli_nome, cliente_chave:f.cli_chave, cliente_doc:f.cli_doc, cliente_fone:f.cli_fone, cliente_local:f.cli_local,
+    vendedor:f.vendedor, tabela:FP_TAB[f.tabela],
+    itens_txt: its.map(it => `${fpN(it.mil)} mil ${fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod}${it.arte ? ' / ' + it.arte : ''}${it.arte_nova ? ' (ARTE NOVA)' : ''}`).join(' | '),
+    itens: JSON.stringify(its.map(({pid, prod, arte, arte_nova, cores, mil, preco, obs}) => ({pid, prod, arte, arte_nova, cores, mil:fpN(mil), preco:fpN(preco), obs}))),
+    total_itens:String(f.bruto), acrescimo:String(fpN(f.acresc)), desconto:String(fpN(f.desc)), total:String(f.total),
+    pagamento:f.pag, vencimento:f.venc || '', entrega_prev:f.entrega || '', obs:f.obs || '', start_num:f.start_num || '', criado_em:f.criado_em || new Date().toISOString()};
+}
+function fpLer(r){
+  let its = []; try { its = JSON.parse(r.itens || '[]'); } catch(e) {}
+  const f = {id:r.id, num:Number(r.num) || 0, data:dV(r.data), status:r.status || 'NOVA', origem:r.origem, empresa:r.empresa || 'Globo',
+    cli_nome:r.cliente, cli_chave:r.cliente_chave, cli_doc:r.cliente_doc, cli_fone:r.cliente_fone, cli_local:r.cliente_local,
+    vendedor:r.vendedor, tabela:Math.max(0, FP_TAB.indexOf(r.tabela)), itens:its.map(it => ({...it, total:0})),
+    acresc:fpN(r.acrescimo), desc:fpN(r.desconto), pag:r.pagamento, venc:dV(r.vencimento), vencManual:true, entrega:dV(r.entrega_prev), obs:r.obs, start_num:r.start_num, criado_em:r.criado_em, por:r.por, atualizado_em:r.atualizado_em};
+  return fpCalc(f);
+}
+async function fpGrava(f, okTxt){
+  const reg = fpReg(f);
+  if (API() && REM){ await gravarSis('Fichas_pedido', reg, okTxt); return; }
+  L.fichas = (L.fichas || []).filter(x => x.id !== f.id).concat([fpLer({...reg, por:quem(), atualizado_em:new Date().toISOString()})]);
+  salvaL(); avisoGrav(okTxt + ' (só neste navegador — o porteiro não está ligado)', 'ok'); render();
+}
+function fpSalvar(){
+  const its = FP.itens.filter(it => it.prod && fpN(it.mil) > 0);
+  const falta = [];
+  if (!FP.cli_nome) falta.push('cliente');
+  if (!its.length) falta.push('pelo menos um item com produto e milheiros');
+  if (FP.itens.some(it => it.prod && !fpN(it.preco))) falta.push('preço de algum item');
+  if (falta.length){ avisoGrav('Falta: ' + falta.join(', ') + '.', 'erro'); return; }
+  FP.itens = its;
+  if (!FP.id){ FP.num = fichas().reduce((a, x) => Math.max(a, x.num || 0), 0) + 1; FP.id = 'FP-' + String(FP.num).padStart(4, '0'); FP.criado_em = new Date().toISOString(); }
+  fpCalc(FP);
+  const f = FP; FP = null; fpVer = f.id;
+  fpGrava(f, `Ficha ${f.id} salva.`);
+}
+function fpStatus(id, st){
+  const f = fichas().find(x => x.id === id); if (!f) return;
+  if (st === 'NO START'){
+    dialogo(`Ficha ${id} lançada no Start`, `<label style="display:block">Número do pedido no Start<br><input name="n" inputmode="numeric" value="${esc(f.start_num || '')}" required></label>`,
+      'Salvar', (r) => fpGrava({...f, status:'NO START', start_num:r.n.trim()}, `Ficha ${id}: pedido ${r.n.trim()} no Start.`));
+    return;
+  }
+  if (st === 'CANCELADA' && !confirm(`Cancelar a ficha ${id}?`)) return;
+  fpGrava({...f, status:st}, `Ficha ${id}: ${st.toLowerCase()}.`);
+}
+function fpEditar(id){ const f = fichas().find(x => x.id === id); FP = JSON.parse(JSON.stringify(f)); fpCalc(FP); fpVer = null; render(); scrollTo(0,0); }
+
+/* impressão: via comercial + via da fábrica (OS, sem preços) */
+function fpFolha(f, fabrica){
+  const its = f.itens;
+  return `<div class="fpFolha">
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px">
+     <div><b style="font-size:17px">EMBALAGENS ${f.empresa === 'Impressos' ? 'GLOBO IMPRESSOS' : 'GLOBO'}</b><div style="font-size:12px">${fabrica ? 'ORDEM DE SERVIÇO — via da fábrica' : 'FICHA DE PEDIDO — via comercial'}</div></div>
+     <div style="text-align:right"><b style="font-size:20px">${esc(f.id)}</b><div style="font-size:12px">${dBR(f.data)}${f.start_num ? ' · Start nº ' + esc(f.start_num) : ''}</div></div></div>
+   <table class="fpKV"><tr><td>Cliente</td><td colspan="3"><b style="font-size:15px">${esc(f.cli_nome)}</b> ${esc(f.cli_doc || '')}</td></tr>
+     <tr><td>Telefone</td><td>${esc(f.cli_fone || '—')}</td><td>Local</td><td>${esc(f.cli_local || '—')}</td></tr>
+     <tr><td>Vendedor</td><td>${esc(f.vendedor)}</td><td>Origem</td><td>${esc(f.origem)}</td></tr>
+     <tr><td>Entrega prevista</td><td><b>${dBR(f.entrega)}</b></td><td>${fabrica ? 'Status' : 'Pagamento'}</td><td>${fabrica ? esc(f.status) : esc(f.pag) + (f.venc ? ' · venc. ' + dBR(f.venc) : '')}</td></tr></table>
+   <table class="fpIt"><thead><tr><th>Produto</th><th>Arte</th><th>Cores</th><th class="n">Milheiros</th>${fabrica ? '<th>Máquina</th><th>Bobina</th><th>Início</th><th>Fim</th>' : `<th class="n">R$/mil (Tab. ${FP_TAB[f.tabela]})</th><th class="n">Total</th>`}</tr></thead>
+   <tbody>${its.map(it => { const p = fpProd(it.pid); return `<tr><td><b>${esc(p ? fpStartId(p) : it.prod)}</b>${p ? `<div style="font-size:11px">${esc(p.papel)}${p.medidas ? ' · ' + esc(p.medidas) : ''}</div>` : ''}</td>
+     <td>${esc(it.arte || '—')}${it.arte_nova ? ' <b>(ARTE NOVA)</b>' : ''}${it.obs ? `<div style="font-size:11px">${esc(it.obs)}</div>` : ''}</td><td>${esc(it.cores || '')}</td><td class="n"><b>${fmt(fpN(it.mil), 1)}</b></td>
+     ${fabrica ? '<td></td><td></td><td></td><td></td>' : `<td class="n">${brl(fpN(it.preco))}</td><td class="n">${brl(it.total)}</td>`}</tr>`; }).join('')}</tbody></table>
+   ${fabrica ? '' : `<div style="text-align:right;margin-top:6px">${fpN(f.acresc) ? 'Acréscimo ' + brl(fpN(f.acresc)) + ' · ' : ''}${fpN(f.desc) ? 'Desconto ' + brl(fpN(f.desc)) + ' · ' : ''}<b style="font-size:16px">Total ${brl(f.total)}</b></div>`}
+   ${f.obs ? `<div style="margin-top:8px;border:1px solid #000;padding:6px"><b>Obs.:</b> ${esc(f.obs)}</div>` : ''}
+   ${fabrica ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:22px;font-size:12px"><div style="border-top:1px solid #000;padding-top:3px">Produzido por</div><div style="border-top:1px solid #000;padding-top:3px">Conferido por</div><div style="border-top:1px solid #000;padding-top:3px">Entregue em ___/___</div></div>` : ''}
+   <div style="font-size:10px;margin-top:10px;color:#555">Sistema Globo · impresso em ${new Date().toLocaleString('pt-BR')}</div></div>`;
+}
+function fpImprimir(id){
+  const f = fichas().find(x => x.id === id); if (!f) return;
+  let b = document.getElementById('printBox'); if (!b){ b = document.createElement('div'); b.id = 'printBox'; document.body.appendChild(b); }
+  b.innerHTML = fpFolha(f, false) + '<div style="page-break-after:always"></div>' + fpFolha(f, true);
+  document.body.classList.add('imprimindo');
+  const fim = () => { document.body.classList.remove('imprimindo'); window.removeEventListener('afterprint', fim); };
+  window.addEventListener('afterprint', fim);
+  setTimeout(() => { window.print(); setTimeout(fim, 500); }, 50);
+}
+
+/* roteiro para digitar no Start, na ordem da tela do Pedido de Venda */
+function fpRoteiro(f){
+  const pg = f.pag.replace(' (boleto)', '');
+  return `<ol style="margin:0;padding-left:20px;line-height:1.7">
+    <li>Vendas › <b>Novo Pedido › Pedido de Venda</b>.</li>
+    <li>Cliente: digite <code>${esc(f.cli_nome)}</code>${f.cli_local ? ` e confira o endereço (${esc(f.cli_local)})` : ''}.</li>
+    <li>Vendedor <b>${esc(f.vendedor)}</b> · Almoxarifado <b>${f.empresa === 'Impressos' ? 'impressos' : 'globo'}</b> · Preços <b>TABELA ${FP_TAB[f.tabela]}</b>.</li>
+    ${f.itens.map(it => { const p = fpProd(it.pid); return `<li>Produto: busque <code>${esc(p ? p.cod + ' ' + p.nome.replace(/^Saco /,'').replace(/ kg$/,'') : it.prod)}</code> → escolha <b>${esc(p ? fpStartId(p) : it.prod)}</b> → na janela de atributos ponha <b>${fmt(fpN(it.mil), 1)}</b> na arte <b>${esc(it.arte || '—')}</b>${it.arte_nova ? ' (arte nova: não existe ainda no Start)' : ''}. Valor esperado: <b>${brl(fpN(it.preco))}</b> → ${brl(it.total)}.</li>`; }).join('')}
+    ${fpN(f.acresc) || fpN(f.desc) ? `<li>Acréscimo ${brl(fpN(f.acresc))} · desconto ${brl(fpN(f.desc))}.</li>` : ''}
+    <li>Observações: <code>Ficha ${esc(f.id)}${f.obs ? ' — ' + esc(f.obs) : ''}</code>.</li>
+    <li>Confira o <b>Total Líquido ${brl(f.total)}</b>. Receber: <b>${esc(pg)}</b>${f.venc ? ` (vencimento ${dBR(f.venc)})` : ''}.</li>
+    <li>Volte aqui e clique <b>Lançado no Start</b> com o número do pedido.</li></ol>`;
+}
+
+/* ---------- telas ---------- */
+function vPedidos(){
+  if (FP) return vFpEditor();
+  if (fpVer){ const f = fichas().find(x => x.id === fpVer); if (f) return vFpVer(f); fpVer = null; }
+  const F = fichas().slice().sort((a, b) => b.num - a.num), H = iso(hoje());
+  const ab = F.filter(f => f.status !== 'ENTREGUE' && f.status !== 'CANCELADA');
+  const bq = fpBusca.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let Lf = fpFilt === 'abertas' ? ab : fpFilt === 'todas' ? F : F.filter(f => f.status === fpFilt);
+  if (bq) Lf = Lf.filter(f => [f.id, f.cli_nome, f.cli_doc, f.vendedor, f.start_num, f.itens.map(i => i.prod + ' ' + i.arte).join(' ')].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(bq));
+  const atras = ab.filter(f => f.entrega && f.entrega < H);
+  return `${remBanner()}${gravBox()}
+  ${API() && REM ? `<div class="banner ok">As fichas ficam na planilha <b>Glopel — Sistema Globo (dados do site)</b>, aba <b>Fichas_pedido</b>, e valem para todos. Por enquanto o pedido <b>continua sendo lançado no Start</b>: a ficha traz o roteiro na ordem da tela.</div>`
+    : `<div class="banner">Sem o porteiro ligado, as fichas ficam <b>só neste navegador</b>. O pedido continua sendo lançado no Start.</div>`}
+  <div class="grid kpis">
+    <div class="card kpi ${ab.filter(f => f.status === 'NOVA').length ? 'warn' : ''}"><div class="v">${ab.filter(f => f.status === 'NOVA').length}</div><div class="l">novas · a conferir</div></div>
+    <div class="card kpi"><div class="v">${ab.filter(f => f.status === 'CONFERIDA').length}</div><div class="l">conferidas · falta lançar no Start</div></div>
+    <div class="card kpi"><div class="v">${ab.filter(f => f.status === 'NO START' || f.status === 'EM PRODUÇÃO').length}</div><div class="l">no Start / em produção</div></div>
+    <div class="card kpi ${atras.length ? 'bad' : ''}"><div class="v">${atras.length}</div><div class="l">entrega prevista já passou</div></div>
+    <div class="card kpi"><div class="v">${brl(ab.reduce((a, f) => a + f.total, 0))}</div><div class="l">em aberto (${ab.length} fichas)</div></div>
+  </div>
+  <div class="filtros"><button class="btn pri" onclick="fpNova()">+ Nova ficha</button>
+    <select onchange="fpFilt=this.value;render()">${[['abertas','Abertas'],['todas','Todas'],...Object.keys(FP_ST).map(s => [s, s])].map(([v, t]) => `<option value="${v}" ${v === fpFilt ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <input placeholder="buscar cliente, nº, produto, arte…" value="${esc(fpBusca)}" oninput="fpBusca=this.value;clearTimeout(window._fpb);window._fpb=setTimeout(()=>{render();const e=document.querySelector('.filtros input');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},250)">
+    <label style="display:flex;gap:6px;align-items:center" class="mut">Quem está registrando<input value="${esc(quem())}" placeholder="seu nome" onchange="defQuem(this.value)" style="min-width:120px;max-width:160px"></label></div>
+  ${F.length ? `<div class="card" style="padding:0"><div class="tw"><table>
+    <thead><tr><th>Ficha</th><th>Data</th><th>Cliente</th><th>Itens</th><th class="n">Total</th><th>Pagamento</th><th>Entrega</th><th>Status</th><th>Start</th></tr></thead>
+    <tbody>${Lf.map(f => `<tr style="cursor:pointer" onclick="fpVer='${f.id}';render();scrollTo(0,0)"><td class="cod">${esc(f.id)}</td><td>${dBR(f.data)}</td><td><b>${esc(f.cli_nome)}</b><div class="mut" style="font-size:11px">${esc(f.vendedor)} · ${esc(f.origem)}</div></td>
+      <td style="white-space:normal;min-width:220px;font-size:13px">${f.itens.map(it => `${fmt(fpN(it.mil), 1)} mil ${esc(fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod)}${it.arte_nova ? ' <span class="pill warn">arte nova</span>' : ''}`).join('<br>')}</td>
+      <td class="n">${brl(f.total)}</td><td style="font-size:12px">${esc(f.pag)}${f.venc ? `<div class="mut">venc. ${dBR(f.venc)}</div>` : ''}</td>
+      <td>${f.entrega ? (f.entrega < H && FP_FLUXO.indexOf(f.status) < 4 && f.status !== 'CANCELADA' ? `<span class="pill bad">${dBR(f.entrega)}</span>` : dBR(f.entrega)) : '—'}</td>
+      <td><span class="pill ${FP_ST[f.status] || 'grey'}">${esc(f.status)}</span></td><td class="cod">${esc(f.start_num || '—')}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Nenhuma ficha neste filtro.</td></tr>'}</tbody></table></div></div>`
+  : `<div class="empty"><div class="ic">🧾</div><b>Nenhuma ficha ainda</b><div>Clique em <b>+ Nova ficha</b>. Ex.: Panetelli Filial, 2 milheiros de K35 5 kg com a arte Panetelli.</div></div>`}
+  <p class="note">Caminho: <b>NOVA</b> (alguém anotou o pedido) → <b>CONFERIDA</b> (Márcia/Daiane conferiram preço e arte) → <b>NO START</b> (lançado, com o nº do Start) → <b>EM PRODUÇÃO</b> → <b>ENTREGUE</b>. Cada ficha imprime a via comercial e a ordem de serviço da fábrica.</p>`;
+}
+
+function vFpVer(f){
+  const i = FP_FLUXO.indexOf(f.status), prox = i >= 0 && i < FP_FLUXO.length - 1 ? FP_FLUXO[i + 1] : null;
+  const rot = {'CONFERIDA':'✔ Conferida','NO START':'↳ Lançado no Start…','EM PRODUÇÃO':'🏭 Foi para produção','ENTREGUE':'🚚 Entregue'};
+  return `${remBanner()}${gravBox()}
+  <div class="filtros"><button class="btn" onclick="fpVer=null;render()">← Fichas</button>
+    ${prox ? `<button class="btn pri" onclick="fpStatus('${f.id}','${prox}')">${rot[prox]}</button>` : ''}
+    <button class="btn" onclick="fpImprimir('${f.id}')">🖨️ Imprimir (ficha + OS)</button>
+    <button class="btn" onclick="fpEditar('${f.id}')">✏️ Editar</button>
+    <button class="btn" onclick="fpNova(fichas().find(x=>x.id==='${f.id}'))">🔁 Repetir pedido</button>
+    ${f.status !== 'CANCELADA' && f.status !== 'ENTREGUE' ? `<button class="btn" style="color:var(--bad)" onclick="fpStatus('${f.id}','CANCELADA')">Cancelar ficha</button>` : ''}
+    <span class="sp"></span><span class="pill ${FP_ST[f.status] || 'grey'}" style="font-size:14px">${esc(f.status)}</span></div>
+  <div class="two" style="margin-top:0">
+    <div class="card fpTela">${fpFolha(f, false)}</div>
+    <div class="card"><h3 style="margin-top:0">Roteiro para o Start</h3>${fpRoteiro(f)}
+      <p class="note">Registrado por ${esc(f.por || '—')}${f.atualizado_em ? ' · ' + new Date(f.atualizado_em).toLocaleString('pt-BR') : ''}.</p></div>
+  </div>`;
+}
+
+function vFpEditor(){
+  const f = FP, D = fpDL(), c = fpCli(f.cli_chave);
+  const ant = f.cli_nome ? fichas().filter(x => x.cli_nome === f.cli_nome && x.id !== f.id && x.status !== 'CANCELADA').sort((a, b) => b.num - a.num).slice(0, 3) : [];
+  const artes = [...new Set([fpArteBase(f.cli_nome), ...fichas().filter(x => x.cli_nome === f.cli_nome).flatMap(x => x.itens.map(i => i.arte))].filter(Boolean))];
+  const lab = (t, h) => `<label>${t}${h}</label>`;
+  const sel = (k, ops, val) => `<select onchange="fpSet('${k}',this.value)">${ops.map(o => `<option ${o === val ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  const vends = [...new Set(['MARCIA','DAIANE','EDSON TONET','WALMOR','MARIANE', ...(SEG && SEG.cli ? SEG.cli.vend.map(kVn) : []), f.vendedor])].filter(v => v && v !== 'VENDEDOR PADRÃO' && !/^ZZZ/.test(v));
+  return `${D.html}${gravBox()}
+  <div class="filtros"><button class="btn" onclick="if(confirm('Sair sem salvar?')){FP=null;render()}">← Voltar</button>
+    <b style="font-size:16px">${f.id ? 'Editar ficha ' + esc(f.id) : 'Nova ficha de pedido'}</b><span class="sp"></span>
+    <button class="btn pri" onclick="fpSalvar()">💾 Salvar ficha</button></div>
+
+  <div class="card" style="margin-bottom:12px"><form class="inline" onsubmit="return false" style="margin:0">
+    ${lab('Cliente', `<input list="dlCli" value="${esc(f.cli_nome)}" placeholder="nome, razão ou CNPJ…" style="min-width:320px" onchange="fpEscolheCli(this.value)">`)}
+    ${lab('Data', `<input type="date" value="${f.data}" onchange="fpSet('data',this.value)">`)}
+    ${lab('Origem', sel('origem', FP_ORIG, f.origem))}
+    ${lab('Vendedor', sel('vendedor', vends, f.vendedor))}
+    ${lab('Empresa', sel('empresa', ['Globo','Impressos'], f.empresa))}
+    ${lab('Tabela de preço', `<select onchange="fpTabela(this.value)">${FP_TAB.map((t, i) => `<option value="${i}" ${i === f.tabela ? 'selected' : ''}>TABELA ${t}</option>`).join('')}</select>`)}
+  </form>
+  ${f.cli_nome ? `<div style="margin-top:10px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px">
+     <div><span class="mut">Doc</span> ${esc(f.cli_doc || '—')}</div><div><span class="mut">Telefone</span> ${esc(f.cli_fone || '—')}</div><div><span class="mut">Local</span> ${esc(f.cli_local || '—')}</div>
+     ${c ? `<div><span class="mut">Situação</span> ${kPill(c.sit)}${c.ciclo ? ` <span class="mut">compra a cada ~${c.ciclo} dias</span>` : ''}</div>` : `<div class="pill warn">cliente fora da base do Start (novo?)</div>`}</div>
+   ${c && c.peds.length ? `<div class="mut" style="font-size:12px;margin-top:6px">Últimos pedidos no Start: ${c.peds.slice().sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 5).map(p => `${dBR(p.data)} nº ${p.num} ${brl(p.total)}`).join(' · ')}${c.abTot ? ` · <b style="color:var(--warn)">aguardando recebimento ${brl(c.abTot)}</b>` : ''}</div>` : ''}
+   ${ant.length ? `<div style="margin-top:8px;font-size:13px">Fichas anteriores: ${ant.map(a => `<button class="btn" style="font-size:12px;padding:3px 8px" onclick="FP.itens=fichas().find(x=>x.id==='${a.id}').itens.map(i=>({...i}));fpTabela(${a.tabela})">copiar itens de ${esc(a.id)} (${dBR(a.data)}, ${brl(a.total)})</button>`).join(' ')}</div>` : ''}` : ''}
+  </div>
+
+  <div class="card" style="padding:0;margin-bottom:12px"><div class="tw"><table>
+    <datalist id="dlArte">${artes.map(a => `<option value="${esc(a)}">`).join('')}</datalist>
+    <thead><tr><th>Produto (faca + papel)</th><th>Arte / personalização</th><th>Cores</th><th class="n">Milheiros</th><th class="n">R$ / milheiro</th><th class="n">Total</th><th></th></tr></thead>
+    <tbody>${f.itens.map((it, i) => { const p = fpProd(it.pid); return `<tr>
+      <td style="min-width:300px"><input list="dlProd" value="${esc(it.prod)}" placeholder="ex.: K35 5 kg" style="width:100%" onchange="fpEscolheProd(${i},this.value)">
+        <div class="mut" style="font-size:11px;margin-top:2px">${p ? `Start: <b>${esc(fpStartId(p))}</b>${p.medidas ? ' · ' + esc(p.medidas) + ' cm' : ''} · Tab. I/II/III ${p.tab.map(x => brl(x)).join(' / ')}${p.fora_site ? ' · ⚠️ ' + esc(p.fora_site) : ''}` : it.prod ? '⚠️ produto fora do catálogo — preencha o preço' : ''}</div></td>
+      <td style="min-width:200px"><input list="dlArte" value="${esc(it.arte)}" style="width:100%" oninput="fpIt(${i},'arte',this.value)">
+        <label class="mut" style="font-size:11px;display:flex;gap:4px;align-items:center;margin-top:3px"><input type="checkbox" ${it.arte_nova ? 'checked' : ''} onchange="fpIt(${i},'arte_nova',this.checked)"> arte nova / mudou</label>
+        <input value="${esc(it.obs || '')}" placeholder="obs. do item" style="width:100%;margin-top:3px;font-size:12px" oninput="fpIt(${i},'obs',this.value)"></td>
+      <td><select onchange="fpIt(${i},'cores',this.value)">${['','1 cor','2 cores','3 cores','sem impressão'].map(o => `<option ${o === it.cores ? 'selected' : ''} value="${o}">${o || '—'}</option>`).join('')}</select></td>
+      <td class="n"><input inputmode="decimal" value="${esc(String(it.mil))}" style="width:80px;text-align:right" oninput="fpIt(${i},'mil',this.value)"><div id="fpM${i}">${fpAvisoMin(it)}</div></td>
+      <td class="n"><input inputmode="decimal" value="${esc(String(it.preco).replace('.', ','))}" style="width:90px;text-align:right" oninput="fpIt(${i},'preco',this.value)"></td>
+      <td class="n"><b id="fpT${i}">${brl(it.total)}</b></td>
+      <td><button class="btn" title="remover item" onclick="fpDelItem(${i})">✕</button></td></tr>`; }).join('')}</tbody></table></div>
+    <div style="padding:10px 12px"><button class="btn" onclick="fpAddItem()">+ Item</button></div></div>
+
+  <div class="two" style="margin-top:0">
+    <div class="card"><form class="inline" onsubmit="return false" style="margin:0">
+      ${lab('Pagamento', sel('pag', FP_PAG.map(x => x[0]), f.pag))}
+      ${lab('Vencimento', `<input id="fpVenc" type="date" value="${f.venc || ''}" onchange="fpSet('venc',this.value)">`)}
+      ${lab('Entrega prevista', `<input type="date" value="${f.entrega || ''}" onchange="fpSet('entrega',this.value)">`)}
+      ${lab('+ acréscimo R$', `<input inputmode="decimal" value="${fpN(f.acresc) || ''}" style="min-width:90px;width:90px" oninput="fpSet('acresc',this.value)">`)}
+      ${lab('− desconto R$', `<input inputmode="decimal" value="${fpN(f.desc) || ''}" style="min-width:90px;width:90px" oninput="fpSet('desc',this.value)">`)}
+    </form>
+    <label class="mut" style="display:block;font-size:12px;margin-top:10px">Observações (vão para a ficha e para o Start)<textarea style="width:100%;min-height:54px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit" oninput="FP.obs=this.value">${esc(f.obs || '')}</textarea></label></div>
+    <div class="card" id="fpTot">${fpTotHtml(f)}</div>
+  </div>
+  <p class="note">Milheiros: 1 = 1.000 sacos (igual à Qtde do Start). Preço puxado da tabela escolhida, pode ser alterado. O mínimo vem da tabela 2026.</p>`;
 }
 
 /* =========================================================
@@ -1540,7 +1848,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -1548,7 +1856,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), lido: j.lido };
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
   render();
