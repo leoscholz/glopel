@@ -619,7 +619,7 @@ function vInicio(){
     ${card('🏭','Produção','O que cada máquina está rodando agora.','producao')}
     ${card('🧻','Bobinas','Estoque, consumo e quando comprar papel.','bobinas')}
     ${card('📅','Calendário','Contas, bobinas, férias e feriados do mês.','calendario')}
-    ${card('📤','A pagar','Papel, contas fixas, folha e comissões.','apagar')}
+    ${card('📤','A pagar','Notas do email, papel, contas fixas, folha e comissões.','apagar')}
     ${card('🤝','Comissões','Vendido e quitado por vendedor.','comissoes')}
     ${card('📊','Relatórios','Vendas desde 2017: anos, clientes, vendedores.','relatorios')}
     ${card('🚚','Fornecedores','Prazos reais e preço do papel.','fornecedores')}
@@ -1671,12 +1671,16 @@ function apagaFunc(id){ if (!confirm('Remover esta pessoa da lista?')) return; i
 /* =========================================================
    A pagar
    ========================================================= */
-const CATS = {'Papel':'🧻','Aluguel':'🏠','Assinaturas':'🔁','Frota':'🚚','Folha':'🧑‍🏭','Comissões':'🤝','Impostos':'📑','Energia e água':'💡','Serviços':'🛠️','Outros':'•'};
+const CATS = {'Papel':'🧻','Aluguel':'🏠','Assinaturas':'🔁','Frota':'🚚','Folha':'🧑‍🏭','Comissões':'🤝','Impostos':'📑','Energia e água':'💡','Serviços':'🛠️','Insumos':'🧴','Outros':'•'};
 const SUGESTOES = [['Aluguel','Aluguel'],['Sage Start (IOB)','Assinaturas'],['Internet','Assinaturas'],['LetsBot (WhatsApp)','Assinaturas'],['Contador','Serviços'],['Energia elétrica','Energia e água'],['Água','Energia e água'],['Combustível','Frota'],['Seguro do veículo','Frota'],['IPVA','Frota'],['Simples / DAS','Impostos']];
 function ocorrencias(de, ate){
   const out = [];
   // 1. parcelas das notas de papel
   (FORN?.nfs||[]).forEach(n => n.parcelas.forEach(([d,v],i) => { if (d>=de && d<=ate) out.push({id:'nf:'+n.nf+':'+d, data:d, nome:'Papel '+n.forn+' — NF '+n.nf+' ('+(i+1)+'/'+n.parcelas.length+')', cat:'Papel', valor:v, fonte:'nota'}); }));
+  // 1b. parcelas das NF-e que chegaram por email (Caixa de notas → aba NFe_Parcelas). Nota já presente no cofre (papel) não entra de novo.
+  const jaCofre = new Set((FORN?.nfs||[]).map(n=>String(n.chave||'')));
+  (REM?.nfeParc||[]).forEach(p => { const d = p.vencimento; if (!d || d<de || d>ate || jaCofre.has(p.chave)) return;
+    out.push({id:'nfe:'+p.id, data:d, nome:nfeCurto(p.emitente)+' — NF '+p.numero+' ('+p.parcela+')'+(p.conferir?' ⚠️':''), cat:CATS[p.categoria]?p.categoria:'Outros', valor:num(p.valor), fonte:'email', pdf:p.pdf, conferir:p.conferir}); });
   // 2. contas cadastradas
   contas().forEach(c => {
     if (c.ativa===false) return;
@@ -1695,6 +1699,34 @@ function ocorrencias(de, ate){
     comissaoMes(addM(m,-1)).filter(x=>x.com>0).forEach(x => out.push({id:'com:'+x.v+':'+d, data:d, nome:'Comissão '+x.v+' — '+mesNome(addM(m,-1)), cat:'Comissões', valor:x.com, fonte:'estimada'}));
   }
   return out.sort((a,b) => a.data<b.data?-1:a.data>b.data?1:a.nome.localeCompare(b.nome));
+}
+const nfeCurto = e => { const s = String(e||'').replace(/\s*\(.*\)$/,'').trim(); return s.length>34 ? s.slice(0,32)+'…' : s; };
+let nfeMostra = 15;
+function vNotasEmail(){
+  if (!REM) return '';
+  const N = (REM.nfe||[]).slice().sort((a,b)=>(b.emissao||'').localeCompare(a.emissao||'') || (b.email_data||'').localeCompare(a.email_data||''));
+  const S = REM.nfeSemXml||[];
+  const H = iso(hoje()), sem7 = N.filter(n=>(n.email_data||'')>=addD(H,-7)).length;
+  if (!N.length && !S.length) return `<h3>📥 Notas recebidas por email</h3><div class="card mut" style="margin-bottom:16px">Nenhuma nota chegou pela Caixa de notas ainda. Quando o script estiver instalado, toda NF-e com XML que chegar no email entra aqui e as parcelas aparecem na lista acima sozinhas.</div>`;
+  const parcDe = ch => (REM.nfeParc||[]).filter(p=>p.chave===ch);
+  return `<h3>📥 Notas recebidas por email <span class="mut" style="font-weight:400;font-size:13px">${N.length} notas · ${sem7} nos últimos 7 dias</span></h3>
+  ${S.length?`<div class="banner">${S.length} email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas destes não entram sozinhas. Pedir o XML ao fornecedor ou cadastrar como conta. ${S.slice(0,5).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>`).join('')}</div>`:''}
+  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
+    <thead><tr><th>Emissão</th><th>Fornecedor</th><th>NF</th><th>Empresa</th><th class="n">Total</th><th>Vencimentos</th><th>Categoria</th><th>Arquivos</th></tr></thead>
+    <tbody>${N.slice(0,nfeMostra).map(n=>{ const P=parcDe(n.id); const canc=n.status==='CANCELADA';
+      return `<tr style="${canc?'opacity:.5;text-decoration:line-through':''}"><td>${dBR(n.emissao)}</td><td title="${esc(n.emitente)} · CNPJ ${esc(n.cnpj_emitente)}&#10;${esc(n.itens)}">${esc(nfeCurto(n.emitente))}</td><td title="Chave ${esc(n.id)}">${esc(n.numero)}</td><td>${esc(n.empresa)}</td><td class="n">${brl(num(n.valor_total))}</td>
+      <td class="mut" style="font-size:12px">${canc?'cancelada':P.length?P.map(p=>dBR(p.vencimento).slice(0,5)+' '+brl(num(p.valor))).join(' · '):esc(n.conferir||n.forma_pagamento||'—')}${n.conferir&&P.length?' ⚠️':''}</td>
+      <td><select onchange="nfeCat('${esc(n.id)}',this.value)" ${canc?'disabled':''}>${Object.keys(CATS).filter(c=>c!=='Comissões'&&c!=='Folha').map(c=>`<option ${c===(n.categoria||'Outros')?'selected':''}>${c}</option>`).join('')}</select></td>
+      <td style="font-size:12px">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF</a>`:'<span class="mut">sem PDF</span>'}${n.xml?` · <a href="${esc(n.xml)}" target="_blank" rel="noopener">XML</a>`:''}</td></tr>`; }).join('')}</tbody>
+  </table></div>${N.length>nfeMostra?`<div style="padding:8px 12px"><button class="btn" onclick="nfeMostra+=30;render()">Mostrar mais (${N.length-nfeMostra})</button></div>`:''}</div>`;
+}
+async function nfeCat(chave, cat){
+  avisoGrav('Gravando categoria…');
+  try {
+    await api('upsert', {aba:'NFe_Recebidas', registro:{id:chave, categoria:cat}});
+    for (const p of (REM.nfeParc||[]).filter(p=>p.chave===chave)) await api('upsert', {aba:'NFe_Parcelas', registro:{id:p.id, categoria:cat}});
+    await lerSis(); avisoGrav('Categoria gravada na planilha.', 'ok');
+  } catch(e) { avisoGrav('Não consegui gravar: '+(e.message||e)+'. Nada foi alterado.', 'erro'); }
 }
 const DESDE_SIS = '2026-11-17'; // na planilha: vencidas antes disso contam como pagas
 const pago = o => REM ? (!!REM.pagos[o.id] || o.data < DESDE_SIS) : (!!L.pagos[o.id] || o.data < L.desde);
@@ -1726,7 +1758,7 @@ function vApagar(){
   <label class="mut" style="font-size:13px;display:block;margin:-6px 0 8px"><input type="checkbox" ${pMostra?'checked':''} onchange="pMostra=this.checked;render()"> mostrar também as pagas (últimos 90 dias)</label>
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
     <thead><tr><th title="Pago">✓</th><th>Vencimento</th><th>Conta</th><th>Categoria</th><th class="n">Valor</th><th>Origem</th></tr></thead>
-    <tbody>${lista.map(o=>`<tr style="${pago(o)?'opacity:.5':''}"><td><input type="checkbox" ${pago(o)?'checked':''} title="Marcar como pago" onchange="marcaPago('${o.id}',this.checked)"></td><td>${dBR(o.data)} ${o.data<H?'<span class="pill bad">vencida</span>':o.data<=addD(H,7)?'<span class="pill warn">esta semana</span>':''}</td><td>${esc(o.nome)}</td><td>${CATS[o.cat]||''} ${esc(o.cat)}</td><td class="n">${o.valor!=null?brl(o.valor):'<span class="mut">sem valor</span>'}</td><td class="mut" style="font-size:12px">${o.fonte}${REM&&REM.pagos[o.id]?` · pago ${dmy(REM.pagos[o.id].pago_em)}${REM.pagos[o.id].forma?' · '+esc(REM.pagos[o.id].forma):''}`:''}${REM?` <button class="btn" style="padding:1px 7px;font-size:12px" title="Pagar com detalhes (data, valor, forma, obs.)" onclick="detalhePago('${o.id}')">…</button>`:''}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Nada em aberto.</td></tr>'}</tbody>
+    <tbody>${lista.map(o=>`<tr style="${pago(o)?'opacity:.5':''}"><td><input type="checkbox" ${pago(o)?'checked':''} title="Marcar como pago" onchange="marcaPago('${o.id}',this.checked)"></td><td>${dBR(o.data)} ${o.data<H?'<span class="pill bad">vencida</span>':o.data<=addD(H,7)?'<span class="pill warn">esta semana</span>':''}</td><td>${esc(o.nome)}</td><td>${CATS[o.cat]||''} ${esc(o.cat)}</td><td class="n">${o.valor!=null?brl(o.valor):'<span class="mut">sem valor</span>'}</td><td class="mut" style="font-size:12px">${o.fonte}${o.pdf?` · <a href="${esc(o.pdf)}" target="_blank" rel="noopener">PDF</a>`:''}${o.conferir?` · <span title="${esc(o.conferir)}">⚠️ ${esc(o.conferir)}</span>`:''}${REM&&REM.pagos[o.id]?` · pago ${dmy(REM.pagos[o.id].pago_em)}${REM.pagos[o.id].forma?' · '+esc(REM.pagos[o.id].forma):''}`:''}${REM?` <button class="btn" style="padding:1px 7px;font-size:12px" title="Pagar com detalhes (data, valor, forma, obs.)" onclick="detalhePago('${o.id}')">…</button>`:''}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Nada em aberto.</td></tr>'}</tbody>
   </table></div></div>
   <h3>Por categoria — próximos meses</h3>
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
@@ -1734,6 +1766,7 @@ function vApagar(){
     <tbody>${porCat.map(([c,v])=>`<tr><td>${CATS[c]||''} ${esc(c)}</td>${v.map(x=>`<td class="n">${x?brl(x):'—'}</td>`).join('')}</tr>`).join('')}
     <tr style="font-weight:600"><td>Total</td>${meses.map((m,i)=>`<td class="n">${brl(porCat.reduce((a,[,v])=>a+v[i],0))}</td>`).join('')}</tr></tbody>
   </table></div></div>
+  ${vNotasEmail()}
   <h3>Contas fixas</h3>
   <div class="filtros"><button class="btn pri" onclick="pEdit='novo';render()">+ Nova conta</button><span class="mut">Atalhos:</span>${SUGESTOES.filter(([n])=>!C.some(c=>c.nome===n)).map(([n,c])=>`<button class="btn" style="padding:3px 9px;font-size:12px" onclick='pEdit={id:uid(),nome:${JSON.stringify(n)},cat:${JSON.stringify(c)},valor:"",dia:"",freq:"mensal",inicio:iso(hoje()),fim:"",obs:""};render()'>${CATS[c]||''} ${esc(n)}</button>`).join('')}</div>
   ${e?`<div class="card" style="margin-bottom:12px"><form class="inline" onsubmit="salvaConta(event,'${e.id}')">
@@ -1890,7 +1923,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -1898,7 +1931,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), lido: j.lido };
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
   render();
