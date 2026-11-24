@@ -518,7 +518,8 @@ function pixOk(id){ gravarSis('Pix_Recebidos', {id, status:'CONFERIDO'}, 'Marcad
 /* A receber: notas que a própria empresa emitiu (cópia que chega no email) */
 let rcEmp = 'todas';
 function vReceber(){
-  if (!REM) return `<div class="banner">Destranque o sistema para ler a planilha.</div>`;
+  if (!REM) return REM_ERRO ? remBanner() : !API() ? `<div class="banner">Destranque o sistema (senha do cofre) para ler a planilha.</div>`
+    : `<div class="banner">Lendo a planilha… <button class="btn" onclick="lerSis()">Tentar de novo</button></div>`;
   return vPix() + vReceberNF();
 }
 function vReceberNF(){
