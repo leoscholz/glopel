@@ -38,8 +38,8 @@ const DIAS_INICIO = 60;       // primeira leitura: quantos dias para trás
 const MAX_EMAILS = 25;        // por rodada (o Apps Script tem limite de 6 min)
 const MARCA_LIDA = 'NF-e/lida';
 const MARCA_ERRO = 'NF-e/erro';
-// Contas que chegam no mesmo email mas NÃO são da empresa (domiciliares): ficam registradas como IGNORADA, fora do A pagar
-const IGNORAR_FATURAS = /vivo/i;   // Leo, 24-11-2026: Vivo é domiciliar
+// Auto-ignorar: a lista fica na aba NFe_Ignorar da planilha do site (texto, motivo, status ATIVA/REMOVIDO)
+// e é editada pelo site (Financeiro › A pagar › Ignorar automaticamente). Não precisa mexer neste script.
 
 const CAB = {
   NFe_Recebidas: ['id', 'numero', 'serie', 'emissao', 'emitente', 'cnpj_emitente', 'destinatario', 'cnpj_destinatario', 'empresa',
@@ -52,6 +52,7 @@ const CAB = {
   NFe_Itens: ['id', 'chave', 'numero', 'emitente', 'emissao', 'item', 'codigo', 'descricao', 'quantidade', 'unidade', 'kg',
     'valor_unit', 'valor', 'ipi', 'rkg', 'sku', 'papel', 'pedido', 'lote', 'atualizado_em', 'por'],
   NFe_Log: ['id', 'quando', 'o_que', 'detalhe'],
+  NFe_Ignorar: ['id', 'texto', 'motivo', 'status', 'atualizado_em', 'por'],
 };
 
 /* ===================== gatilho ===================== */
@@ -75,6 +76,7 @@ function rodar(op) {
     const shN = aba_(ss, 'NFe_Recebidas'), shP = aba_(ss, 'NFe_Parcelas'), shS = aba_(ss, 'NFe_SemXML'), shI = aba_(ss, 'NFe_Itens');
     garantirColunas_(shS, CAB.NFe_SemXML);
     const jaN = ids_(shN), jaS = ids_(shS);
+    const regras = regrasIgnorar_(aba_(ss, 'NFe_Ignorar'));
     const lida = marca_(MARCA_LIDA), erro = marca_(MARCA_ERRO);
     const q = 'has:attachment (filename:xml OR filename:zip OR filename:pdf) -label:' + MARCA_LIDA.replace('/', '-') +
       ' -label:' + MARCA_ERRO.replace('/', '-') + ' newer_than:' + DIAS_INICIO + 'd';
@@ -110,6 +112,13 @@ function rodar(op) {
           if (emp === null) { res.ignoradas++; return; }    // emitida pela Globo, ou de outro destinatário
           nfesDoEmail++;
           if (jaN.has(n.chave) || novasN.some(z => z.id === n.chave)) { res.repetidas++; return; }
+          const ign = ignorar_(regras, [m.getFrom(), m.getSubject(), n.emitenteRazao, n.emitente, n.cnpjEmit].join(' '));
+          if (ign) {   // registra a nota (para não ler de novo), sem parcelas e sem itens
+            novasN.push({ id: n.chave, numero: n.numero, serie: n.serie, emissao: n.emissao, emitente: n.emitente, cnpj_emitente: n.cnpjEmit,
+              destinatario: n.destinatario, cnpj_destinatario: n.cnpjDest, empresa: emp, valor_total: n.vNF, n_parcelas: n.parcelas.length,
+              status: 'IGNORADA (' + ign.texto + ')', email_de: m.getFrom(), email_assunto: m.getSubject(), email_data: iso_(m.getDate()) });
+            res.ignoradas_regra = (res.ignoradas_regra || 0) + 1; return;
+          }
           const pdf = pdfs.find(p => (p.getName() || '').indexOf(n.chave) >= 0) || (pdfs.length === 1 ? pdfs[0] : null);
           const links = op.seco ? { xml: '', pdf: '' } : guardar_(n, x.blob, pdf);
           const cat = categoria_(n.emitente, n.itens);
@@ -137,7 +146,8 @@ function rodar(op) {
             const st = tipoSemXml_(m, pdfs);
             const reg = { id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
               anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: st };
-            if (st === 'FATURA DE CONSUMO' && IGNORAR_FATURAS.test(m.getFrom() + ' ' + m.getSubject())) reg.status = 'IGNORADA (domiciliar)';
+            const ignF = ignorar_(regras, m.getFrom() + ' ' + m.getSubject() + ' ' + reg.anexos);
+            if (ignF) { reg.status = 'IGNORADA (' + ignF.texto + ')'; res.ignoradas_regra = (res.ignoradas_regra || 0) + 1; }
             else if (st === 'FATURA DE CONSUMO' && !op.seco) Object.assign(reg, lerFatura_(m, pdfs[0]));
             novasS.push(reg);
             res.so_pdf++;
@@ -293,6 +303,21 @@ function garantirColunas_(sh, cab) {
   cab.forEach(c => { if (head.indexOf(c) < 0) { head.push(c); sh.getRange(1, head.length).setNumberFormat('@').setValue(c); } });
 }
 
+/* ===================== auto-ignorar ===================== */
+const normal_ = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function regrasIgnorar_(sh) {
+  const v = sh.getDataRange().getDisplayValues(); if (v.length < 2) return [];
+  const h = v[0], it = h.indexOf('texto'), is = h.indexOf('status');
+  return v.slice(1).filter(r => r[it] && String(r[is] || 'ATIVA').toUpperCase() === 'ATIVA').map(r => ({ texto: String(r[it]).trim() }));
+}
+// Casa palavra inteira, sem acento e sem diferença de maiúscula ("vivo" pega "Vivo" mas não "vivos"; CNPJ também vale)
+function ignorar_(regras, texto) {
+  const t = normal_(texto), so = t.replace(/[^\d]/g, '');
+  return regras.find(r => { const x = normal_(r.texto).trim(); if (!x) return false;
+    if (/^[\d.\/-]+$/.test(x) && x.replace(/\D/g, '').length >= 8) return so.indexOf(x.replace(/\D/g, '')) >= 0;
+    return new RegExp('(^|[^a-z0-9])' + x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])').test(t); }) || null;
+}
+
 /* ===================== regras ===================== */
 function empresa_(n) {
   const so = s => String(s || '').replace(/\D/g, '');
@@ -376,4 +401,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
+if (typeof module !== 'undefined') module.exports = { ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };

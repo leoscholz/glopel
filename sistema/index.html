@@ -1739,10 +1739,10 @@ function ocorrencias(de, ate){
   (FORN?.nfs||[]).forEach(n => n.parcelas.forEach(([d,v],i) => { if (d>=de && d<=ate) out.push({id:'nf:'+n.nf+':'+d, data:d, nome:'Papel '+n.forn+' — NF '+n.nf+' ('+(i+1)+'/'+n.parcelas.length+')', cat:'Papel', valor:v, fonte:'nota'}); }));
   // 1b. parcelas das NF-e que chegaram por email (Caixa de notas → aba NFe_Parcelas). Nota já presente no cofre (papel) não entra de novo.
   const jaCofre = new Set((FORN?.nfs||[]).map(n=>String(n.chave||'')));
-  (REM?.nfeParc||[]).forEach(p => { const d = p.vencimento; if (!d || d<de || d>ate || jaCofre.has(p.chave)) return;
+  (REM?.nfeParc||[]).forEach(p => { const d = p.vencimento; if (!d || d<de || d>ate || jaCofre.has(p.chave)) return; const nn = (REM.nfe||[]).find(x=>x.id===p.chave); if (nfeIgn(nn||{emitente:p.emitente})) return;
     out.push({id:'nfe:'+p.id, data:d, nome:nfeCurto(p.emitente)+' — NF '+p.numero+' ('+p.parcela+')'+(p.conferir?' ⚠️':''), cat:CATS[p.categoria]?p.categoria:'Outros', valor:numN(p.valor), fonte:'email', pdf:p.pdf, conferir:p.conferir}); });
   // 1c. faturas de consumo lidas do email (Copel, Vivo, SKY…)
-  (REM?.nfeSemXml||[]).filter(f=>f.status==='FATURA DE CONSUMO' && f.vencimento).forEach(f => { const d = f.vencimento; if (d<de || d>ate) return;
+  (REM?.nfeSemXml||[]).filter(f=>f.status==='FATURA DE CONSUMO' && f.vencimento && !fatIgn(f)).forEach(f => { const d = f.vencimento; if (d<de || d>ate) return;
     const conf = /^conferir/.test(f.leitura||'') ? 'leitura automática: conferir valor/vencimento' : '';
     out.push({id:'fat:'+f.id, data:d, nome:(f.fornecedor||'Fatura')+' — fatura '+mesNome(d.slice(0,7))+(conf?' ⚠️':''), cat:CATS[f.categoria]?f.categoria:'Outros', valor:f.valor===''?null:numN(f.valor), fonte:'fatura', pdf:f.pdf, conferir:conf}); });
   // 2. contas cadastradas
@@ -1765,24 +1765,48 @@ function ocorrencias(de, ate){
   return out.sort((a,b) => a.data<b.data?-1:a.data>b.data?1:a.nome.localeCompare(b.nome));
 }
 const nfeCurto = e => { const s = String(e||'').replace(/\s*\(.*\)$/,'').trim(); return s.length>34 ? s.slice(0,32)+'…' : s; };
+/* Auto-ignorar (aba NFe_Ignorar): mesma regra do script — palavra inteira, sem acento; CNPJ pelos dígitos */
+const normal = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function ignoradoPor(txt){
+  const R = REM?.ignorar||[]; if (!R.length) return null; const t = normal(txt), so = t.replace(/\D/g,'');
+  return R.find(r => { const x = normal(r.texto).trim(); if (!x) return false;
+    if (/^[\d.\/-]+$/.test(x) && x.replace(/\D/g,'').length >= 8) return so.includes(x.replace(/\D/g,''));
+    return new RegExp('(^|[^a-z0-9])'+x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])').test(t); }) || null;
+}
+const nfeIgn = n => /^IGNORADA/.test(n.status||'') || !!ignoradoPor([n.emitente, n.cnpj_emitente, n.email_de, n.email_assunto].join(' '));
+const fatIgn = f => /^IGNORADA/.test(f.status||'') || !!ignoradoPor([f.email_de, f.email_assunto, f.anexos, f.fornecedor].join(' '));
+function vIgnorar(){
+  const R = REM?.ignorar||[];
+  return `<h3>🚫 Ignorar automaticamente <span class="mut" style="font-weight:400;font-size:13px">notas e faturas que chegam no email mas não são da empresa</span></h3>
+  <div class="card" style="margin-bottom:16px">
+    ${R.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${R.map(r=>`<span class="pill" style="padding:4px 10px">${esc(r.texto)}${r.motivo?` <span class="mut">· ${esc(r.motivo)}</span>`:''} <a href="javascript:void 0" title="Parar de ignorar" onclick="ignRemover('${esc(r.id)}')" style="margin-left:4px">✕</a></span>`).join('')}</div>`:'<div class="mut" style="margin-bottom:8px">Nenhuma regra ainda.</div>'}
+    <form class="inline" onsubmit="ignAdd(event)"><label>Palavra ou CNPJ<input name="texto" required placeholder="ex.: vivo, sky, 12.345.678/0001-90" style="min-width:220px"></label><label>Motivo<input name="motivo" placeholder="ex.: domiciliar"></label><button class="btn pri">Adicionar</button></form>
+    <div class="mut" style="font-size:12px;margin-top:6px">Vale para o remetente, o assunto, o fornecedor e o CNPJ do emitente. Palavra inteira, sem diferença de acento ou maiúscula. Some do A pagar na hora; o que chegar depois já entra como ignorado.</div>
+  </div>`;
+}
+function ignAdd(ev, pre){ const f = ev ? fd(ev) : pre; const t = String(f.texto||'').trim(); if (!t) return;
+  gravarSis('NFe_Ignorar', {id:'ign-'+uid(), texto:t, motivo:f.motivo||'', status:'ATIVA'}, `"${t}" será ignorado.`); }
+function ignRemover(id){ gravarSis('NFe_Ignorar', {id, status:'REMOVIDO'}, 'Regra removida (fica na planilha como REMOVIDO).'); }
+function ignSugerir(txt){ dialogo('Ignorar sempre', `<label style="display:block;margin-bottom:8px">Palavra ou CNPJ<br><input name="texto" value="${esc(txt)}" required></label><label style="display:block">Motivo<br><input name="motivo" placeholder="ex.: domiciliar"></label>`, 'Ignorar', f => ignAdd(null, f)); }
 let nfeMostra = 15;
 function vNotasEmail(){
   if (!REM) return '';
-  const N = (REM.nfe||[]).slice().sort((a,b)=>(b.emissao||'').localeCompare(a.emissao||'') || (b.email_data||'').localeCompare(a.email_data||''));
-  const S = REM.nfeSemXml||[];
+  const NI = (REM.nfe||[]).filter(nfeIgn), N = (REM.nfe||[]).filter(n=>!nfeIgn(n)).slice().sort((a,b)=>(b.emissao||'').localeCompare(a.emissao||'') || (b.email_data||'').localeCompare(a.email_data||''));
+  const S = (REM.nfeSemXml||[]).filter(f=>!fatIgn(f)), SI = (REM.nfeSemXml||[]).filter(fatIgn);
   const H = iso(hoje()), sem7 = N.filter(n=>(n.email_data||'')>=addD(H,-7)).length;
-  if (!N.length && !S.length) return `<h3>📥 Notas recebidas por email</h3><div class="card mut" style="margin-bottom:16px">Nenhuma nota chegou pela Caixa de notas ainda. Quando o script estiver instalado, toda NF-e com XML que chegar no email entra aqui e as parcelas aparecem na lista acima sozinhas.</div>`;
+  const ignTxt = (NI.length||SI.length) ? ` · ${NI.length+SI.length} ignorada(s)` : '';
+  if (!N.length && !S.length) return vIgnorar() + `<h3>📥 Notas recebidas por email${ignTxt}</h3><div class="card mut" style="margin-bottom:16px">Nenhuma nota chegou pela Caixa de notas ainda. Quando o script estiver instalado, toda NF-e com XML que chegar no email entra aqui e as parcelas aparecem na lista acima sozinhas.</div>`;
   const parcDe = ch => (REM.nfeParc||[]).filter(p=>p.chave===ch);
-  return `<h3>📥 Notas recebidas por email <span class="mut" style="font-weight:400;font-size:13px">${N.length} notas · ${sem7} nos últimos 7 dias</span></h3>
-  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…): valor e vencimento lidos do email/PDF entram sozinhos no A pagar (origem "fatura"). Não cadastre estas também em Contas fixas, senão contam dobrado.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.fornecedor||x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>${x.status==='FATURA DE CONSUMO'?(x.valor?` · <b>${brl(numN(x.valor))}</b> vence ${dmy(x.vencimento)}`:' · <b>sem valor lido — conferir</b>'):''}`).join('')}</div>`:''; }).join('')}
+  return `<h3>📥 Notas recebidas por email <span class="mut" style="font-weight:400;font-size:13px">${N.length} notas · ${sem7} nos últimos 7 dias${ignTxt}</span></h3>
+  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…): valor e vencimento lidos do email/PDF entram sozinhos no A pagar (origem "fatura"). Não cadastre estas também em Contas fixas, senão contam dobrado.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.fornecedor||x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>${x.status==='FATURA DE CONSUMO'?(x.valor?` · <b>${brl(numN(x.valor))}</b>${x.vencimento?' vence '+dmy(x.vencimento):' · <b>sem vencimento — conferir</b>'}`:' · <b>sem valor lido — conferir</b>'):''} <a href="javascript:void 0" title="Ignorar sempre" onclick='ignSugerir(${JSON.stringify(String(x.fornecedor||(x.email_de||"").replace(/.*@/,"").split(".")[0]).toLowerCase())})'>🚫</a>`).join('')}</div>`:''; }).join('')}
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
     <thead><tr><th>Emissão</th><th>Fornecedor</th><th>NF</th><th>Empresa</th><th class="n">Total</th><th>Vencimentos</th><th>Categoria</th><th>Arquivos</th></tr></thead>
     <tbody>${N.slice(0,nfeMostra).map(n=>{ const P=parcDe(n.id); const canc=n.status==='CANCELADA';
       return `<tr style="${canc?'opacity:.5;text-decoration:line-through':''}"><td>${dBR(n.emissao)}</td><td title="${esc(n.emitente)} · CNPJ ${esc(n.cnpj_emitente)}&#10;${esc(n.itens)}">${esc(nfeCurto(n.emitente))}</td><td title="Chave ${esc(n.id)}">${esc(n.numero)}</td><td>${esc(n.empresa)}</td><td class="n">${brl(numN(n.valor_total))}</td>
       <td class="mut" style="font-size:12px">${canc?'cancelada':P.length?P.map(p=>dBR(p.vencimento).slice(0,5)+' '+brl(numN(p.valor))).join(' · '):esc(n.conferir||n.forma_pagamento||'—')}${n.conferir&&P.length?' ⚠️':''}</td>
       <td><select onchange="nfeCat('${esc(n.id)}',this.value)" ${canc?'disabled':''}>${Object.keys(CATS).filter(c=>c!=='Comissões'&&c!=='Folha').map(c=>`<option ${c===(n.categoria||'Outros')?'selected':''}>${c}</option>`).join('')}</select></td>
-      <td style="font-size:12px">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF</a>`:'<span class="mut">sem PDF</span>'}${n.xml?` · <a href="${esc(n.xml)}" target="_blank" rel="noopener">XML</a>`:''}</td></tr>`; }).join('')}</tbody>
-  </table></div>${N.length>nfeMostra?`<div style="padding:8px 12px"><button class="btn" onclick="nfeMostra+=30;render()">Mostrar mais (${N.length-nfeMostra})</button></div>`:''}</div>`;
+      <td style="font-size:12px">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF</a>`:'<span class="mut">sem PDF</span>'}${n.xml?` · <a href="${esc(n.xml)}" target="_blank" rel="noopener">XML</a>`:''} <a href="javascript:void 0" title="Ignorar sempre este fornecedor" onclick='ignSugerir(${JSON.stringify(String(n.cnpj_emitente||nfeCurto(n.emitente)))})'>🚫</a></td></tr>`; }).join('')}</tbody>
+  </table></div>${N.length>nfeMostra?`<div style="padding:8px 12px"><button class="btn" onclick="nfeMostra+=30;render()">Mostrar mais (${N.length-nfeMostra})</button></div>`:''}</div>${vIgnorar()}`;
 }
 async function nfeCat(chave, cat){
   avisoGrav('Gravando categoria…');
@@ -1987,7 +2011,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -1995,7 +2019,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
