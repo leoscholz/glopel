@@ -503,8 +503,36 @@ function vArtes(){
   <div class="ph">${ARTES_FASES.map(([t,q,l])=>`<div class="card"><h3>${esc(t)}</h3><div class="mut" style="font-size:12px;margin-bottom:6px">${esc(q)}</div><ul>${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div>
   <p class="note">Retrato de ${esc(A.atualizado||'—')}. Fontes: varredura da pasta Globo 2026 › 06_Produto_Arte e planilha _base_clientes_2026-11-16.</p>`;
 }
+function vAltaPapel(C){
+  const por = {}; C.slice().sort((a,b)=>a.data<b.data?-1:1).forEach(c => (por[c.papel]=por[c.papel]||[]).push(c));
+  const H = iso(hoje()), A = Object.entries(por).map(([p,L]) => { const u = L[L.length-1], ant = [...L].reverse().find(x=>x.data<u.data); return ant && u.data >= addD(H,-45) ? {p, nome:u.nome, u, ant, var:u.rkg/ant.rkg-1} : null; }).filter(x=>x && Math.abs(x.var)>=0.02);
+  if (!A.length) return '';
+  return `<div class="banner">${A.map(x=>`${x.var>0?'🔺':'🔻'} <b>${esc(x.nome)}</b> (${x.p}): ${brl(x.ant.rkg)} → <b>${brl(x.u.rkg)}</b>/kg (${x.var>0?'+':''}${(x.var*100).toFixed(1).replace('.',',')}%) · NF ${esc(x.u.nf)} de ${dmy(x.u.data)}`).join('<br>')}<br><span class="mut" style="font-size:12px">Preço da nota sem IPI e sem frete. O Precificador já usa o preço novo.</span></div>`;
+}
+/* Papel das notas que chegaram por email (aba NFe_Itens) → compras e notas no formato do cofre */
+const fornCurto = e => { const s = String(e||'').toUpperCase(); return /IRANI/.test(s)?'Irani':/LUTEPEL/.test(s)?'Lutepel':/VIDEIRA/.test(s)?'Videira':/NOVACKI/.test(s)?'Novacki':nfeCurto(e).split(' ')[0]; };
+function papelEmail(){
+  if (!REM || !REM.nfeItens) return {C:[], N:[]};
+  const ja = new Set((FORN?.nfs||[]).map(n=>String(n.chave||''))), nomes = Object.fromEntries((window.GLOPEL_PAPEIS_COFRE||[]).map(p=>[p[0],p[1]]));
+  const I = REM.nfeItens.filter(i => i.papel && numN(i.kg) > 0 && numN(i.rkg) > 0 && !ja.has(i.chave));
+  const C = I.map(i => ({data:i.emissao, f:fornCurto(i.emitente), papel:i.papel, nome:nomes[i.papel]||i.papel, kg:numN(i.kg), rkg:numN(i.rkg), nf:i.numero, sku:i.sku, email:true}));
+  const chaves = [...new Set(I.map(i=>i.chave))];
+  const N = chaves.map(ch => { const n = (REM.nfe||[]).find(x=>x.id===ch) || {}; const P = (REM.nfeParc||[]).filter(p=>p.chave===ch);
+    return {nf:n.numero, data:n.emissao, forn:fornCurto(n.emitente), dest:n.empresa, chave:ch, produtos:numN(n.valor_produtos), ipi:numN(n.ipi), total:numN(n.valor_total), parcelas:P.map(p=>[p.vencimento, numN(p.valor)]), transp:'(email)'}; }).filter(n=>n.nf);
+  return {C, N};
+}
+/* Preço do papel: a nota mais nova (cofre ou email) vale; o Precificador lê GLOPEL_PAPEIS */
+function precosDasNotas(){
+  if (!window.GLOPEL_PAPEIS_COFRE) return;
+  const E = papelEmail().C, ultCofre = {};
+  (FORN?.compras||[]).forEach(c => { if (!ultCofre[c.papel] || c.data > ultCofre[c.papel]) ultCofre[c.papel] = c.data; });
+  const novo = {}; E.forEach(c => { if (c.data >= (ultCofre[c.papel]||'') && (!novo[c.papel] || c.data >= novo[c.papel].data)) novo[c.papel] = c; });
+  window.GLOPEL_PAPEIS = window.GLOPEL_PAPEIS_COFRE.map(p => novo[p[0]] ? [p[0], p[1], p[2], Math.round(novo[p[0]].rkg*100)/100, 'NF '+novo[p[0]].nf+' de '+dmy(novo[p[0]].data)+' (email)'].concat(p.slice(5)) : p);
+  window.GLOPEL_PAPEIS_EMAIL = novo;
+}
 function vFornecedores(){
-  const H = iso(hoje()), C = FORN.compras, N = FORN.nfs;
+  const PE = papelEmail();
+  const H = iso(hoje()), C = FORN.compras.concat(PE.C), N = FORN.nfs.concat(PE.N);
   const kg = C.reduce((a,c)=>a+c.kg,0), tot = N.reduce((a,n)=>a+n.total,0);
   const parc = N.flatMap(n => n.parcelas.map(([d,v]) => ({d, v, nf:n.nf, forn:n.forn, dest:n.dest}))).sort((a,b)=>a.d<b.d?-1:1);
   const futuras = parc.filter(p => p.d >= H), p45 = futuras.filter(p => p.d <= addD(H,45));
@@ -520,6 +548,7 @@ function vFornecedores(){
   const nfsF = N.filter(n => ffor==='todos' || n.forn===ffor).sort((a,b)=>a.data<b.data?1:-1);
   return `
   <div class="banner ok">Dados reais das <b>${N.length} notas fiscais de compra de papel</b> (${dBR(N.map(n=>n.data).sort()[0])} a ${dBR(N.map(n=>n.data).sort().pop())}). Preço da nota com ICMS embutido e <b>IPI 3,25% por fora</b>; o <b>frete (≈5% da nota)</b> é pago pela Globo e não aparece na nota.</div>
+  ${vAltaPapel(C)}
   <div class="grid kpis">
     <div class="card kpi"><div class="v">${FORN.fornecedores.length}</div><div class="l">fornecedores de papel com nota</div></div>
     <div class="card kpi"><div class="v">${fmt(kg/1000,1)} t</div><div class="l">papel comprado nas notas</div></div>
@@ -718,7 +747,7 @@ function vBobinas(){
     ? `<div class="banner ok"><b>Dados reais</b> da planilha da Secretaria, publicados em ${dmy(DB.atualizado)}: contagem física de 17/11 (Márcia) + saídas do GLOBO CONTROLE. Para ver o mais recente: <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>.<br>⚠️ Pedidos, chegadas e contagens registrados <b>nesta</b> página ficam só neste navegador. Para gravar na planilha, use o Sistema Globo dentro do Claude.</div>`
     : `<div class="banner ok">Dados da planilha <b>${esc(DB.fonte)}</b>, lidos neste navegador. Edições feitas aqui não voltam para a planilha.</div>`;
   const body = {estoque:bEstoque, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
-  return ban + gravBox() + t + (sub === 'estoque' || !sub ? bFichasDemanda() : '') + body();
+  return ban + gravBox() + t + ((sub === 'estoque' || sub === 'entradas' || !sub) ? vNotasBobina() : '') + (sub === 'estoque' || !sub ? bFichasDemanda() : '') + body();
 }
 
 function bFichasDemanda(){
@@ -787,6 +816,35 @@ function bSaidas(){
 
 let PRE = null;
 function pedirRapido(sku, qtd){ PRE = {sku, qtd}; ir('bobinas','entradas'); setTimeout(()=>{ const q=document.querySelector('form.inline input[name=qtd]'); if(q) q.focus(); },50); }
+/* Notas de papel recebidas por email × pedidos de bobina em aberto */
+function notasBobina(){
+  if (!REM || !REM.nfeItens || !DB) return [];
+  const usadas = new Set(DB.ent.filter(e=>e.nf).map(e=>String(e.nf).replace(/^0+/,'')+'|'+e.sku));
+  return REM.nfeItens.filter(i => i.sku && numN(i.kg) > 0 && !usadas.has(String(i.numero).replace(/^0+/,'')+'|'+i.sku)).map(i => {
+    const sk = DB.skus.find(s=>s.sku===i.sku), f = fornCurto(i.emitente);
+    const cand = DB.ent.map((e,ix)=>[e,ix]).filter(([e]) => e.status==='PEDIDO' && e.sku===i.sku && (!e.fornecedor || String(e.fornecedor).toUpperCase().indexOf(f.toUpperCase())>=0))
+      .sort(([a],[b]) => Math.abs(num(a.peso)-numN(i.kg)) - Math.abs(num(b.peso)-numN(i.kg)));
+    const pm = sk && (sk.pm0 || null);
+    return {i, f, sk, cand, est: pm ? Math.round(numN(i.kg)/pm) : null};
+  });
+}
+function vNotasBobina(){
+  const M = notasBobina(); if (!M.length) return '';
+  return `<div class="card" style="margin-bottom:12px"><b>📥 Papel que chegou em nota (email) — ${M.length} item(ns) para conferir</b>
+  <div class="mut" style="font-size:12px;margin:2px 0 8px">A nota sai antes do caminhão chegar: confirme só quando as bobinas estiverem na fábrica. O botão grava RECEBIDO, a data, a NF e o peso da nota no pedido.</div>
+  <div class="tw"><table><thead><tr><th>NF</th><th>Emissão</th><th>Item da nota</th><th>SKU</th><th class="n">kg</th><th>Pedido em aberto</th><th></th></tr></thead><tbody>${M.map((x,k)=>{ const c = x.cand[0];
+    return `<tr><td>${esc(x.i.numero)}</td><td>${dBR(x.i.emissao)}</td><td style="font-size:12px">${esc(x.i.descricao)}</td><td><b>${esc(x.i.sku)}</b>${x.sk?'':' <span class="pill bad" title="SKU não cadastrado em Bob_SKU">novo</span>'}</td><td class="n">${fmt(numN(x.i.kg))}${x.est?` <span class="mut">≈${x.est} bob.</span>`:''}</td>
+    <td style="font-size:12px">${c?`${c[0].qtd} bob. · ${fmt(num(c[0].peso))} kg previstos${c[0].pedido?' · pedido '+dmy(c[0].pedido):''}${x.cand.length>1?` <span class="mut">(+${x.cand.length-1})</span>`:''}`:'<span class="mut">nenhum pedido em aberto deste SKU — registrar o pedido antes</span>'}</td>
+    <td>${c&&AO_VIVO()?`<button class="btn pri" style="padding:2px 9px" onclick="receberNF(${k})">Chegou</button>`:''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+function receberNF(k){ const x = notasBobina()[k]; if (!x || !x.cand[0]) return; const e = x.cand[0][0];
+  dialogo(`Chegou: ${esc(x.i.sku)} da NF ${esc(x.i.numero)}`,
+    `<label style="display:block;margin-bottom:8px">Recebido em<br><input type="date" name="receb" value="${iso(hoje())}" required></label>
+     <label style="display:block;margin-bottom:8px">NF<br><input name="nf" value="${esc(x.i.numero)}"></label>
+     <label style="display:block">Peso total em kg (da nota)<br><input name="peso" inputmode="decimal" value="${esc(x.i.kg)}"></label>
+     <div class="mut" style="font-size:12px;margin-top:8px">Vai no pedido de ${e.qtd} bobina(s) ${esc(e.sku)}${e.pedido?' de '+dmy(e.pedido):''}. A quantidade de bobinas fica a do pedido — corrija na contagem se vier diferente.</div>`,
+    'Registrar chegada', (f) => gravar('chegou', {linha:e.linha, sku:e.sku, receb:f.receb, nf:f.nf||'', peso:f.peso||''}, `Chegada de ${e.sku} (NF ${f.nf}) registrada na planilha.`));
+}
 function bEntradas(){
   const pre = PRE; PRE = null;
   const rows = DB.ent.slice().sort((a,b)=>(b.pedido||'').localeCompare(a.pedido||''));
@@ -848,7 +906,7 @@ async function abreCofre(senha){
   return JSON.parse(new TextDecoder().decode(pt));
 }
 function usaCofre(d){
-  SEG = d; BOB_REAL = d.bob; FORN = d.forn; window.GLOPEL_PAPEIS = d.papeis;
+  SEG = d; BOB_REAL = d.bob; FORN = d.forn; window.GLOPEL_PAPEIS = d.papeis; window.GLOPEL_PAPEIS_COFRE = d.papeis; precosDasNotas();
   iniciarDB(); carregaL();
   document.getElementById('trava').hidden = true;
   render();
@@ -885,6 +943,8 @@ function carregaL(){
 function salvaL(){ try { localStorage.setItem(LS_L, JSON.stringify(L)); } catch(e) {} }
 const funcs = () => REM ? REM.func : (L.func || SEG.funcionarios);
 const contas = () => REM ? REM.contas : (L.contas || SEG.contas || []);
+// Números gravados pela Caixa de notas: ponto decimal (ex.: 28442.15). Não usar num() neles — num() lê no padrão BR e tira o ponto.
+const numN = v => { if (v===''||v==null) return null; const x = parseFloat(String(v).replace(',','.')); return isFinite(x) ? x : null; };
 const num = v => { if (v===''||v==null) return null; const x = Number(String(v).replace(/\s|R\$/g,'').replace(/\./g,'').replace(',','.')); return isFinite(x) ? x : null; };
 const uid = () => Math.random().toString(36).slice(2,9);
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -1680,7 +1740,11 @@ function ocorrencias(de, ate){
   // 1b. parcelas das NF-e que chegaram por email (Caixa de notas → aba NFe_Parcelas). Nota já presente no cofre (papel) não entra de novo.
   const jaCofre = new Set((FORN?.nfs||[]).map(n=>String(n.chave||'')));
   (REM?.nfeParc||[]).forEach(p => { const d = p.vencimento; if (!d || d<de || d>ate || jaCofre.has(p.chave)) return;
-    out.push({id:'nfe:'+p.id, data:d, nome:nfeCurto(p.emitente)+' — NF '+p.numero+' ('+p.parcela+')'+(p.conferir?' ⚠️':''), cat:CATS[p.categoria]?p.categoria:'Outros', valor:num(p.valor), fonte:'email', pdf:p.pdf, conferir:p.conferir}); });
+    out.push({id:'nfe:'+p.id, data:d, nome:nfeCurto(p.emitente)+' — NF '+p.numero+' ('+p.parcela+')'+(p.conferir?' ⚠️':''), cat:CATS[p.categoria]?p.categoria:'Outros', valor:numN(p.valor), fonte:'email', pdf:p.pdf, conferir:p.conferir}); });
+  // 1c. faturas de consumo lidas do email (Copel, Vivo, SKY…)
+  (REM?.nfeSemXml||[]).filter(f=>f.status==='FATURA DE CONSUMO' && f.vencimento).forEach(f => { const d = f.vencimento; if (d<de || d>ate) return;
+    const conf = /^conferir/.test(f.leitura||'') ? 'leitura automática: conferir valor/vencimento' : '';
+    out.push({id:'fat:'+f.id, data:d, nome:(f.fornecedor||'Fatura')+' — fatura '+mesNome(d.slice(0,7))+(conf?' ⚠️':''), cat:CATS[f.categoria]?f.categoria:'Outros', valor:f.valor===''?null:numN(f.valor), fonte:'fatura', pdf:f.pdf, conferir:conf}); });
   // 2. contas cadastradas
   contas().forEach(c => {
     if (c.ativa===false) return;
@@ -1710,12 +1774,12 @@ function vNotasEmail(){
   if (!N.length && !S.length) return `<h3>📥 Notas recebidas por email</h3><div class="card mut" style="margin-bottom:16px">Nenhuma nota chegou pela Caixa de notas ainda. Quando o script estiver instalado, toda NF-e com XML que chegar no email entra aqui e as parcelas aparecem na lista acima sozinhas.</div>`;
   const parcDe = ch => (REM.nfeParc||[]).filter(p=>p.chave===ch);
   return `<h3>📥 Notas recebidas por email <span class="mut" style="font-weight:400;font-size:13px">${N.length} notas · ${sem7} nos últimos 7 dias</span></h3>
-  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…) — não têm XML. Cadastrar em <b>Contas fixas</b> abaixo, se ainda não estiver.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>`).join('')}</div>`:''; }).join('')}
+  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…): valor e vencimento lidos do email/PDF entram sozinhos no A pagar (origem "fatura"). Não cadastre estas também em Contas fixas, senão contam dobrado.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.fornecedor||x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>${x.status==='FATURA DE CONSUMO'?(x.valor?` · <b>${brl(numN(x.valor))}</b> vence ${dmy(x.vencimento)}`:' · <b>sem valor lido — conferir</b>'):''}`).join('')}</div>`:''; }).join('')}
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
     <thead><tr><th>Emissão</th><th>Fornecedor</th><th>NF</th><th>Empresa</th><th class="n">Total</th><th>Vencimentos</th><th>Categoria</th><th>Arquivos</th></tr></thead>
     <tbody>${N.slice(0,nfeMostra).map(n=>{ const P=parcDe(n.id); const canc=n.status==='CANCELADA';
-      return `<tr style="${canc?'opacity:.5;text-decoration:line-through':''}"><td>${dBR(n.emissao)}</td><td title="${esc(n.emitente)} · CNPJ ${esc(n.cnpj_emitente)}&#10;${esc(n.itens)}">${esc(nfeCurto(n.emitente))}</td><td title="Chave ${esc(n.id)}">${esc(n.numero)}</td><td>${esc(n.empresa)}</td><td class="n">${brl(num(n.valor_total))}</td>
-      <td class="mut" style="font-size:12px">${canc?'cancelada':P.length?P.map(p=>dBR(p.vencimento).slice(0,5)+' '+brl(num(p.valor))).join(' · '):esc(n.conferir||n.forma_pagamento||'—')}${n.conferir&&P.length?' ⚠️':''}</td>
+      return `<tr style="${canc?'opacity:.5;text-decoration:line-through':''}"><td>${dBR(n.emissao)}</td><td title="${esc(n.emitente)} · CNPJ ${esc(n.cnpj_emitente)}&#10;${esc(n.itens)}">${esc(nfeCurto(n.emitente))}</td><td title="Chave ${esc(n.id)}">${esc(n.numero)}</td><td>${esc(n.empresa)}</td><td class="n">${brl(numN(n.valor_total))}</td>
+      <td class="mut" style="font-size:12px">${canc?'cancelada':P.length?P.map(p=>dBR(p.vencimento).slice(0,5)+' '+brl(numN(p.valor))).join(' · '):esc(n.conferir||n.forma_pagamento||'—')}${n.conferir&&P.length?' ⚠️':''}</td>
       <td><select onchange="nfeCat('${esc(n.id)}',this.value)" ${canc?'disabled':''}>${Object.keys(CATS).filter(c=>c!=='Comissões'&&c!=='Folha').map(c=>`<option ${c===(n.categoria||'Outros')?'selected':''}>${c}</option>`).join('')}</select></td>
       <td style="font-size:12px">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF</a>`:'<span class="mut">sem PDF</span>'}${n.xml?` · <a href="${esc(n.xml)}" target="_blank" rel="noopener">XML</a>`:''}</td></tr>`; }).join('')}</tbody>
   </table></div>${N.length>nfeMostra?`<div style="padding:8px 12px"><button class="btn" onclick="nfeMostra+=30;render()">Mostrar mais (${N.length-nfeMostra})</button></div>`:''}</div>`;
@@ -1923,7 +1987,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -1931,7 +1995,8 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), lido: j.lido };
+    precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
   render();

@@ -9,6 +9,8 @@
  *      → as parcelas aparecem sozinhas em Financeiro › A pagar e no Calendário do Sistema Globo.
  *   5. Põe o marcador "NF-e/lida" no email. Email só com PDF (sem XML) vai para a aba NFe_SemXML.
  *   Evento de cancelamento (XML de cancelamento) marca a nota CANCELADA e tira as parcelas do A pagar.
+ *   Itens de cada nota → aba NFe_Itens (kg, R$/kg, SKU da bobina): alimentam Bobinas (chegada) e o preço do papel.
+ *   Fatura de consumo (Copel, Vivo, SKY…): lê valor e vencimento do email ou do PDF (OCR do Drive) → A pagar.
  *
  * Nunca paga, nunca responde email, nunca apaga nada (nem email, nem linha).
  *
@@ -43,7 +45,10 @@ const CAB = {
     'conferir', 'status', 'xml', 'pdf', 'email_de', 'email_assunto', 'email_data', 'atualizado_em', 'por'],
   NFe_Parcelas: ['id', 'chave', 'numero', 'emitente', 'empresa', 'parcela', 'vencimento', 'valor', 'categoria', 'conferir',
     'status', 'pdf', 'atualizado_em', 'por'],
-  NFe_SemXML: ['id', 'email_data', 'email_de', 'email_assunto', 'anexos', 'link_email', 'status', 'atualizado_em', 'por'],
+  NFe_SemXML: ['id', 'email_data', 'email_de', 'email_assunto', 'anexos', 'link_email', 'status', 'fornecedor', 'valor', 'vencimento',
+    'categoria', 'leitura', 'pdf', 'atualizado_em', 'por'],
+  NFe_Itens: ['id', 'chave', 'numero', 'emitente', 'emissao', 'item', 'codigo', 'descricao', 'quantidade', 'unidade', 'kg',
+    'valor_unit', 'valor', 'ipi', 'rkg', 'sku', 'papel', 'pedido', 'lote', 'atualizado_em', 'por'],
   NFe_Log: ['id', 'quando', 'o_que', 'detalhe'],
 };
 
@@ -51,7 +56,7 @@ const CAB = {
 function instalar() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'rodar').forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('rodar').timeBased().everyMinutes(30).create();
-  ['NFe_Recebidas', 'NFe_Parcelas', 'NFe_SemXML', 'NFe_Log'].forEach(n => aba_(SpreadsheetApp.openById(PLANILHA_SITE), n));
+  ['NFe_Recebidas', 'NFe_Parcelas', 'NFe_SemXML', 'NFe_Itens', 'NFe_Log'].forEach(n => aba_(SpreadsheetApp.openById(PLANILHA_SITE), n));
   const r = rodar();
   Logger.log('Instalado. Gatilho a cada 30 min. Primeira rodada: ' + JSON.stringify(r));
 }
@@ -65,13 +70,14 @@ function rodar(op) {
   const res = { emails: 0, notas: 0, repetidas: 0, canceladas: 0, so_pdf: 0, ignoradas: 0, erros: [] };
   try {
     const ss = SpreadsheetApp.openById(PLANILHA_SITE);
-    const shN = aba_(ss, 'NFe_Recebidas'), shP = aba_(ss, 'NFe_Parcelas'), shS = aba_(ss, 'NFe_SemXML');
+    const shN = aba_(ss, 'NFe_Recebidas'), shP = aba_(ss, 'NFe_Parcelas'), shS = aba_(ss, 'NFe_SemXML'), shI = aba_(ss, 'NFe_Itens');
+    garantirColunas_(shS, CAB.NFe_SemXML);
     const jaN = ids_(shN), jaS = ids_(shS);
     const lida = marca_(MARCA_LIDA), erro = marca_(MARCA_ERRO);
     const q = 'has:attachment (filename:xml OR filename:zip OR filename:pdf) -label:' + MARCA_LIDA.replace('/', '-') +
       ' -label:' + MARCA_ERRO.replace('/', '-') + ' newer_than:' + DIAS_INICIO + 'd';
     const threads = GmailApp.search(q, 0, MAX_EMAILS);
-    const novasN = [], novasP = [], novasS = [], cancelar = [];
+    const novasN = [], novasP = [], novasS = [], novasI = [], cancelar = [];
     threads.forEach(th => {
       let fio_ok = true, achouNFe = false;
       th.getMessages().forEach(m => {
@@ -120,13 +126,17 @@ function rodar(op) {
             parcela: (i + 1) + '/' + parc.length, vencimento: p.venc, valor: p.valor, categoria: cat, conferir: conf,
             status: 'ATIVA', pdf: links.pdf,
           }));
+          n.det.forEach(d => novasI.push(Object.assign({ id: n.chave + ':' + d.item, chave: n.chave, numero: n.numero, emitente: n.emitente, emissao: n.emissao }, d)));
           res.notas++;
         });
         if (!xmls.length && pdfs.length && pareceNota_(m, pdfs)) {
           const id = m.getId();
           if (!jaS.has(id)) {
-            novasS.push({ id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
-              anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: tipoSemXml_(m, pdfs) });
+            const st = tipoSemXml_(m, pdfs);
+            const reg = { id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
+              anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: st };
+            if (st === 'FATURA DE CONSUMO' && !op.seco) Object.assign(reg, lerFatura_(m, pdfs[0]));
+            novasS.push(reg);
             res.so_pdf++;
           }
         }
@@ -134,7 +144,8 @@ function rodar(op) {
       if (!op.seco) th.addLabel(fio_ok ? lida : erro);
     });
     if (!op.seco) {
-      anexar_(shN, novasN); anexar_(shP, novasP); anexar_(shS, novasS);
+      anexar_(shN, novasN); anexar_(shP, novasP); anexar_(shS, novasS); anexar_(shI, novasI);
+      res.faturas_completadas = completarFaturas_(shS);
       if (cancelar.length) cancelar_(shN, shP, cancelar);
       if (res.notas || res.so_pdf || res.canceladas || res.erros.length) log_(ss, 'rodada', res);
     } else { res.previa = { notas: novasN, parcelas: novasP, so_pdf: novasS, cancelar }; }
@@ -166,6 +177,15 @@ function lerXmlNFe(xml) {
   const tp = B(B(inf, 'pag')[0] || '', 'detPag').map(d => T(d, 'tPag'));
   const FORMAS = { '01': 'dinheiro', '02': 'cheque', '03': 'cartão de crédito', '04': 'cartão de débito', '05': 'crédito loja', '15': 'boleto', '16': 'depósito', '17': 'Pix', '18': 'transferência', '90': 'sem pagamento', '99': 'outros' };
   const itens = B(inf, 'det').map(d => { const p = B(d, 'prod')[0] || ''; return T(p, 'xProd') + ' (' + fmtQ_(T(p, 'qCom')) + ' ' + T(p, 'uCom') + ')'; });
+  const det = B(inf, 'det').map((d, i) => {
+    const p = B(d, 'prod')[0] || '', q = parseFloat(T(p, 'qCom')), u = T(p, 'uCom').toUpperCase(), v = N(T(p, 'vProd'));
+    const kg = isNaN(q) ? '' : /^(T|TO|TON|TL|TONELADA)/.test(u) ? Math.round(q * 1000 * 10) / 10 : /^KG|^QUILO/.test(u) ? q : '';
+    const desc = T(p, 'xProd'), sku = skuDe_(desc);
+    return { item: i + 1, codigo: T(p, 'cProd'), descricao: desc, quantidade: isNaN(q) ? '' : q, unidade: T(p, 'uCom'), kg,
+      valor_unit: N(T(p, 'vUnCom')), valor: v, ipi: N(T(B(d, 'IPITrib')[0] || '', 'vIPI')) || 0,
+      rkg: kg && v !== '' ? Math.round(v / kg * 10000) / 10000 : '', sku, papel: papelDe_(sku),
+      pedido: T(p, 'xPed'), lote: T(B(d, 'rastro')[0] || '', 'nLote') || ((T(d, 'infAdProd').match(/LOTE[:\s]*([\w\/-]+)/i) || [])[1] || '') };
+  });
   const prot = B(xml, 'protNFe')[0] || '';
   return {
     tipo: 'nfe',
@@ -175,7 +195,7 @@ function lerXmlNFe(xml) {
       emitenteRazao: T(emit, 'xNome'), cnpjEmit: T(emit, 'CNPJ') || T(emit, 'CPF'),
       destinatario: T(dest, 'xNome'), cnpjDest: T(dest, 'CNPJ') || T(dest, 'CPF'),
       vNF: N(T(tot, 'vNF')), vProd: N(T(tot, 'vProd')), vIPI: N(T(tot, 'vIPI')), vFrete: N(T(tot, 'vFrete')),
-      parcelas: dups, forma: tp.map(t => FORMAS[t] || t).filter((v, i, a) => a.indexOf(v) === i).join(' + '),
+      parcelas: dups, det, forma: tp.map(t => FORMAS[t] || t).filter((v, i, a) => a.indexOf(v) === i).join(' + '),
       itens: (itens.slice(0, 4).join(' · ') + (itens.length > 4 ? ' · +' + (itens.length - 4) + ' itens' : '')).slice(0, 480),
       autorizada: !prot || T(prot, 'cStat') === '100' || T(prot, 'cStat') === '150',
     },
@@ -183,6 +203,87 @@ function lerXmlNFe(xml) {
 }
 function dec_(s) { return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'"); }
 function fmtQ_(q) { const x = parseFloat(q); return isNaN(x) ? q : String(Math.round(x * 1000) / 1000).replace('.', ','); }
+
+/* ===================== bobinas: SKU a partir da descrição do item ===================== */
+// Regra do SKU (doc Bobinas-Estoque): TIPO + gramatura + '-' + largura cm. Ex.: "PAPEL FINE KRAFT BRANCO 40gr 150X800" → KB40-15
+function skuDe_(desc) {
+  const u = String(desc || '').toUpperCase();
+  if (!/PAPEL|KRAFT|MONOL|\bMG\b|GREASE|STRONG/.test(u)) return '';
+  const g = (u.match(/(\d{2})\s*(?:GR|GRS|G\/M|G\b|GM)/) || [])[1];
+  let cm = '';
+  const mx = u.match(/(\d{2,4})\s*X\s*\d{3,4}/), mc = u.match(/(\d{2,3})\s*CM/);
+  if (mx) cm = String(Math.round(parseInt(mx[1], 10) / 10)); else if (mc) cm = String(parseInt(mc[1], 10));
+  const t = /GREASE/.test(u) ? 'G' : /STRONG/.test(u) ? 'ST' : /MONOL|\bMG\b/.test(u) ? 'MG' : /BRANCO/.test(u) ? 'KB' : /KRAFT/.test(u) ? 'KN' : '';
+  return t && g && cm ? t + g + '-' + cm : '';
+}
+// Código do papel na tabela de preços / Precificador: KB40, K35, M30, G32, STRONG
+function papelDe_(sku) {
+  const m = String(sku || '').match(/^([A-Z]+)(\d+)-/); if (!m) return '';
+  return ({ KB: 'KB', KN: 'K', MG: 'M', G: 'G' })[m[1]] ? ({ KB: 'KB', KN: 'K', MG: 'M', G: 'G' })[m[1]] + m[2] : m[1] === 'ST' ? 'STRONG' : '';
+}
+
+/* ===================== faturas de consumo: valor e vencimento ===================== */
+function fornecedorFatura_(de, assunto) {
+  const t = (de + ' ' + assunto).toUpperCase();
+  const L = [['COPEL', 'Copel', 'Energia e água'], ['SANEPAR', 'Sanepar', 'Energia e água'], ['VIVO', 'Vivo', 'Assinaturas'], ['CLARO', 'Claro', 'Assinaturas'],
+    ['SKY', 'SKY', 'Assinaturas'], ['TIM', 'TIM', 'Assinaturas'], ['OI ', 'Oi', 'Assinaturas']];
+  for (const [k, n, c] of L) if (new RegExp('\\b' + k.trim() + '\\b').test(t)) return { fornecedor: n, categoria: c };
+  const nome = (String(de).match(/^\s*"?([^"<]+?)"?\s*</) || [])[1] || String(de).replace(/.*@/, '').split('.')[0];
+  return { fornecedor: nome.trim(), categoria: 'Outros' };
+}
+function extrairValorVenc_(txt) {
+  const t = String(txt || '').replace(/\s+/g, ' ');
+  const dm = t.match(/venc[a-zçã]*\s*(?:em|:)?\s*[^\d]{0,25}(\d{2}\/\d{2}\/\d{2,4})/i);
+  const vm = t.match(/(?:total a pagar|valor a pagar|valor total|total da fatura|valor do documento|valor cobrado|valor da fatura|total)\s*[:\-]?\s*(?:R\$)?\s*([\d.]{1,9},\d{2})/i);
+  let venc = '';
+  if (dm) { const [d, mo, y] = dm[1].split('/'); venc = (y.length === 2 ? '20' + y : y) + '-' + mo + '-' + d; }
+  return { valor: vm ? Math.round(parseFloat(vm[1].replace(/\./g, '').replace(',', '.')) * 100) / 100 : '', vencimento: venc };
+}
+function lerFatura_(m, pdf) {
+  const out = fornecedorFatura_(m.getFrom(), m.getSubject());
+  let r = extrairValorVenc_(m.getPlainBody()), fonte = 'email';
+  if ((!r.valor || !r.vencimento) && pdf) {
+    try { const o = extrairValorVenc_(ocr_(pdf)); r = { valor: r.valor || o.valor, vencimento: r.vencimento || o.vencimento }; fonte = 'pdf'; }
+    catch (e) { fonte = 'erro OCR: ' + String(e).slice(0, 80); }
+  }
+  if (pdf) { try { out.pdf = guardarFatura_(out.fornecedor, iso_(m.getDate()), pdf); } catch (e) { } }
+  return Object.assign(out, r, { leitura: r.valor && r.vencimento ? fonte : 'conferir (' + fonte + ')' });
+}
+function completarFaturas_(sh) {
+  const v = sh.getDataRange().getDisplayValues(), h = v[0], c = k => h.indexOf(k);
+  let n = 0;
+  for (let i = 1; i < v.length && n < 10; i++) {
+    if (v[i][c('status')] !== 'FATURA DE CONSUMO' || v[i][c('valor')] || v[i][c('leitura')]) continue;
+    let m; try { m = GmailApp.getMessageById(v[i][c('id')]); } catch (e) { continue; }
+    const pdf = m.getAttachments({ includeInlineImages: false }).filter(a => /\.pdf$/i.test(a.getName()))[0];
+    const r = lerFatura_(m, pdf);
+    ['fornecedor', 'valor', 'vencimento', 'categoria', 'leitura', 'pdf'].forEach(k => { if (c(k) >= 0 && r[k] != null) sh.getRange(i + 1, c(k) + 1).setNumberFormat('@').setValue(String(r[k])); });
+    n++;
+  }
+  return n;
+}
+// OCR do Drive: converte o PDF em Google Doc temporário, lê o texto e manda o Doc para a lixeira
+function ocr_(pdf) {
+  const meta = { name: 'tmp-ocr-' + Date.now(), mimeType: 'application/vnd.google-apps.document' };
+  const b = Utilities.getUuid(), blob = pdf.copyBlob();
+  const corpo = Utilities.newBlob('--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) +
+    '\r\n--' + b + '\r\nContent-Type: application/pdf\r\n\r\n').getBytes().concat(blob.getBytes()).concat(Utilities.newBlob('\r\n--' + b + '--').getBytes());
+  const r = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&ocrLanguage=pt', {
+    method: 'post', contentType: 'multipart/related; boundary=' + b, payload: corpo,
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+  if (r.getResponseCode() >= 300) throw new Error('Drive ' + r.getResponseCode());
+  const id = JSON.parse(r.getContentText()).id;
+  try { return DocumentApp.openById(id).getBody().getText(); } finally { DriveApp.getFileById(id).setTrashed(true); }
+}
+function guardarFatura_(forn, data, pdf) {
+  const raiz = pasta_(), it = raiz.getFoldersByName('Faturas'), f = it.hasNext() ? it.next() : raiz.createFolder('Faturas');
+  const nome = data + '_' + forn.replace(/[^\wÀ-ú]/g, '') + '.pdf', ex = f.getFilesByName(nome);
+  return (ex.hasNext() ? ex.next() : f.createFile(pdf.copyBlob().setName(nome))).getUrl();
+}
+function garantirColunas_(sh, cab) {
+  const head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getDisplayValues()[0].map(String);
+  cab.forEach(c => { if (head.indexOf(c) < 0) { head.push(c); sh.getRange(1, head.length).setNumberFormat('@').setValue(c); } });
+}
 
 /* ===================== regras ===================== */
 function empresa_(n) {
@@ -267,4 +368,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { lerXmlNFe, empresa_, categoria_, tipoSemXml_ };
+if (typeof module !== 'undefined') module.exports = { lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
