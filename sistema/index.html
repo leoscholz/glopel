@@ -171,7 +171,7 @@ const MODS = [
   {id:'artes', ic:'🎨', nome:'Artes/clichês', tag:'novo'},
   {grp:'Financeiro'},
   {id:'apagar', ic:'📤', nome:'A pagar', tag:'novo'},
-  {id:'financeiro', ic:'💰', nome:'A receber e caixa', ph:true},
+  {id:'financeiro', ic:'💰', nome:'A receber e caixa', tag:'novo'},
   {id:'fiscal', ic:'📑', nome:'Fiscal', ph:true},
   {grp:'Pessoas'},
   {id:'funcionarios', ic:'🧑‍🏭', nome:'Funcionários', tag:'novo'},
@@ -381,6 +381,7 @@ function render(){
   else if (atual==='clientes') v.innerHTML = vClientes();
   else if (atual==='funcionarios') v.innerHTML = vFuncionarios();
   else if (atual==='apagar') v.innerHTML = vApagar();
+  else if (atual==='financeiro') v.innerHTML = vReceber();
   else if (atual==='calendario') v.innerHTML = vCalendario();
   else if (atual==='precificador') v.innerHTML = `<iframe src="precificador.html" title="Precificador" style="width:100%;height:calc(100vh - 110px);border:0;border-radius:12px;background:#fff"></iframe>`;
   else if (atual==='artes') v.innerHTML = vArtes();
@@ -465,12 +466,53 @@ const ARTES_DRIVE = `_GLOBO-Site/03_Artes_Clientes/
     04_GloboEditor/        SVG por painel + preset .json + prévias
     LEIA-ME.txt            cor, tamanhos, papel, clicheria, último pedido
   _Inativos/  _Genericas/  _Nao_usar/ (restrito)`;
+/* Artes que chegaram por email (aba Artes_Email, gravada pela Caixa de notas) */
+let artMostra = 20;
+function vArtesEmail(){
+  if (!REM) return '';
+  const A = (REM.artesEmail||[]).slice().sort((a,b)=>(b.email_data||'').localeCompare(a.email_data||''));
+  if (!A.length) return `<div class="card mut" style="margin-bottom:14px">📥 <b>Artes por email:</b> nenhuma ainda. Assim que a clicheria estiver cadastrada (aba Artes_Fontes), cada prova ou arte que chegar no email da empresa é guardada no Drive (pasta "Artes (email)") e aparece aqui.</div>`;
+  const novas = A.filter(a=>a.status==='NOVA').length;
+  return `<h3>📥 Artes que chegaram por email <span class="mut" style="font-weight:400;font-size:13px">${A.length} arquivos · ${novas} a conferir</span></h3>
+  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Data</th><th>De</th><th>Cliente (palpite)</th><th>Arquivo</th><th>Tipo</th><th>Assunto</th></tr></thead><tbody>${A.slice(0,artMostra).map(a=>`<tr><td>${dBR(a.email_data)}</td><td>${esc(a.fonte)}</td><td><b>${esc(a.cliente_sugerido||'—')}</b></td><td><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.arquivo)}</a></td><td class="mut">${esc(a.tipo)} · ${esc(a.kb)} kb</td><td class="mut" style="font-size:12px"><a href="${esc(a.link_email)}" target="_blank" rel="noopener">${esc(a.assunto||'(sem assunto)')}</a></td></tr>`).join('')}</tbody></table></div>${A.length>artMostra?`<div style="padding:8px 12px"><button class="btn" onclick="artMostra+=40;render()">Mostrar mais (${A.length-artMostra})</button></div>`:''}</div>`;
+}
+/* A receber: notas que a própria empresa emitiu (cópia que chega no email) */
+let rcEmp = 'todas';
+function vReceber(){
+  if (!REM) return `<div class="banner">Destranque o sistema para ler a planilha.</div>`;
+  const H = iso(hoje()), mes = H.slice(0,7);
+  const E = (REM.emit||[]).filter(n=>n.status!=='CANCELADA' && (rcEmp==='todas' || n.empresa===rcEmp));
+  const P = (REM.emitParc||[]).filter(p=>rcEmp==='todas' || p.empresa===rcEmp);
+  const S = a => a.reduce((t,x)=>t+(numN(x.valor ?? x.valor_total)||0),0);
+  if (!(REM.emit||[]).length) return `${remBanner()}<div class="banner">Nenhuma nota emitida chegou ainda. A Caixa de notas registra aqui toda NF-e que a <b>própria empresa emite</b> e que chega com cópia no email (embglobo@gmail.com): faturamento do mês e o que há para receber, sem esperar o export do Start. Se nada aparecer em 1–2 dias, o emissor não está mandando cópia para o email — dá para configurar no Start.</div>`;
+  const doMes = E.filter(n=>(n.emissao||'').slice(0,7)===mes), fut = P.filter(p=>p.vencimento>=H).sort((a,b)=>a.vencimento<b.vencimento?-1:1);
+  const d30 = fut.filter(p=>p.vencimento<=addD(H,30)), venc = P.filter(p=>p.vencimento<H && p.vencimento>=addD(H,-60));
+  const porCli = {}; E.forEach(n=>{ const k=n.cliente||'?'; (porCli[k]=porCli[k]||{n:0,v:0}); porCli[k].n++; porCli[k].v+=numN(n.valor_total)||0; });
+  const top = Object.entries(porCli).sort((a,b)=>b[1].v-a[1].v).slice(0,10);
+  const emps = [...new Set((REM.emit||[]).map(n=>n.empresa))];
+  return `${remBanner()}
+  <div class="banner ok">Notas emitidas pela empresa que chegaram com cópia no email — de ${dmy(E.map(n=>n.emissao).sort()[0])} a ${dmy(E.map(n=>n.emissao).sort().pop())}. <b>Não</b> mostra se o cliente já pagou: isso continua no Start / no banco. Vencidas = parcelas dos últimos 60 dias, só como lembrete para conferir.</div>
+  <div class="subtabs">${['todas',...emps].map(k=>`<button class="${rcEmp===k?'on':''}" onclick="rcEmp='${k}';render()">${k==='todas'?'Todas':esc(k)}</button>`).join('')}</div>
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">${brl(S(doMes))}</div><div class="l">faturado em ${mesNome(mes)} (${doMes.length} notas)</div></div>
+    <div class="card kpi"><div class="v">${brl(S(d30))}</div><div class="l">a receber nos próximos 30 dias (${d30.length} parcelas)</div></div>
+    <div class="card kpi"><div class="v">${brl(S(fut))}</div><div class="l">a receber, total futuro (${fut.length})</div></div>
+    <div class="card kpi"><div class="v">${brl(S(venc))}</div><div class="l">venceram nos últimos 60 dias — conferir se entrou (${venc.length})</div></div>
+  </div>
+  <h3>Próximos recebimentos</h3>
+  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Vencimento</th><th>Cliente</th><th>NF</th><th>Parcela</th><th>Empresa</th><th class="n">Valor</th></tr></thead><tbody>${fut.slice(0,60).map(p=>`<tr><td>${dBR(p.vencimento)}${p.vencimento<=addD(H,7)?' <span class="pill warn">esta semana</span>':''}</td><td>${esc(p.cliente)}</td><td>${esc(p.numero)}</td><td>${esc(p.parcela)}</td><td>${esc(p.empresa)}</td><td class="n">${brl(numN(p.valor))}</td></tr>`).join('')||'<tr><td colspan="6" class="mut">Nada a receber nas notas lidas.</td></tr>'}</tbody></table></div></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px;margin-bottom:16px">
+    <div><h3>Maiores clientes (notas lidas)</h3><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>Cliente</th><th class="n">Notas</th><th class="n">Valor</th></tr></thead><tbody>${top.map(([c,x])=>`<tr><td>${esc(c)}</td><td class="n">${x.n}</td><td class="n">${brl(x.v)}</td></tr>`).join('')}</tbody></table></div></div></div>
+    <div><h3>Últimas notas emitidas</h3><div class="card" style="padding:0"><div class="tw"><table><thead><tr><th>Emissão</th><th>Cliente</th><th>NF</th><th class="n">Total</th></tr></thead><tbody>${E.slice().sort((a,b)=>(b.emissao||'').localeCompare(a.emissao||'')).slice(0,20).map(n=>`<tr><td>${dBR(n.emissao)}</td><td title="${esc(n.itens)}">${esc(n.cliente)}</td><td>${esc(n.numero)}</td><td class="n">${brl(numN(n.valor_total))}</td></tr>`).join('')}</tbody></table></div></div></div>
+  </div>
+  <p class="note">Fonte: aba NFe_Emitidas da planilha do site, gravada pela Caixa de notas (embglobo@gmail.com). Notas canceladas ficam de fora.</p>`;
+}
 function vArtes(){
   const A = SEG.artes || {fila:[], sem:[]}, F = A.fila||[], S = A.sem||[];
   const fmtR = (v) => v ? 'R$ '+fmt(v/1000,1)+' mil' : '—';
   const fase = (f) => ({1:'<span class="pill ok">Fase 1</span>',2:'<span class="pill warn">Fase 2</span>',3:'<span class="pill grey">Fase 3</span>'})[f];
   const n12 = F.filter(a=>a[6]<=2).length;
-  return `
+  return `${vArtesEmail()}
   <div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:16px;border-color:#9cc3e6;background:#f2f7fc">
     <div style="font-size:34px">🛍️</div>
     <div style="flex:1;min-width:220px"><b style="font-size:16px">GloboEditor</b><div class="mut" style="font-size:13px">Editor de arte dos sacos. Site = login + artes salvas na nuvem (artes prontas dos clientes ficam na conta admin, em 🎨 Minhas artes).</div></div>
@@ -2011,7 +2053,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -2019,7 +2061,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }

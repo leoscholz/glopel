@@ -11,6 +11,9 @@
  *   Evento de cancelamento (XML de cancelamento) marca a nota CANCELADA e tira as parcelas do A pagar.
  *   Itens de cada nota → aba NFe_Itens (kg, R$/kg, SKU da bobina): alimentam Bobinas (chegada) e o preço do papel.
  *   Fatura de consumo (Copel, Vivo, SKY…): lê valor e vencimento do email ou do PDF (OCR do Drive) → A pagar.
+ *   Nota EMITIDA pela própria empresa (cópia no email) → NFe_Emitidas / NFe_Emitidas_Parcelas (vendas e A receber).
+ *   Artes da clicheria (remetentes na aba Artes_Fontes) → Drive "Artes (email)" + aba Artes_Email.
+ *   Uma vez só, sozinho: releitura dos emails já lidos (itens e notas emitidas) e raio-x da caixa (aba Email_RaioX).
  *
  * Nunca paga, nunca responde email, nunca apaga nada (nem email, nem linha).
  *
@@ -29,8 +32,8 @@ const PLANILHA_SITE = '1EcJLIH3Yqd7Byx9bEdJ167BDf6enCF-oRmwvy2Ozo8g';
 // CNPJs das empresas (só números). Nota com destinatário fora desta lista é ignorada.
 // Vazio = aceita tudo, menos nota emitida por "EMBALAGENS GLOBO" / "GLOBO IMPRESSOS".
 const CNPJS_EMPRESA = {
-  // '00000000000000': 'Embalagens',
-  // '00000000000000': 'Impressos',
+  '77071967000199': 'Embalagens',
+  '59957970000122': 'Impressos',
 };
 
 const PASTA_ID = '';          // pasta do Drive para os arquivos; vazio = cria "NF-e recebidas (email)" no Meu Drive
@@ -53,13 +56,20 @@ const CAB = {
     'valor_unit', 'valor', 'ipi', 'rkg', 'sku', 'papel', 'pedido', 'lote', 'atualizado_em', 'por'],
   NFe_Log: ['id', 'quando', 'o_que', 'detalhe'],
   NFe_Ignorar: ['id', 'texto', 'motivo', 'status', 'atualizado_em', 'por'],
+  NFe_Emitidas: ['id', 'numero', 'serie', 'emissao', 'empresa', 'cliente', 'cnpj_cliente', 'valor_total', 'n_parcelas', 'forma_pagamento',
+    'natureza', 'itens', 'status', 'email_de', 'email_data', 'atualizado_em', 'por'],
+  NFe_Emitidas_Parcelas: ['id', 'chave', 'numero', 'cliente', 'empresa', 'parcela', 'vencimento', 'valor', 'status', 'atualizado_em', 'por'],
+  Artes_Fontes: ['id', 'texto', 'nome', 'status', 'atualizado_em', 'por'],
+  Artes_Email: ['id', 'email_data', 'fonte', 'email_de', 'assunto', 'arquivo', 'tipo', 'kb', 'link', 'cliente_sugerido', 'status',
+    'link_email', 'atualizado_em', 'por'],
+  Email_RaioX: ['remetente', 'nome', 'emails', 'com_anexo', 'tipos_anexo', 'ultimo', 'assuntos', 'atualizado_em'],
 };
 
 /* ===================== gatilho ===================== */
 function instalar() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'rodar').forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('rodar').timeBased().everyMinutes(30).create();
-  ['NFe_Recebidas', 'NFe_Parcelas', 'NFe_SemXML', 'NFe_Itens', 'NFe_Log'].forEach(n => aba_(SpreadsheetApp.openById(PLANILHA_SITE), n));
+  ['NFe_Recebidas', 'NFe_Parcelas', 'NFe_SemXML', 'NFe_Itens', 'NFe_Log', 'NFe_Emitidas', 'NFe_Emitidas_Parcelas', 'Artes_Fontes', 'Artes_Email', 'Email_RaioX'].forEach(n => aba_(SpreadsheetApp.openById(PLANILHA_SITE), n));
   const r = rodar();
   Logger.log('Instalado. Gatilho a cada 30 min. Primeira rodada: ' + JSON.stringify(r));
 }
@@ -70,12 +80,15 @@ function rodar(op) {
   op = op || {};
   const trava = LockService.getScriptLock();
   if (!trava.tryLock(10000)) return { ok: false, erro: 'outra rodada em andamento' };
+  const t0 = Date.now();
   const res = { emails: 0, notas: 0, repetidas: 0, canceladas: 0, so_pdf: 0, ignoradas: 0, erros: [] };
   try {
     const ss = SpreadsheetApp.openById(PLANILHA_SITE);
     const shN = aba_(ss, 'NFe_Recebidas'), shP = aba_(ss, 'NFe_Parcelas'), shS = aba_(ss, 'NFe_SemXML'), shI = aba_(ss, 'NFe_Itens');
     garantirColunas_(shS, CAB.NFe_SemXML);
-    const jaN = ids_(shN), jaS = ids_(shS);
+    const shE = aba_(ss, 'NFe_Emitidas'), shEP = aba_(ss, 'NFe_Emitidas_Parcelas');
+    const jaN = ids_(shN), jaS = ids_(shS), jaE = ids_(shE);
+    const novasE = [], novasEP = [];
     const regras = regrasIgnorar_(aba_(ss, 'NFe_Ignorar'));
     const lida = marca_(MARCA_LIDA), erro = marca_(MARCA_ERRO);
     const q = 'has:attachment (filename:xml OR filename:zip OR filename:pdf) -label:' + MARCA_LIDA.replace('/', '-') +
@@ -108,8 +121,13 @@ function rodar(op) {
           achouNFe = true;
           if (r.tipo === 'cancelamento') { cancelar.push(r.chave); res.canceladas++; return; }
           const n = r.nota;
+          if (emitidaPor_(n)) {   // nota que a própria empresa emitiu (cópia no email) → vendas / A receber
+            achouNFe = true;
+            if (!jaE.has(n.chave) && !novasE.some(z => z.id === n.chave)) { emitida_(n, m, novasE, novasEP); res.emitidas = (res.emitidas || 0) + 1; }
+            return;
+          }
           const emp = empresa_(n);
-          if (emp === null) { res.ignoradas++; return; }    // emitida pela Globo, ou de outro destinatário
+          if (emp === null) { res.ignoradas++; return; }    // de outro destinatário
           nfesDoEmail++;
           if (jaN.has(n.chave) || novasN.some(z => z.id === n.chave)) { res.repetidas++; return; }
           const ign = ignorar_(regras, [m.getFrom(), m.getSubject(), n.emitenteRazao, n.emitente, n.cnpjEmit].join(' '));
@@ -157,10 +175,12 @@ function rodar(op) {
       if (!op.seco) th.addLabel(fio_ok ? lida : erro);
     });
     if (!op.seco) {
-      anexar_(shN, novasN); anexar_(shP, novasP); anexar_(shS, novasS); anexar_(shI, novasI);
+      anexar_(shN, novasN); anexar_(shP, novasP); anexar_(shS, novasS); anexar_(shI, novasI); anexar_(shE, novasE); anexar_(shEP, novasEP);
       res.faturas_completadas = completarFaturas_(shS);
-      if (cancelar.length) cancelar_(shN, shP, cancelar);
-      if (res.notas || res.so_pdf || res.canceladas || res.erros.length) log_(ss, 'rodada', res);
+      try { res.artes = artes_(ss); } catch (e) { res.erros.push('artes: ' + e); }
+      try { res.extra = extras_(ss, t0); } catch (e) { res.erros.push('extra: ' + e); }
+      if (cancelar.length) { cancelar_(shN, shP, cancelar); cancelar_(shE, shEP, cancelar); }
+      if (res.notas || res.so_pdf || res.canceladas || res.emitidas || res.artes || res.extra || res.erros.length) log_(ss, 'rodada', res);
     } else { res.previa = { notas: novasN, parcelas: novasP, so_pdf: novasS, cancelar }; }
     return res;
   } finally { trava.releaseLock(); }
@@ -303,6 +323,114 @@ function garantirColunas_(sh, cab) {
   cab.forEach(c => { if (head.indexOf(c) < 0) { head.push(c); sh.getRange(1, head.length).setNumberFormat('@').setValue(c); } });
 }
 
+/* ===================== notas emitidas pela própria empresa ===================== */
+function emitidaPor_(n) { return CNPJS_EMPRESA[String(n.cnpjEmit || '').replace(/\D/g, '')] || null; }
+function emitida_(n, m, novasE, novasEP) {
+  const emp = emitidaPor_(n);
+  novasE.push({ id: n.chave, numero: n.numero, serie: n.serie, emissao: n.emissao, empresa: emp, cliente: n.destinatario, cnpj_cliente: n.cnpjDest,
+    valor_total: n.vNF, n_parcelas: n.parcelas.length, forma_pagamento: n.forma, natureza: n.natureza, itens: n.itens,
+    status: n.autorizada ? 'AUTORIZADA' : 'SEM PROTOCOLO', email_de: m.getFrom(), email_data: iso_(m.getDate()) });
+  n.parcelas.forEach((p, i) => novasEP.push({ id: n.chave + ':' + (p.nDup || (i + 1)), chave: n.chave, numero: n.numero, cliente: n.destinatario,
+    empresa: emp, parcela: (i + 1) + '/' + n.parcelas.length, vencimento: p.venc, valor: p.valor, status: 'ATIVA' }));
+}
+
+/* ===================== tarefas de uma vez só (releitura, raio-x) — uma por rodada, com folga de tempo ===================== */
+function extras_(ss, t0) {
+  const P = PropertiesService.getScriptProperties();
+  if (Date.now() - t0 > 60000) return '';
+  if (!P.getProperty('releitura_v1')) { const r = releitura_(ss); P.setProperty('releitura_v1', new Date().toISOString()); return 'releitura ' + JSON.stringify(r); }
+  if (!P.getProperty('raiox_v1')) { const r = raioX_(ss); P.setProperty('raiox_v1', new Date().toISOString()); return 'raio-x ' + r; }
+  return '';
+}
+// Rodar à mão quando quiser: raio-x agora (e marca como feito)
+function raioX() { Logger.log(raioX_(SpreadsheetApp.openById(PLANILHA_SITE))); PropertiesService.getScriptProperties().setProperty('raiox_v1', new Date().toISOString()); }
+function releitura() { Logger.log(JSON.stringify(releitura_(SpreadsheetApp.openById(PLANILHA_SITE)))); PropertiesService.getScriptProperties().setProperty('releitura_v1', new Date().toISOString()); }
+// Emails já marcados NF-e/lida: pega notas emitidas e os itens das notas recebidas que ficaram sem itens
+function releitura_(ss) {
+  const shN = aba_(ss, 'NFe_Recebidas'), shI = aba_(ss, 'NFe_Itens'), shE = aba_(ss, 'NFe_Emitidas'), shEP = aba_(ss, 'NFe_Emitidas_Parcelas');
+  const jaN = ids_(shN), jaE = ids_(shE), comItens = new Set([...ids_(shI)].map(x => x.split(':')[0]));
+  const novasI = [], novasE = [], novasEP = [];
+  GmailApp.search('label:' + MARCA_LIDA.replace('/', '-') + ' newer_than:' + DIAS_INICIO + 'd', 0, 100).forEach(th => th.getMessages().forEach(m => {
+    m.getAttachments({ includeInlineImages: false }).filter(a => /\.xml$/i.test(a.getName())).forEach(a => {
+      let r; try { r = lerXmlNFe(a.getDataAsString('UTF-8')); } catch (e) { return; }
+      if (!r || r.tipo !== 'nfe') return; const n = r.nota;
+      if (emitidaPor_(n)) { if (!jaE.has(n.chave) && !novasE.some(z => z.id === n.chave)) emitida_(n, m, novasE, novasEP); return; }
+      if (jaN.has(n.chave) && !comItens.has(n.chave)) { comItens.add(n.chave);
+        n.det.forEach(d => novasI.push(Object.assign({ id: n.chave + ':' + d.item, chave: n.chave, numero: n.numero, emitente: n.emitente, emissao: n.emissao }, d))); }
+    });
+  }));
+  anexar_(shI, novasI); anexar_(shE, novasE); anexar_(shEP, novasEP);
+  return { itens: novasI.length, emitidas: novasE.length };
+}
+// Raio-x: quem manda email e com que anexos (últimos 90 dias). Só cabeçalho: remetente, assunto, tipo de anexo.
+function raioX_(ss) {
+  const sh = aba_(ss, 'Email_RaioX'), t0 = Date.now(), M = {};
+  for (let i = 0; i < 1000 && Date.now() - t0 < 200000; i += 100) {
+    const ths = GmailApp.search('newer_than:90d', i, 100); if (!ths.length) break;
+    GmailApp.getMessagesForThreads(ths).forEach(ms => ms.forEach(m => {
+      const de = m.getFrom(), em = ((de.match(/<([^>]+)>/) || [])[1] || de).toLowerCase().trim();
+      const x = M[em] = M[em] || { nome: (de.match(/^\s*"?([^"<]+?)"?\s*</) || [])[1] || '', n: 0, anexo: 0, tipos: {}, ult: '', ass: [] };
+      x.n++; const d = iso_(m.getDate()); if (d > x.ult) x.ult = d;
+      const s = m.getSubject().replace(/^(re|fw|fwd|enc|res):\s*/i, '').slice(0, 70); if (x.ass.length < 4 && x.ass.indexOf(s) < 0) x.ass.push(s);
+      if (Date.now() - t0 < 200000) { const at = m.getAttachments({ includeInlineImages: false });
+        if (at.length) { x.anexo++; at.forEach(a => { const e = ((a.getName() || '').match(/\.([a-z0-9]{2,4})$/i) || [, '?'])[1].toLowerCase(); x.tipos[e] = (x.tipos[e] || 0) + 1; }); } }
+    }));
+  }
+  const agora = new Date().toISOString();
+  const linhas = Object.entries(M).sort((a, b) => b[1].n - a[1].n).map(([em, x]) => [em, x.nome, String(x.n), String(x.anexo),
+    Object.entries(x.tipos).map(([k, v]) => k + ':' + v).join(' '), x.ult, x.ass.join(' | '), agora]);
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, CAB.Email_RaioX.length).clearContent();
+  if (linhas.length) sh.getRange(2, 1, linhas.length, CAB.Email_RaioX.length).setNumberFormat('@').setValues(linhas);
+  return linhas.length + ' remetentes';
+}
+
+/* ===================== artes da clicheria ===================== */
+const EXT_ARTE = /\.(pdf|ai|eps|cdr|svg|jpe?g|png|tiff?|zip|psd)$/i;
+function fontesArtes_(sh) {
+  const v = sh.getDataRange().getDisplayValues(); if (v.length < 2) return [];
+  const h = v[0], it = h.indexOf('texto'), inm = h.indexOf('nome'), is = h.indexOf('status');
+  return v.slice(1).filter(r => r[it] && String(r[is] || 'ATIVA').toUpperCase() === 'ATIVA').map(r => ({ texto: r[it].trim(), nome: r[inm] || r[it].trim() }));
+}
+function artes_(ss) {
+  const shF = aba_(ss, 'Artes_Fontes'), shA = aba_(ss, 'Artes_Email'), F = fontesArtes_(shF);
+  if (!F.length) return 0;                                        // sem fonte cadastrada: não faz nada
+  const marca = marca_('Artes/lida'), ja = ids_(shA), novas = [];
+  const q = '(' + F.map(f => '"' + f.texto.replace(/"/g, '') + '"').join(' OR ') + ') has:attachment -label:artes-lida newer_than:120d';
+  GmailApp.search(q, 0, 20).forEach(th => {
+    th.getMessages().forEach(m => {
+      const at = m.getAttachments({ includeInlineImages: false });
+      const temXml = at.some(a => /\.xml$/i.test(a.getName()));
+      const fonte = (F.find(f => normal_(m.getFrom() + ' ' + m.getSubject()).indexOf(normal_(f.texto)) >= 0) || F[0]).nome;
+      at.forEach((a, i) => {
+        const nome = a.getName() || ('anexo' + i), kb = Math.round(a.getSize() / 1024);
+        if (!EXT_ARTE.test(nome) || kb < 25) return;              // assinatura, logo de rodapé
+        if (temXml && /\.pdf$/i.test(nome)) return;                // DANFE de nota fiscal, não é arte
+        const id = m.getId() + ':' + i; if (ja.has(id)) return;
+        const link = guardarArte_(fonte, iso_(m.getDate()), nome, a);
+        novas.push({ id, email_data: iso_(m.getDate()), fonte, email_de: m.getFrom(), assunto: m.getSubject(), arquivo: nome,
+          tipo: (nome.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase(), kb, link, cliente_sugerido: clienteDe_(m.getSubject() + ' ' + nome),
+          status: 'NOVA', link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId() });
+      });
+    });
+    th.addLabel(marca);
+  });
+  anexar_(shA, novas);
+  return novas.length;
+}
+function guardarArte_(fonte, data, nome, blob) {
+  const raizIt = DriveApp.getFoldersByName('Artes (email)'), raiz = raizIt.hasNext() ? raizIt.next() : DriveApp.createFolder('Artes (email)');
+  const sub = (pai, n) => { const it = pai.getFoldersByName(n); return it.hasNext() ? it.next() : pai.createFolder(n); };
+  const pasta = sub(sub(raiz, fonte.replace(/[\/\\]/g, '-')), data.slice(0, 7));
+  const arq = data + '_' + nome, ex = pasta.getFilesByName(arq);
+  return (ex.hasNext() ? ex.next() : pasta.createFile(blob.copyBlob().setName(arq))).getUrl();
+}
+// Palpite do cliente pelo assunto/nome do arquivo (a conferência é humana; o casamento com o cadastro fica para o site)
+function clienteDe_(t) {
+  return String(t || '').replace(/\.[a-z0-9]{2,4}\b/gi, ' ')
+    .replace(/\b(re|fw|fwd|enc|res|prova|provas|arte|artes|layout|clich[eê]s?|clicheria|aprova[cç][aã]o|aprovad[oa]|ok|final|novo|nova|revis[aã]o|rev\d*|v\d+|cores?|saco|sacos|pdf|jpg|png|segue|seguem|em anexo|anexo|para|de|do|da)\b/gi, ' ')
+    .replace(/\d+\s*x\s*\d+/gi, ' ').replace(/[_\-–.,:;()\[\]#]+/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase().slice(0, 50);
+}
+
 /* ===================== auto-ignorar ===================== */
 const normal_ = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 function regrasIgnorar_(sh) {
@@ -401,4 +529,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
+if (typeof module !== 'undefined') module.exports = { clienteDe_, emitidaPor_, ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
