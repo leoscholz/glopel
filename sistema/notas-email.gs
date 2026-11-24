@@ -38,6 +38,8 @@ const DIAS_INICIO = 60;       // primeira leitura: quantos dias para trás
 const MAX_EMAILS = 25;        // por rodada (o Apps Script tem limite de 6 min)
 const MARCA_LIDA = 'NF-e/lida';
 const MARCA_ERRO = 'NF-e/erro';
+// Contas que chegam no mesmo email mas NÃO são da empresa (domiciliares): ficam registradas como IGNORADA, fora do A pagar
+const IGNORAR_FATURAS = /vivo/i;   // Leo, 24-11-2026: Vivo é domiciliar
 
 const CAB = {
   NFe_Recebidas: ['id', 'numero', 'serie', 'emissao', 'emitente', 'cnpj_emitente', 'destinatario', 'cnpj_destinatario', 'empresa',
@@ -135,7 +137,8 @@ function rodar(op) {
             const st = tipoSemXml_(m, pdfs);
             const reg = { id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
               anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: st };
-            if (st === 'FATURA DE CONSUMO' && !op.seco) Object.assign(reg, lerFatura_(m, pdfs[0]));
+            if (st === 'FATURA DE CONSUMO' && IGNORAR_FATURAS.test(m.getFrom() + ' ' + m.getSubject())) reg.status = 'IGNORADA (domiciliar)';
+            else if (st === 'FATURA DE CONSUMO' && !op.seco) Object.assign(reg, lerFatura_(m, pdfs[0]));
             novasS.push(reg);
             res.so_pdf++;
           }
