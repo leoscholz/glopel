@@ -1826,10 +1826,14 @@ function ocorrencias(de, ate){
   const jaCofre = new Set((FORN?.nfs||[]).map(n=>String(n.chave||'')));
   (REM?.nfeParc||[]).forEach(p => { const d = p.vencimento; if (!d || d<de || d>ate || jaCofre.has(p.chave)) return; const nn = (REM.nfe||[]).find(x=>x.id===p.chave); if (nfeIgn(nn||{emitente:p.emitente})) return;
     out.push({id:'nfe:'+p.id, data:d, nome:nfeCurto(p.emitente)+' — NF '+p.numero+' ('+p.parcela+')'+(p.conferir?' ⚠️':''), cat:CATS[p.categoria]?p.categoria:'Outros', valor:numN(p.valor), fonte:'email', pdf:p.pdf, conferir:p.conferir}); });
-  // 1c. faturas de consumo lidas do email (Copel, Vivo, SKY…)
-  (REM?.nfeSemXml||[]).filter(f=>f.status==='FATURA DE CONSUMO' && f.vencimento && !fatIgn(f)).forEach(f => { const d = f.vencimento; if (d<de || d>ate) return;
+  // 1d. guias do contador no Nibo (aba Nibo_Guias, atualizada pela tarefa diária)
+  (REM?.nibo||[]).forEach(g => { const d = g.vencimento; if (!d || d<de || d>ate) return;
+    const cat = /folha|fgts|sal[aá]rio|f[eé]rias|13/i.test(g.nome) ? 'Folha' : /honor|certificado/i.test(g.nome) ? 'Serviços' : 'Impostos';
+    out.push({id:'nibo:'+g.id, data:d, nome:g.nome+(g.empresa?' — '+g.empresa:'')+(g.competencia?' ('+g.competencia+')':''), cat, valor:g.valor===''?null:numN(g.valor), fonte:'Nibo'+(g.valor_fonte==='código de barras'?' · valor do código de barras':''), pagoExt: g.status==='PAGA'}); });
+  // 1c. faturas de consumo e contas de serviço lidas do email (Copel, SKY, notas de serviço com boleto…)
+  (REM?.nfeSemXml||[]).filter(f=>/^(FATURA DE CONSUMO|CONTA DE SERVIÇO)$/.test(f.status) && f.vencimento && !fatIgn(f)).forEach(f => { const d = f.vencimento; if (d<de || d>ate) return;
     const conf = /^conferir/.test(f.leitura||'') ? 'leitura automática: conferir valor/vencimento' : '';
-    out.push({id:'fat:'+f.id, data:d, nome:(f.fornecedor||'Fatura')+' — fatura '+mesNome(d.slice(0,7))+(conf?' ⚠️':''), cat:CATS[f.categoria]?f.categoria:'Outros', valor:f.valor===''?null:numN(f.valor), fonte:'fatura', pdf:f.pdf, conferir:conf}); });
+    out.push({id:'fat:'+f.id, data:d, nome:(f.fornecedor||'Fatura')+(f.status==='CONTA DE SERVIÇO'?' — '+(f.nfse?'NFS-e '+f.nfse:'boleto'):' — fatura '+mesNome(d.slice(0,7)))+(conf?' ⚠️':''), cat:CATS[f.categoria]?f.categoria:'Outros', valor:f.valor===''?null:numN(f.valor), fonte:'fatura', pdf:f.pdf, conferir:conf}); });
   // 2. contas cadastradas
   contas().forEach(c => {
     if (c.ativa===false) return;
@@ -1883,7 +1887,7 @@ function vNotasEmail(){
   if (!N.length && !S.length) return vIgnorar() + `<h3>📥 Notas recebidas por email${ignTxt}</h3><div class="card mut" style="margin-bottom:16px">Nenhuma nota chegou pela Caixa de notas ainda. Quando o script estiver instalado, toda NF-e com XML que chegar no email entra aqui e as parcelas aparecem na lista acima sozinhas.</div>`;
   const parcDe = ch => (REM.nfeParc||[]).filter(p=>p.chave===ch);
   return `<h3>📥 Notas recebidas por email <span class="mut" style="font-weight:400;font-size:13px">${N.length} notas · ${sem7} nos últimos 7 dias${ignTxt}</span></h3>
-  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…): valor e vencimento lidos do email/PDF entram sozinhos no A pagar (origem "fatura"). Não cadastre estas também em Contas fixas, senão contam dobrado.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.fornecedor||x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>${x.status==='FATURA DE CONSUMO'?(x.valor?` · <b>${brl(numN(x.valor))}</b>${x.vencimento?' vence '+dmy(x.vencimento):' · <b>sem vencimento — conferir</b>'}`:' · <b>sem valor lido — conferir</b>'):''} <a href="javascript:void 0" title="Ignorar sempre" onclick='ignSugerir(${JSON.stringify(String(x.fornecedor||(x.email_de||"").replace(/.*@/,"").split(".")[0]).toLowerCase())})'>🚫</a>`).join('')}</div>`:''; }).join('')}
+  ${[['PEDIR XML','email(s) com nota <b>só em PDF</b> (sem o XML) — as parcelas não entram sozinhas. Pedir o XML ao fornecedor.'],['FATURA DE CONSUMO','fatura(s) de consumo (luz, telefone, TV…): valor e vencimento lidos do email/PDF entram sozinhos no A pagar (origem "fatura"). Não cadastre estas também em Contas fixas, senão contam dobrado.'],['CONTA DE SERVIÇO','conta(s) de serviço (nota de serviço / boleto): valor e vencimento lidos do boleto entram sozinhos no A pagar.']].map(([st,txt])=>{ const L=S.filter(x=>(x.status||'PEDIR XML')===st); return L.length?`<div class="banner">${L.length} ${txt} ${L.slice(0,6).map(x=>`<br>· ${dmy(x.email_data)} — ${esc(x.fornecedor||x.email_de)} — <a href="${esc(x.link_email)}" target="_blank" rel="noopener">${esc(x.email_assunto||'(sem assunto)')}</a>${/^(FATURA DE CONSUMO|CONTA DE SERVIÇO)$/.test(x.status)?(x.valor?` · <b>${brl(numN(x.valor))}</b>${x.vencimento?' vence '+dmy(x.vencimento):' · <b>sem vencimento — conferir</b>'}`:' · <b>sem valor lido — conferir</b>'):''} <a href="javascript:void 0" title="Ignorar sempre" onclick='ignSugerir(${JSON.stringify(String(x.fornecedor||(x.email_de||"").replace(/.*@/,"").split(".")[0]).toLowerCase())})'>🚫</a>`).join('')}</div>`:''; }).join('')}
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table>
     <thead><tr><th>Emissão</th><th>Fornecedor</th><th>NF</th><th>Empresa</th><th class="n">Total</th><th>Vencimentos</th><th>Categoria</th><th>Arquivos</th></tr></thead>
     <tbody>${N.slice(0,nfeMostra).map(n=>{ const P=parcDe(n.id); const canc=n.status==='CANCELADA';
@@ -1902,7 +1906,7 @@ async function nfeCat(chave, cat){
   } catch(e) { avisoGrav('Não consegui gravar: '+(e.message||e)+'. Nada foi alterado.', 'erro'); }
 }
 const DESDE_SIS = '2026-11-17'; // na planilha: vencidas antes disso contam como pagas
-const pago = o => REM ? (!!REM.pagos[o.id] || o.data < DESDE_SIS) : (!!L.pagos[o.id] || o.data < L.desde);
+const pago = o => !!o.pagoExt || (REM ? (!!REM.pagos[o.id] || o.data < DESDE_SIS) : (!!L.pagos[o.id] || o.data < L.desde));
 const OC = {};
 let pFiltro = 'todas', pEdit = null, pMostra = false;
 function vApagar(){
@@ -2096,7 +2100,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos','Nibo_Guias'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -2104,7 +2108,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), nibo: objs(D.Nibo_Guias||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }

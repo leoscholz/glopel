@@ -92,6 +92,8 @@ function rodar(op) {
     const jaN = ids_(shN), jaS = ids_(shS), jaE = ids_(shE);
     const novasE = [], novasEP = [];
     const regras = regrasIgnorar_(aba_(ss, 'NFe_Ignorar'));
+    const vS = shS.getDataRange().getDisplayValues(), hS = vS[0] || [];
+    const chavesConta = new Set(vS.slice(1).filter(r => /FATURA|CONTA/.test(r[hS.indexOf('status')] || '')).map(r => normal_(r[hS.indexOf('fornecedor')]) + '|' + r[hS.indexOf('valor')] + '|' + r[hS.indexOf('vencimento')]));
     const lida = marca_(MARCA_LIDA), erro = marca_(MARCA_ERRO);
     const q = 'has:attachment (filename:xml OR filename:zip OR filename:pdf) -label:' + MARCA_LIDA.replace('/', '-') +
       ' -label:' + MARCA_ERRO.replace('/', '-') + ' newer_than:' + DIAS_INICIO + 'd';
@@ -115,11 +117,12 @@ function rodar(op) {
             });
           } catch (x) { res.erros.push(a.getName() + ': ' + x); fio_ok = false; }
         });
-        let nfesDoEmail = 0;
+        let nfesDoEmail = 0, nfeNaMsg = false, nfse = null;
         xmls.forEach(x => {
           let r;
           try { r = lerXmlNFe(x.txt); } catch (e) { res.erros.push(x.nome + ': ' + e); fio_ok = false; return; }
-          if (!r) return;                                   // XML que não é NF-e (ex.: CT-e, NFS-e) → ignora
+          if (!r) { if (!nfse) nfse = lerNFSe_(x.txt); return; }   // XML que não é NF-e: NFS-e (serviço) vira conta; CT-e etc. ignorado
+          nfeNaMsg = true;
           achouNFe = true;
           if (r.tipo === 'cancelamento') { cancelar.push(r.chave); res.canceladas++; return; }
           const n = r.nota;
@@ -160,15 +163,20 @@ function rodar(op) {
           n.det.forEach(d => novasI.push(Object.assign({ id: n.chave + ':' + d.item, chave: n.chave, numero: n.numero, emitente: n.emitente, emissao: n.emissao }, d)));
           res.notas++;
         });
-        if (!xmls.length && pdfs.length && pareceNota_(m, pdfs)) {
+        if (!nfeNaMsg && (pdfs.length || nfse) && (nfse || pareceNota_(m, pdfs))) {
           const id = m.getId();
           if (!jaS.has(id)) {
-            const st = tipoSemXml_(m, pdfs);
+            const st = nfse ? 'CONTA DE SERVIÇO' : tipoSemXml_(m, pdfs);
             const reg = { id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
               anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: st };
             const ignF = ignorar_(regras, m.getFrom() + ' ' + m.getSubject() + ' ' + reg.anexos);
             if (ignF) { reg.status = 'IGNORADA (' + ignF.texto + ')'; res.ignoradas_regra = (res.ignoradas_regra || 0) + 1; }
-            else if (st === 'FATURA DE CONSUMO' && !op.seco) Object.assign(reg, lerFatura_(m, pdfs[0]));
+            else if ((st === 'FATURA DE CONSUMO' || st === 'CONTA DE SERVIÇO') && !op.seco) {
+              Object.assign(reg, lerFatura_(m, pdfs.find(p => /boleto/i.test(p.getName())) || pdfs[0], nfse));
+              // o mesmo boleto chega várias vezes (nota + boleto, lembrete, "vence hoje"): fica só o primeiro
+              const k = normal_(reg.fornecedor) + '|' + reg.valor + '|' + reg.vencimento;
+              if (reg.valor && reg.vencimento && (chavesConta.has(k) || novasS.some(z => normal_(z.fornecedor) + '|' + z.valor + '|' + z.vencimento === k))) reg.status = 'DUPLICADA';
+            }
             novasS.push(reg);
             res.so_pdf++;
           }
@@ -280,21 +288,49 @@ function extrairValorVenc_(txt, ref) {
   if (venc && lim && venc < lim) venc = '';   // só achou data velha: deixa para conferir
   return { valor: vm ? Math.round(parseFloat(vm[1].replace(/\./g, '').replace(',', '.')) * 100) / 100 : '', vencimento: venc };
 }
-function lerFatura_(m, pdf) {
+function lerFatura_(m, pdf, nfse) {
   const out = fornecedorFatura_(m.getFrom(), m.getSubject());
-  let r = extrairValorVenc_(m.getPlainBody(), m.getDate()), fonte = 'email';
+  if (nfse && nfse.prestador) { out.fornecedor = nfse.prestador; out.categoria = 'Serviços'; }
+  else if (/omie\.com/i.test(m.getFrom())) { out.fornecedor = m.getSubject().split(/\s+-\s+/)[0].trim(); out.categoria = 'Serviços'; }
+  const corpo = m.getPlainBody();
+  let r = Object.assign(extrairValorVenc_(corpo, m.getDate()), boletoDe_(corpo)), fonte = 'email';
+  if (nfse && nfse.valor && !r.valor) r.valor = nfse.valor;
   if ((!r.valor || !r.vencimento) && pdf) {
-    try { const o = extrairValorVenc_(ocr_(pdf), m.getDate()); r = { valor: r.valor || o.valor, vencimento: r.vencimento || o.vencimento }; fonte = 'pdf'; }
+    try { const t = ocr_(pdf), o = Object.assign(extrairValorVenc_(t, m.getDate()), boletoDe_(t)); r = { valor: r.valor || o.valor, vencimento: r.vencimento || o.vencimento }; fonte = 'pdf'; }
     catch (e) { fonte = 'erro OCR: ' + String(e).slice(0, 80); }
   }
+  if (nfse && nfse.numero) out.nfse = nfse.numero;
   if (pdf) { try { out.pdf = guardarFatura_(out.fornecedor, iso_(m.getDate()), pdf); } catch (e) { } }
   return Object.assign(out, r, { leitura: r.valor && r.vencimento ? fonte : 'conferir (' + (fonte === 'pdf' || fonte === 'email' ? 'faltou ' + (!r.valor ? 'valor' : 'vencimento') : fonte.replace('Drive 400', 'PDF com senha ou ilegível')) + ')' });
+}
+// Linha digitável de boleto bancário (47 dígitos): fator de vencimento + valor. Arrecadação (48, começa com 8): só o valor.
+function boletoDe_(t) {
+  const s = String(t || '');
+  const b = s.match(/\b(\d{5}[.\s]?\d{5}\s+\d{5}[.\s]?\d{6}\s+\d{5}[.\s]?\d{6}\s+\d\s+\d{14})\b/);
+  if (b) {
+    const d = b[1].replace(/\D/g, ''), fator = parseInt(d.slice(33, 37), 10), valor = parseInt(d.slice(37), 10) / 100;
+    const out = {}; if (valor > 0) out.valor = Math.round(valor * 100) / 100;
+    if (fator >= 1000) { const base = new Date(Date.UTC(2025, 1, 22)); base.setUTCDate(base.getUTCDate() + fator - 1000); out.vencimento = base.toISOString().slice(0, 10); }
+    return out;
+  }
+  const a = s.match(/\b(8[2-9]\d{10})\s?(\d{12})\s?(\d{12})\s?(\d{12})\b/);
+  if (a && /[6-9]/.test(a[1][2])) { const c = a[1].slice(0, 11) + a[2].slice(0, 11); const v = parseInt(c.slice(4, 15), 10) / 100; return v > 0 ? { valor: v } : {}; }
+  return {};
+}
+// NFS-e (ABRASF ou padrão nacional): valor, número, prestador
+function lerNFSe_(xml) {
+  const s = String(xml || ''); if (!/nfse|CompNfse|InfNfse|infNFSe|ValorServicos|vServ/i.test(s)) return null;
+  const T = (src, t) => { const r = new RegExp('<(?:\\w+:)?' + t + '(?:\\s[^>]*)?>([\\s\\S]*?)</(?:\\w+:)?' + t + '>', 'i').exec(src); return r ? dec_(r[1].replace(/<[^>]+>/g, ' ').trim()) : ''; };
+  const prest = (/<(?:\w+:)?(PrestadorServico|Prestador|emit)[\s>][\s\S]*?<\/(?:\w+:)?\1>/i.exec(s) || [''])[0];
+  const v = T(s, 'ValorLiquidoNfse') || T(s, 'vLiq') || T(s, 'ValorServicos') || T(s, 'vServ');
+  return { valor: v ? Math.round(parseFloat(v.replace(',', '.')) * 100) / 100 : '', numero: T(s, 'nNFSe') || T(s, 'Numero'),
+    prestador: (T(prest, 'RazaoSocial') || T(prest, 'xNome') || T(prest, 'NomeFantasia')).replace(/\s+/g, ' ').slice(0, 60) };
 }
 function completarFaturas_(sh) {
   const v = sh.getDataRange().getDisplayValues(), h = v[0], c = k => h.indexOf(k);
   let n = 0;
   for (let i = 1; i < v.length && n < 10; i++) {
-    if (v[i][c('status')] !== 'FATURA DE CONSUMO' || v[i][c('valor')] || v[i][c('leitura')]) continue;
+    if (!/^(FATURA DE CONSUMO|CONTA DE SERVIÇO)$/.test(v[i][c('status')]) || v[i][c('valor')] || v[i][c('leitura')]) continue;
     let m; try { m = GmailApp.getMessageById(v[i][c('id')]); } catch (e) { continue; }
     const pdf = m.getAttachments({ includeInlineImages: false }).filter(a => /\.pdf$/i.test(a.getName()))[0];
     const r = lerFatura_(m, pdf);
@@ -343,6 +379,11 @@ function extras_(ss, t0) {
   if (Date.now() - t0 > 60000) return '';
   if (!P.getProperty('releitura_v1')) { const r = releitura_(ss); P.setProperty('releitura_v1', new Date().toISOString()); return 'releitura ' + JSON.stringify(r); }
   if (!P.getProperty('raiox_v1')) { const r = raioX_(ss); P.setProperty('raiox_v1', new Date().toISOString()); return 'raio-x ' + r; }
+  if (!P.getProperty('contas_v1')) {   // 24-11: notas de serviço (Omie) já marcadas como lidas antes de existir a leitura de NFS-e → reler
+    const lida = GmailApp.getUserLabelByName(MARCA_LIDA); let n = 0;
+    if (lida) GmailApp.search('from:omie.com.br label:' + MARCA_LIDA.replace('/', '-') + ' newer_than:60d', 0, 50).forEach(th => { th.removeLabel(lida); n++; });
+    P.setProperty('contas_v1', new Date().toISOString()); return 'reler contas de serviço: ' + n + ' emails';
+  }
   return '';
 }
 // Rodar à mão quando quiser: raio-x agora (e marca como feito)
@@ -514,11 +555,13 @@ function categoria_(emit, itens) {
 // Fatura de consumo (Copel, Vivo, SKY…) não tem NF-e com XML: vira conta fixa, não "pedir XML"
 function tipoSemXml_(m, pdfs) {
   const t = (m.getFrom() + ' ' + m.getSubject() + ' ' + pdfs.map(p => p.getName()).join(' ')).toLowerCase();
-  return /fatura|conta digital|copel|sanepar|vivo|claro|\btim\b|sky|net |oi |internet|energia/.test(t) && !/nf-?e|danfe|nota fiscal/.test(t) ? 'FATURA DE CONSUMO' : 'PEDIR XML';
+  if (/fatura|conta digital|copel|sanepar|vivo|claro|\btim\b|sky|net |oi |internet|energia/.test(t) && !/nf-?e|danfe|nota fiscal/.test(t)) return 'FATURA DE CONSUMO';
+  if (/boleto|nfs-?e|cobran[cç]a|vencimento|honor[aá]rio/.test(t)) return 'CONTA DE SERVIÇO';
+  return 'PEDIR XML';
 }
 function pareceNota_(m, pdfs) {
   const t = (m.getSubject() + ' ' + pdfs.map(p => p.getName()).join(' ')).toLowerCase();
-  return /nf-?e|nota fiscal|danfe|\bnf\b|fatura|\d{44}/.test(t);
+  return /nf-?e|nota fiscal|danfe|\bnf\b|fatura|boleto|cobran[cç]a|vencimento|\d{44}/.test(t);
 }
 
 /* ===================== planilha / drive / gmail ===================== */
@@ -572,4 +615,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { lerPix_, clienteDe_, emitidaPor_, ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
+if (typeof module !== 'undefined') module.exports = { boletoDe_, lerNFSe_, lerPix_, clienteDe_, emitidaPor_, ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
