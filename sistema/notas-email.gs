@@ -231,23 +231,28 @@ function fornecedorFatura_(de, assunto) {
   const nome = (String(de).match(/^\s*"?([^"<]+?)"?\s*</) || [])[1] || String(de).replace(/.*@/, '').split('.')[0];
   return { fornecedor: nome.trim(), categoria: 'Outros' };
 }
-function extrairValorVenc_(txt) {
+function extrairValorVenc_(txt, ref) {
   const t = String(txt || '').replace(/\s+/g, ' ');
-  const dm = t.match(/venc[a-zçã]*\s*(?:em|:)?\s*[^\d]{0,25}(\d{2}\/\d{2}\/\d{2,4})/i);
+  // Fatura costuma trazer vencimentos antigos (histórico): vale o 1º vencimento a partir de 10 dias antes do email
+  const lim = ref ? new Date(ref.getTime() - 10 * 864e5).toISOString().slice(0, 10) : '';
+  const todas = [...t.matchAll(/venc[a-zçã]*\s*(?:em|:)?\s*[^\d]{0,25}(\d{2}\/\d{2}\/\d{2,4})/gi)].map(x => x[1]);
+  const isoD = s => { const [d, mo, y] = s.split('/'); return (y.length === 2 ? '20' + y : y) + '-' + mo + '-' + d; };
+  const dm = todas.length ? [null, (todas.find(x => isoD(x) >= lim) || todas[0])] : null;
   const vm = t.match(/(?:total a pagar|valor a pagar|valor total|total da fatura|valor do documento|valor cobrado|valor da fatura|total)\s*[:\-]?\s*(?:R\$)?\s*([\d.]{1,9},\d{2})/i);
   let venc = '';
-  if (dm) { const [d, mo, y] = dm[1].split('/'); venc = (y.length === 2 ? '20' + y : y) + '-' + mo + '-' + d; }
+  if (dm) venc = isoD(dm[1]);
+  if (venc && lim && venc < lim) venc = '';   // só achou data velha: deixa para conferir
   return { valor: vm ? Math.round(parseFloat(vm[1].replace(/\./g, '').replace(',', '.')) * 100) / 100 : '', vencimento: venc };
 }
 function lerFatura_(m, pdf) {
   const out = fornecedorFatura_(m.getFrom(), m.getSubject());
-  let r = extrairValorVenc_(m.getPlainBody()), fonte = 'email';
+  let r = extrairValorVenc_(m.getPlainBody(), m.getDate()), fonte = 'email';
   if ((!r.valor || !r.vencimento) && pdf) {
-    try { const o = extrairValorVenc_(ocr_(pdf)); r = { valor: r.valor || o.valor, vencimento: r.vencimento || o.vencimento }; fonte = 'pdf'; }
+    try { const o = extrairValorVenc_(ocr_(pdf), m.getDate()); r = { valor: r.valor || o.valor, vencimento: r.vencimento || o.vencimento }; fonte = 'pdf'; }
     catch (e) { fonte = 'erro OCR: ' + String(e).slice(0, 80); }
   }
   if (pdf) { try { out.pdf = guardarFatura_(out.fornecedor, iso_(m.getDate()), pdf); } catch (e) { } }
-  return Object.assign(out, r, { leitura: r.valor && r.vencimento ? fonte : 'conferir (' + fonte + ')' });
+  return Object.assign(out, r, { leitura: r.valor && r.vencimento ? fonte : 'conferir (' + (fonte === 'pdf' || fonte === 'email' ? 'faltou ' + (!r.valor ? 'valor' : 'vencimento') : fonte.replace('Drive 400', 'PDF com senha ou ilegível')) + ')' });
 }
 function completarFaturas_(sh) {
   const v = sh.getDataRange().getDisplayValues(), h = v[0], c = k => h.indexOf(k);
