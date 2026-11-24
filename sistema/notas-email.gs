@@ -104,7 +104,7 @@ function rodar(op) {
           if (jaN.has(n.chave) || novasN.some(z => z.id === n.chave)) { res.repetidas++; return; }
           const pdf = pdfs.find(p => (p.getName() || '').indexOf(n.chave) >= 0) || (pdfs.length === 1 ? pdfs[0] : null);
           const links = op.seco ? { xml: '', pdf: '' } : guardar_(n, x.blob, pdf);
-          const cat = categoria_(n.emitente);
+          const cat = categoria_(n.emitente, n.itens);
           const conf = n.parcelas.length ? '' : (n.forma === 'sem pagamento' ? 'sem pagamento na nota' : 'nota sem vencimento: conferir boleto');
           novasN.push({
             id: n.chave, numero: n.numero, serie: n.serie, emissao: n.emissao, emitente: n.emitente, cnpj_emitente: n.cnpjEmit,
@@ -126,7 +126,7 @@ function rodar(op) {
           const id = m.getId();
           if (!jaS.has(id)) {
             novasS.push({ id, email_data: iso_(m.getDate()), email_de: m.getFrom(), email_assunto: m.getSubject(),
-              anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: 'PEDIR XML' });
+              anexos: pdfs.map(p => p.getName()).join(' | '), link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId(), status: tipoSemXml_(m, pdfs) });
             res.so_pdf++;
           }
         }
@@ -195,13 +195,21 @@ function empresa_(n) {
   if (/EMBALAGENS GLOBO|GLOBO IMPRESSOS/i.test(n.emitenteRazao)) return null;
   return /IMPRESSOS/i.test(n.destinatario) ? 'Impressos' : /GLOBO/i.test(n.destinatario) ? 'Embalagens' : (n.destinatario || '?');
 }
-function categoria_(emit) {
-  const e = String(emit || '').toUpperCase();
+function categoria_(emit, itens) {
+  const e = (String(emit || '') + ' ' + String(itens || '')).toUpperCase();
   const R = [[/IRANI|LUTEPEL|PAPEL|CELULOSE|KLABIN|SUZANO|WESTROCK|BOBINA/, 'Papel'], [/COPEL|SANEPAR|ENERGIA|SANEAMENTO/, 'Energia e água'],
-    [/POSTO|COMBUST|AUTO ?PE[CÇ]|PNEU|TRANSPORT|LOG[IÍ]STICA/, 'Frota'], [/TINTA|COLA|ADESIV|QU[IÍ]MIC|CLICH|FOTOPOL|SOLVENTE/, 'Insumos'],
+    [/POSTO|COMBUST|AUTO ?PE[CÇ]|PNEU|TRANSPORT|LOG[IÍ]STICA/, 'Frota'], [/TINTA|COLA|ADESIV|QU[IÍ]MIC|CLICH|FOTOPOL|SOLVENTE|PL[AÁ]STIC|FILME|ENFESTAD|BOBINA PL/, 'Insumos'],
     [/TELECOM|INTERNET|SOFTWARE|SISTEMA|IOB|SAGE|VIVO|CLARO|TIM /, 'Assinaturas'], [/CONTAB|ADVOC|MANUTEN/, 'Serviços']];
-  for (const [re, c] of R) if (re.test(e)) return c;
+  const so = String(emit || '').toUpperCase();
+  if (R[0][0].test(so)) return 'Papel';
+  for (const [re, c] of R.slice(1)) if (re.test(e)) return c;
+  if (R[0][0].test(e)) return 'Papel';
   return 'Outros';
+}
+// Fatura de consumo (Copel, Vivo, SKY…) não tem NF-e com XML: vira conta fixa, não "pedir XML"
+function tipoSemXml_(m, pdfs) {
+  const t = (m.getFrom() + ' ' + m.getSubject() + ' ' + pdfs.map(p => p.getName()).join(' ')).toLowerCase();
+  return /fatura|conta digital|copel|sanepar|vivo|claro|\btim\b|sky|net |oi |internet|energia/.test(t) && !/nf-?e|danfe|nota fiscal/.test(t) ? 'FATURA DE CONSUMO' : 'PEDIR XML';
 }
 function pareceNota_(m, pdfs) {
   const t = (m.getSubject() + ' ' + pdfs.map(p => p.getName()).join(' ')).toLowerCase();
@@ -259,4 +267,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { lerXmlNFe, empresa_, categoria_ };
+if (typeof module !== 'undefined') module.exports = { lerXmlNFe, empresa_, categoria_, tipoSemXml_ };
