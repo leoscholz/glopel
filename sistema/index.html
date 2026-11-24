@@ -476,21 +476,63 @@ function vArtesEmail(){
   return `<h3>📥 Artes que chegaram por email <span class="mut" style="font-weight:400;font-size:13px">${A.length} arquivos · ${novas} a conferir</span></h3>
   <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Data</th><th>De</th><th>Cliente (palpite)</th><th>Arquivo</th><th>Tipo</th><th>Assunto</th></tr></thead><tbody>${A.slice(0,artMostra).map(a=>`<tr><td>${dBR(a.email_data)}</td><td>${esc(a.fonte)}</td><td><b>${esc(a.cliente_sugerido||'—')}</b></td><td><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.arquivo)}</a></td><td class="mut">${esc(a.tipo)} · ${esc(a.kb)} kb</td><td class="mut" style="font-size:12px"><a href="${esc(a.link_email)}" target="_blank" rel="noopener">${esc(a.assunto||'(sem assunto)')}</a></td></tr>`).join('')}</tbody></table></div>${A.length>artMostra?`<div style="padding:8px 12px"><button class="btn" onclick="artMostra+=40;render()">Mostrar mais (${A.length-artMostra})</button></div>`:''}</div>`;
 }
+/* Pix recebidos (aviso do banco por email) × clientes e pedidos "Aguardando" do Start (base do cofre) */
+let pixFiltro = 'abertos', pixMostra = 30;
+function pixSugestao(p){
+  if (!SEG || !SEG.cli) return null;
+  const B = kBase(), v = numN(p.valor), pg = normal(p.pagador).replace(/\b(ltda|me|epp|eireli|s\/?a|cia|comercio|de|da|do|e)\b/g,' ').replace(/\s+/g,' ').trim(), dd = String(p.documento||'').replace(/\D/g,'');
+  let cli = [];
+  if (dd.length === 14) cli = B.filter(c => String(c.doc||'').replace(/\D/g,'') === dd);
+  if (!cli.length && pg.length >= 5) cli = B.filter(c => { const n = normal([c.razao, c.nome, c.nomes].join(' ')); return n.includes(pg) || (pg.split(' ').length >= 2 && pg.split(' ').slice(0,2).every(w => w.length > 2 && n.includes(w))); });
+  const abre = c => c.peds.filter(x => x.rec === 1 && v != null && Math.abs(x.total - v) <= 0.05);
+  for (const c of cli.slice(0,5)) { const pe = abre(c); if (pe.length) return {forte:true, c, pe:pe.slice(-3), txt:'nome + valor'}; }
+  if (cli.length) return {forte:false, c:cli[0], pe:[], txt:cli.length>1?`nome (${cli.length} clientes parecidos)`:'só o nome'};
+  if (v == null) return null;
+  const porValor = []; B.forEach(c => abre(c).forEach(x => porValor.push({c, x})));
+  if (porValor.length && porValor.length <= 3) return {forte:false, c:porValor[0].c, pe:[porValor[0].x], txt:`só o valor${porValor.length>1?` (${porValor.length} pedidos com esse valor)`:''}`};
+  return null;
+}
+function vPix(){
+  if (!REM) return '';
+  const P = (REM.pix||[]).slice().sort((a,b)=>((b.data||'')+(b.hora||'')).localeCompare((a.data||'')+(a.hora||'')));
+  const H = iso(hoje());
+  if (!P.length) return `<h3>💸 Pix recebidos</h3><div class="card mut" style="margin-bottom:16px">Nenhum aviso de Pix lido ainda. A Caixa de notas lê os emails "Pix recebido" do C6 a cada 30 min.</div>`;
+  const S = a => a.reduce((t,x)=>t+(numN(x.valor)||0),0), hoj = P.filter(x=>x.data===H), sem = P.filter(x=>x.data>=addD(H,-6));
+  const ab = P.filter(x=>x.status!=='CONFERIDO'), L = (pixFiltro==='abertos'?ab:P).slice(0,pixMostra);
+  return `<h3>💸 Pix recebidos <span class="mut" style="font-weight:400;font-size:13px">C6 · lidos do email</span></h3>
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">${brl(S(hoj))}</div><div class="l">hoje (${hoj.length})</div></div>
+    <div class="card kpi"><div class="v">${brl(S(sem))}</div><div class="l">últimos 7 dias (${sem.length})</div></div>
+    <div class="card kpi ${ab.length?'warn':''}"><div class="v">${ab.length}</div><div class="l">a dar baixa no Start (${brl(S(ab))})</div></div>
+  </div>
+  <div class="subtabs">${[['abertos','A dar baixa'],['todos','Todos']].map(([k,n])=>`<button class="${pixFiltro===k?'on':''}" onclick="pixFiltro='${k}';render()">${n}</button>`).join('')}</div>
+  <div class="card" style="padding:0;margin-bottom:8px"><div class="tw"><table><thead><tr><th>Data</th><th>Quem pagou</th><th class="n">Valor</th><th>Sugestão (cliente · pedido no Start)</th><th></th></tr></thead><tbody>${L.map(p=>{ const sg = pixSugestao(p);
+    return `<tr style="${p.status==='CONFERIDO'?'opacity:.5':''}"><td>${dBR(p.data)}${p.hora?' <span class="mut">'+esc(p.hora)+'</span>':''}</td>
+    <td>${p.pagador?esc(p.pagador):'<span class="mut" title="'+esc(p.texto)+'">não li o nome — passe o mouse</span>'}${p.documento?' <span class="mut">'+esc(p.documento)+'</span>':''}</td>
+    <td class="n"><b>${p.valor!==''?brl(numN(p.valor)):'—'}</b></td>
+    <td style="font-size:12px">${sg?`<b>${esc(sg.c.nome||sg.c.razao)}</b>${sg.pe.length?' · '+sg.pe.map(x=>`pedido ${esc(x.num)} de ${dmy(x.data)} (${brl(x.total)})`).join(', '):''} <span class="pill ${sg.forte?'ok':'grey'}">${sg.txt}</span>`:'<span class="mut">sem sugestão</span>'}</td>
+    <td>${p.status==='CONFERIDO'?'<span class="mut">baixado</span>':`<button class="btn" style="padding:2px 8px" title="Já dei baixa no Start" onclick="pixOk('${esc(p.id)}')">✓ baixado</button>`}</td></tr>`; }).join('')}</tbody></table></div>${(pixFiltro==='abertos'?ab:P).length>pixMostra?`<div style="padding:8px 12px"><button class="btn" onclick="pixMostra+=50;render()">Mostrar mais</button></div>`:''}</div>
+  <p class="note" style="margin-bottom:18px">A sugestão compara quem pagou e o valor com os pedidos "Aguardando" da base do Start (export de ${dmy(SEG?.cli?.atualizado)}); pedido mais novo que isso não aparece. "nome + valor" = muito provável; o resto é pista. <b>✓ baixado</b> só tira da lista — a baixa de verdade continua no Start.</p>`;
+}
+function pixOk(id){ gravarSis('Pix_Recebidos', {id, status:'CONFERIDO'}, 'Marcado como baixado.'); }
 /* A receber: notas que a própria empresa emitiu (cópia que chega no email) */
 let rcEmp = 'todas';
 function vReceber(){
   if (!REM) return `<div class="banner">Destranque o sistema para ler a planilha.</div>`;
+  return vPix() + vReceberNF();
+}
+function vReceberNF(){
   const H = iso(hoje()), mes = H.slice(0,7);
   const E = (REM.emit||[]).filter(n=>n.status!=='CANCELADA' && (rcEmp==='todas' || n.empresa===rcEmp));
   const P = (REM.emitParc||[]).filter(p=>rcEmp==='todas' || p.empresa===rcEmp);
   const S = a => a.reduce((t,x)=>t+(numN(x.valor ?? x.valor_total)||0),0);
-  if (!(REM.emit||[]).length) return `${remBanner()}<div class="banner">Nenhuma nota emitida chegou ainda. A Caixa de notas registra aqui toda NF-e que a <b>própria empresa emite</b> e que chega com cópia no email (embglobo@gmail.com): faturamento do mês e o que há para receber, sem esperar o export do Start. Se nada aparecer em 1–2 dias, o emissor não está mandando cópia para o email — dá para configurar no Start.</div>`;
+  if (!(REM.emit||[]).length) return `<h3>🧾 Notas emitidas</h3><div class="banner">Nenhuma nota emitida chegou ainda. A Caixa de notas registra aqui toda NF-e que a <b>própria empresa emite</b> e que chega com cópia no email (embglobo@gmail.com): faturamento do mês e o que há para receber, sem esperar o export do Start. Se nada aparecer em 1–2 dias, o emissor não está mandando cópia para o email — dá para configurar no Start.</div>`;
   const doMes = E.filter(n=>(n.emissao||'').slice(0,7)===mes), fut = P.filter(p=>p.vencimento>=H).sort((a,b)=>a.vencimento<b.vencimento?-1:1);
   const d30 = fut.filter(p=>p.vencimento<=addD(H,30)), venc = P.filter(p=>p.vencimento<H && p.vencimento>=addD(H,-60));
   const porCli = {}; E.forEach(n=>{ const k=n.cliente||'?'; (porCli[k]=porCli[k]||{n:0,v:0}); porCli[k].n++; porCli[k].v+=numN(n.valor_total)||0; });
   const top = Object.entries(porCli).sort((a,b)=>b[1].v-a[1].v).slice(0,10);
   const emps = [...new Set((REM.emit||[]).map(n=>n.empresa))];
-  return `${remBanner()}
+  return `<h3>🧾 Notas emitidas</h3>
   <div class="banner ok">Notas emitidas pela empresa que chegaram com cópia no email — de ${dmy(E.map(n=>n.emissao).sort()[0])} a ${dmy(E.map(n=>n.emissao).sort().pop())}. <b>Não</b> mostra se o cliente já pagou: isso continua no Start / no banco. Vencidas = parcelas dos últimos 60 dias, só como lembrete para conferir.</div>
   <div class="subtabs">${['todas',...emps].map(k=>`<button class="${rcEmp===k?'on':''}" onclick="rcEmp='${k}';render()">${k==='todas'?'Todas':esc(k)}</button>`).join('')}</div>
   <div class="grid kpis">
@@ -2053,7 +2095,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -2061,7 +2103,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }

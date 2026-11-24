@@ -13,6 +13,7 @@
  *   Fatura de consumo (Copel, Vivo, SKY…): lê valor e vencimento do email ou do PDF (OCR do Drive) → A pagar.
  *   Nota EMITIDA pela própria empresa (cópia no email) → NFe_Emitidas / NFe_Emitidas_Parcelas (vendas e A receber).
  *   Artes da clicheria (remetentes na aba Artes_Fontes) → Drive "Artes (email)" + aba Artes_Email.
+ *   Pix recebido no C6 (aviso por email) → aba Pix_Recebidos (valor, pagador, data) — o site sugere o cliente/pedido.
  *   Uma vez só, sozinho: releitura dos emails já lidos (itens e notas emitidas) e raio-x da caixa (aba Email_RaioX).
  *
  * Nunca paga, nunca responde email, nunca apaga nada (nem email, nem linha).
@@ -62,6 +63,7 @@ const CAB = {
   Artes_Fontes: ['id', 'texto', 'nome', 'status', 'atualizado_em', 'por'],
   Artes_Email: ['id', 'email_data', 'fonte', 'email_de', 'assunto', 'arquivo', 'tipo', 'kb', 'link', 'cliente_sugerido', 'status',
     'link_email', 'atualizado_em', 'por'],
+  Pix_Recebidos: ['id', 'banco', 'data', 'hora', 'valor', 'pagador', 'documento', 'email_data', 'leitura', 'texto', 'status', 'atualizado_em', 'por'],
   Email_RaioX: ['remetente', 'nome', 'emails', 'com_anexo', 'tipos_anexo', 'ultimo', 'assuntos', 'atualizado_em'],
 };
 
@@ -178,9 +180,10 @@ function rodar(op) {
       anexar_(shN, novasN); anexar_(shP, novasP); anexar_(shS, novasS); anexar_(shI, novasI); anexar_(shE, novasE); anexar_(shEP, novasEP);
       res.faturas_completadas = completarFaturas_(shS);
       try { res.artes = artes_(ss); } catch (e) { res.erros.push('artes: ' + e); }
+      try { res.pix = pix_(ss); } catch (e) { res.erros.push('pix: ' + e); }
       try { res.extra = extras_(ss, t0); } catch (e) { res.erros.push('extra: ' + e); }
       if (cancelar.length) { cancelar_(shN, shP, cancelar); cancelar_(shE, shEP, cancelar); }
-      if (res.notas || res.so_pdf || res.canceladas || res.emitidas || res.artes || res.extra || res.erros.length) log_(ss, 'rodada', res);
+      if (res.notas || res.so_pdf || res.canceladas || res.emitidas || res.artes || res.pix || res.extra || res.erros.length) log_(ss, 'rodada', res);
     } else { res.previa = { notas: novasN, parcelas: novasP, so_pdf: novasS, cancelar }; }
     return res;
   } finally { trava.releaseLock(); }
@@ -384,6 +387,38 @@ function raioX_(ss) {
   return linhas.length + ' remetentes';
 }
 
+/* ===================== Pix recebido (aviso do banco por email) ===================== */
+// C6: remetente no-reply@c6bank.com.br, nome "C6 Empresas: Pix recebido". Guarda um trecho do texto para conferir a leitura.
+const PIX_FONTES = [{ banco: 'C6', q: 'from:no-reply@c6bank.com.br' }];
+function pix_(ss) {
+  const sh = aba_(ss, 'Pix_Recebidos'), ja = ids_(sh), marca = marca_('Pix/lido'), novas = [];
+  PIX_FONTES.forEach(F => GmailApp.search(F.q + ' -label:pix-lido newer_than:90d', 0, 40).forEach(th => {
+    th.getMessages().forEach(m => {
+      if (ja.has(m.getId())) return;
+      const txt = (m.getPlainBody() || '').replace(/\s+/g, ' ').trim();
+      if (!/pix/i.test(m.getFrom() + ' ' + m.getSubject() + ' ' + txt) || !/receb/i.test(m.getFrom() + ' ' + m.getSubject() + ' ' + txt)) return;
+      const r = lerPix_(txt);
+      novas.push(Object.assign({ id: m.getId(), banco: F.banco, email_data: iso_(m.getDate()), texto: txt.slice(0, 600), status: 'NOVO' }, r,
+        { data: r.data || iso_(m.getDate()), leitura: r.valor && r.pagador ? 'ok' : 'conferir' }));
+    });
+    th.addLabel(marca);
+  }));
+  anexar_(sh, novas);
+  return novas.length;
+}
+function lerPix_(t) {
+  t = String(t || '').replace(/\s+/g, ' ');
+  const v = t.match(/R\$\s*([\d.]{1,12},\d{2})/);
+  const d = t.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\D{1,8}(\d{2}[:h]\d{2}))?/);
+  const doc = t.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|[\d*•]{3}\.[\d*•]{3}\.[\d*•]{3}-[\d*•]{2}|\*{2,}\d[\d.*-]+)/);
+  // nome de quem pagou: depois de "de", "pagador", "enviado por", "quem pagou", "origem", "remetente"
+  const n = t.match(/(?:pagador|enviado por|quem (?:pagou|enviou)|remetente|origem|nome)\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .&'\/-]{2,70}?)(?=\s+(?:CPF|CNPJ|Institui|Banco|Ag[eê]ncia|Conta|Valor|Data|Chave|R\$|\d{2}\/|$))/i)
+    || t.match(/(?:recebeu|recebido)[^.]{0,40}?\bde\s+([A-ZÀ-Ý][A-Za-zÀ-ÿ0-9 .&'-]{2,70}?)(?=\s+(?:no valor|de R\$|R\$|CPF|CNPJ|em \d|às|\.|,|$))/i);
+  return { valor: v ? Math.round(parseFloat(v[1].replace(/\./g, '').replace(',', '.')) * 100) / 100 : '',
+    data: d ? d[3] + '-' + d[2] + '-' + d[1] : '', hora: d && d[4] ? d[4].replace('h', ':') : '',
+    pagador: n ? n[1].trim().replace(/\s+(e|de|da|do)$/i, '') : '', documento: doc ? doc[1] : '' };
+}
+
 /* ===================== artes da clicheria ===================== */
 const EXT_ARTE = /\.(pdf|ai|eps|cdr|svg|jpe?g|png|tiff?|zip|psd)$/i;
 function fontesArtes_(sh) {
@@ -529,4 +564,4 @@ function marca_(n) { return GmailApp.getUserLabelByName(n) || GmailApp.createLab
 function iso_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
 
 // Para testes fora do Google (node): module.exports
-if (typeof module !== 'undefined') module.exports = { clienteDe_, emitidaPor_, ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
+if (typeof module !== 'undefined') module.exports = { lerPix_, clienteDe_, emitidaPor_, ignorar_, lerXmlNFe, empresa_, categoria_, tipoSemXml_, skuDe_, papelDe_, extrairValorVenc_, fornecedorFatura_ };
