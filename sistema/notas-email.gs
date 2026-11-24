@@ -398,7 +398,8 @@ function pix_(ss) {
       const txt = (m.getPlainBody() || '').replace(/\s+/g, ' ').trim();
       if (!/pix/i.test(m.getFrom() + ' ' + m.getSubject() + ' ' + txt) || !/receb/i.test(m.getFrom() + ' ' + m.getSubject() + ' ' + txt)) return;
       const r = lerPix_(txt);
-      novas.push(Object.assign({ id: m.getId(), banco: F.banco, email_data: iso_(m.getDate()), texto: txt.slice(0, 600), status: 'NOVO' }, r,
+      const interna = CNPJS_EMPRESA[String(r.documento || '').replace(/\D/g, '')];   // Pix da própria empresa (entre contas)
+      novas.push(Object.assign({ id: m.getId(), banco: F.banco, email_data: iso_(m.getDate()), texto: txt.slice(0, 300), status: interna ? 'ENTRE CONTAS' : 'NOVO' }, r,
         { data: r.data || iso_(m.getDate()), leitura: r.valor && r.pagador ? 'ok' : 'conferir' }));
     });
     th.addLabel(marca);
@@ -411,8 +412,10 @@ function lerPix_(t) {
   const v = t.match(/R\$\s*([\d.]{1,12},\d{2})/);
   const d = t.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\D{1,8}(\d{2}[:h]\d{2}))?/);
   const doc = t.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|[\d*•]{3}\.[\d*•]{3}\.[\d*•]{3}-[\d*•]{2}|\*{2,}\d[\d.*-]+)/);
-  // nome de quem pagou: depois de "de", "pagador", "enviado por", "quem pagou", "origem", "remetente"
-  const n = t.match(/(?:pagador|enviado por|quem (?:pagou|enviou)|remetente|origem|nome)\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .&'\/-]{2,70}?)(?=\s+(?:CPF|CNPJ|Institui|Banco|Ag[eê]ncia|Conta|Valor|Data|Chave|R\$|\d{2}\/|$))/i)
+  // C6 (24-11): "Sua empresa recebeu um Pix no valor de R$ 192,50, de M. C. COMERCIO DE ALIMENTOS LTDA, CNPJ 08.517.485/0001-05, em 24/11/2026."
+  const c6 = t.match(/no valor de R\$\s*[\d.,]+,\s*de\s+(.+?),\s*(?:CNPJ|CPF)\b/i);
+  // outros bancos: depois de "pagador", "enviado por", "quem pagou", "origem", "remetente"
+  const n = c6 || t.match(/(?:pagador|enviado por|quem (?:pagou|enviou)|remetente|origem|nome)\s*:?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .&'\/-]{2,70}?)(?=\s+(?:CPF|CNPJ|Institui|Banco|Ag[eê]ncia|Conta|Valor|Data|Chave|R\$|\d{2}\/|$))/i)
     || t.match(/(?:recebeu|recebido)[^.]{0,40}?\bde\s+([A-ZÀ-Ý][A-Za-zÀ-ÿ0-9 .&'-]{2,70}?)(?=\s+(?:no valor|de R\$|R\$|CPF|CNPJ|em \d|às|\.|,|$))/i);
   return { valor: v ? Math.round(parseFloat(v[1].replace(/\./g, '').replace(',', '.')) * 100) / 100 : '',
     data: d ? d[3] + '-' + d[2] + '-' + d[1] : '', hora: d && d[4] ? d[4].replace('h', ':') : '',
@@ -430,21 +433,24 @@ function artes_(ss) {
   const shF = aba_(ss, 'Artes_Fontes'), shA = aba_(ss, 'Artes_Email'), F = fontesArtes_(shF);
   if (!F.length) return 0;                                        // sem fonte cadastrada: não faz nada
   const marca = marca_('Artes/lida'), ja = ids_(shA), novas = [];
+  const vA = shA.getDataRange().getDisplayValues(), iL = vA[0].indexOf('link'), jaLink = new Set(vA.slice(1).map(r => r[iL]));
   const q = '(' + F.map(f => '"' + f.texto.replace(/"/g, '') + '"').join(' OR ') + ') has:attachment -label:artes-lida newer_than:120d';
   GmailApp.search(q, 0, 20).forEach(th => {
     th.getMessages().forEach(m => {
       const at = m.getAttachments({ includeInlineImages: false });
       const temXml = at.some(a => /\.xml$/i.test(a.getName()));
-      const fonte = (F.find(f => normal_(m.getFrom() + ' ' + m.getSubject()).indexOf(normal_(f.texto)) >= 0) || F[0]).nome;
+      const ff = F.find(f => normal_(m.getFrom()).indexOf(normal_(f.texto)) >= 0);
+      const fonte = ff ? ff.nome : ((m.getFrom().match(/^\s*"?([^"<]+?)"?\s*</) || [])[1] || m.getFrom()).replace(/\s*-\s*.*$/, '').trim();
       at.forEach((a, i) => {
         const nome = a.getName() || ('anexo' + i), kb = Math.round(a.getSize() / 1024);
         if (!EXT_ARTE.test(nome) || kb < 25) return;              // assinatura, logo de rodapé
         if (temXml && /\.pdf$/i.test(nome)) return;                // DANFE de nota fiscal, não é arte
         const id = m.getId() + ':' + i; if (ja.has(id)) return;
         const link = guardarArte_(fonte, iso_(m.getDate()), nome, a);
+        if (jaLink.has(link)) return; jaLink.add(link);                // mesmo arquivo reenviado (Fwd, resposta)
         novas.push({ id, email_data: iso_(m.getDate()), fonte, email_de: m.getFrom(), assunto: m.getSubject(), arquivo: nome,
           tipo: (nome.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase(), kb, link, cliente_sugerido: clienteDe_(m.getSubject() + ' ' + nome),
-          status: 'NOVA', link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId() });
+          status: /or[cç]amento/i.test(nome + ' ' + m.getSubject()) && /\.pdf$/i.test(nome) ? 'ORÇAMENTO' : 'NOVA', link_email: 'https://mail.google.com/mail/u/0/#all/' + th.getId() });
       });
     });
     th.addLabel(marca);
@@ -461,7 +467,9 @@ function guardarArte_(fonte, data, nome, blob) {
 }
 // Palpite do cliente pelo assunto/nome do arquivo (a conferência é humana; o casamento com o cadastro fica para o site)
 function clienteDe_(t) {
-  return String(t || '').replace(/\.[a-z0-9]{2,4}\b/gi, ' ')
+  const limpo = String(t || '').replace(/\.[a-z0-9]{2,4}\b/gi, ' ').replace(/\bCFC\d+\b|\bMOD\s*\d+\b|\b\d+(?:[.,]\d+)?\s*(?:KG|MM|G|CM)\b|\bN[º°o]?\s*\d{3,}\b|\b4GL\b|\bpedido\b|\bor[cç]amento\b|\bpapel manteiga\b|com altera[cç][aã]o.*$|aten[cç][aã]o.*$|\bwhatsapp image.*$/gi, ' ');
+  const w = [], vistos = new Set(); limpo.split(/[\s_\-–.,:;()\[\]#]+/).forEach(x => { const k = x.toUpperCase(); if (k && !vistos.has(k)) { vistos.add(k); w.push(x); } });
+  return w.join(' ')
     .replace(/\b(re|fw|fwd|enc|res|prova|provas|arte|artes|layout|clich[eê]s?|clicheria|aprova[cç][aã]o|aprovad[oa]|ok|final|novo|nova|revis[aã]o|rev\d*|v\d+|cores?|saco|sacos|pdf|jpg|png|segue|seguem|em anexo|anexo|para|de|do|da)\b/gi, ' ')
     .replace(/\d+\s*x\s*\d+/gi, ' ').replace(/[_\-–.,:;()\[\]#]+/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase().slice(0, 50);
 }

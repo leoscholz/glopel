@@ -470,11 +470,11 @@ const ARTES_DRIVE = `_GLOBO-Site/03_Artes_Clientes/
 let artMostra = 20;
 function vArtesEmail(){
   if (!REM) return '';
-  const A = (REM.artesEmail||[]).slice().sort((a,b)=>(b.email_data||'').localeCompare(a.email_data||''));
+  const A = (REM.artesEmail||[]).filter(a=>a.status!=='DUPLICADA').slice().sort((a,b)=>(b.email_data||'').localeCompare(a.email_data||''));
   if (!A.length) return `<div class="card mut" style="margin-bottom:14px">📥 <b>Artes por email:</b> nenhuma ainda. Assim que a clicheria estiver cadastrada (aba Artes_Fontes), cada prova ou arte que chegar no email da empresa é guardada no Drive (pasta "Artes (email)") e aparece aqui.</div>`;
-  const novas = A.filter(a=>a.status==='NOVA').length;
-  return `<h3>📥 Artes que chegaram por email <span class="mut" style="font-weight:400;font-size:13px">${A.length} arquivos · ${novas} a conferir</span></h3>
-  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Data</th><th>De</th><th>Cliente (palpite)</th><th>Arquivo</th><th>Tipo</th><th>Assunto</th></tr></thead><tbody>${A.slice(0,artMostra).map(a=>`<tr><td>${dBR(a.email_data)}</td><td>${esc(a.fonte)}</td><td><b>${esc(a.cliente_sugerido||'—')}</b></td><td><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.arquivo)}</a></td><td class="mut">${esc(a.tipo)} · ${esc(a.kb)} kb</td><td class="mut" style="font-size:12px"><a href="${esc(a.link_email)}" target="_blank" rel="noopener">${esc(a.assunto||'(sem assunto)')}</a></td></tr>`).join('')}</tbody></table></div>${A.length>artMostra?`<div style="padding:8px 12px"><button class="btn" onclick="artMostra+=40;render()">Mostrar mais (${A.length-artMostra})</button></div>`:''}</div>`;
+  const novas = A.filter(a=>a.status==='NOVA').length, orc = A.filter(a=>a.status==='ORÇAMENTO').length;
+  return `<h3>📥 Artes que chegaram por email <span class="mut" style="font-weight:400;font-size:13px">${A.length} arquivos · ${novas} a conferir${orc?` · ${orc} orçamento(s) de clichê`:''}</span></h3>
+  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Data</th><th>De</th><th>Cliente (palpite)</th><th>Arquivo</th><th>Tipo</th><th>Assunto</th></tr></thead><tbody>${A.slice(0,artMostra).map(a=>`<tr><td>${dBR(a.email_data)}</td><td>${esc(a.fonte)}</td><td><b>${esc(a.cliente_sugerido||'—')}</b>${a.status==='ORÇAMENTO'?' <span class="pill warn">orçamento</span>':''}</td><td><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.arquivo)}</a></td><td class="mut">${esc(a.tipo)} · ${esc(a.kb)} kb</td><td class="mut" style="font-size:12px"><a href="${esc(a.link_email)}" target="_blank" rel="noopener">${esc(a.assunto||'(sem assunto)')}</a></td></tr>`).join('')}</tbody></table></div>${A.length>artMostra?`<div style="padding:8px 12px"><button class="btn" onclick="artMostra+=40;render()">Mostrar mais (${A.length-artMostra})</button></div>`:''}</div>`;
 }
 /* Pix recebidos (aviso do banco por email) × clientes e pedidos "Aguardando" do Start (base do cofre) */
 let pixFiltro = 'abertos', pixMostra = 30;
@@ -494,7 +494,7 @@ function pixSugestao(p){
 }
 function vPix(){
   if (!REM) return '';
-  const P = (REM.pix||[]).slice().sort((a,b)=>((b.data||'')+(b.hora||'')).localeCompare((a.data||'')+(a.hora||'')));
+  const PI = (REM.pix||[]).filter(x=>x.status==='ENTRE CONTAS'), P = (REM.pix||[]).filter(x=>x.status!=='ENTRE CONTAS').slice().sort((a,b)=>((b.data||'')+(b.hora||'')).localeCompare((a.data||'')+(a.hora||'')));
   const H = iso(hoje());
   if (!P.length) return `<h3>💸 Pix recebidos</h3><div class="card mut" style="margin-bottom:16px">Nenhum aviso de Pix lido ainda. A Caixa de notas lê os emails "Pix recebido" do C6 a cada 30 min.</div>`;
   const S = a => a.reduce((t,x)=>t+(numN(x.valor)||0),0), hoj = P.filter(x=>x.data===H), sem = P.filter(x=>x.data>=addD(H,-6));
@@ -512,7 +512,7 @@ function vPix(){
     <td class="n"><b>${p.valor!==''?brl(numN(p.valor)):'—'}</b></td>
     <td style="font-size:12px">${sg?`<b>${esc(sg.c.nome||sg.c.razao)}</b>${sg.pe.length?' · '+sg.pe.map(x=>`pedido ${esc(x.num)} de ${dmy(x.data)} (${brl(x.total)})`).join(', '):''} <span class="pill ${sg.forte?'ok':'grey'}">${sg.txt}</span>`:'<span class="mut">sem sugestão</span>'}</td>
     <td>${p.status==='CONFERIDO'?'<span class="mut">baixado</span>':`<button class="btn" style="padding:2px 8px" title="Já dei baixa no Start" onclick="pixOk('${esc(p.id)}')">✓ baixado</button>`}</td></tr>`; }).join('')}</tbody></table></div>${(pixFiltro==='abertos'?ab:P).length>pixMostra?`<div style="padding:8px 12px"><button class="btn" onclick="pixMostra+=50;render()">Mostrar mais</button></div>`:''}</div>
-  <p class="note" style="margin-bottom:18px">A sugestão compara quem pagou e o valor com os pedidos "Aguardando" da base do Start (export de ${dmy(SEG?.cli?.atualizado)}); pedido mais novo que isso não aparece. "nome + valor" = muito provável; o resto é pista. <b>✓ baixado</b> só tira da lista — a baixa de verdade continua no Start.</p>`;
+  <p class="note" style="margin-bottom:18px">${PI.length?`${PI.length} Pix entre contas da própria empresa (${brl(S(PI))}) ficam de fora. `:''}A sugestão compara quem pagou e o valor com os pedidos "Aguardando" da base do Start (export de ${dmy(SEG?.cli?.atualizado)}); pedido mais novo que isso não aparece. "nome + valor" = muito provável; o resto é pista. <b>✓ baixado</b> só tira da lista — a baixa de verdade continua no Start.</p>`;
 }
 function pixOk(id){ gravarSis('Pix_Recebidos', {id, status:'CONFERIDO'}, 'Marcado como baixado.'); }
 /* A receber: notas que a própria empresa emitiu (cópia que chega no email) */
