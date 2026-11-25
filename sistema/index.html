@@ -819,7 +819,7 @@ function oraBox(){
 }
 
 function vBobinas(){
-  const tabs = [['estoque','Estoque'],['saidas','Saídas'],['entradas','Pedidos e entradas'],['inventario','Contagem'],['tipos','Tipos de bobina']];
+  const tabs = [['estoque','Estoque'],['pedir','🛒 Pedir já'],['saidas','Saídas'],['entradas','Pedidos e entradas'],['inventario','Contagem'],['tipos','Tipos de bobina']];
   const t = `<div class="subtabs">${tabs.map(([k,n])=>`<button class="${sub===k?'on':''}" onclick="ir('bobinas','${k}')">${n}</button>`).join('')}</div>`;
   const ban = DB.fonte==='planilha ao vivo'
     ? `<div class="banner ok"><b>Ao vivo:</b> lido agora da planilha da Secretaria${VIVO.em?' às '+new Date(VIVO.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''}. Pedidos, chegadas, contagens e saídas registrados aqui <b>gravam na planilha</b>.</div>
@@ -831,7 +831,7 @@ function vBobinas(){
     : DB.fonte==='publicado'
     ? `<div class="banner ok"><b>Dados reais</b> da planilha da Secretaria, publicados em ${dmy(DB.atualizado)}: contagem física de 17/11 (Márcia) + saídas do GLOBO CONTROLE. Para ver o mais recente: <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>.<br>⚠️ Pedidos, chegadas e contagens registrados <b>nesta</b> página ficam só neste navegador. Para gravar na planilha, use o Sistema Globo dentro do Claude.</div>`
     : `<div class="banner ok">Dados da planilha <b>${esc(DB.fonte)}</b>, lidos neste navegador. Edições feitas aqui não voltam para a planilha.</div>`;
-  const body = {estoque:bEstoque, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
+  const body = {estoque:bEstoque, pedir:bPedir, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
   return ban + gravBox() + t + ((sub === 'estoque' || sub === 'entradas' || !sub) ? vNotasBobina() : '') + (sub === 'estoque' || !sub ? bFichasDemanda() : '') + body();
 }
 
@@ -859,15 +859,16 @@ function bEstoque(){
   const ps = Object.entries(porSku).sort((a,b)=>b[1]-a[1]); const mx2 = Math.max(1, ...ps.map(p=>p[1]));
   return `
   <div class="grid kpis">
-    <div class="card kpi ${n('PEDIR JÁ')?'bad':''}"><div class="v">${n('PEDIR JÁ')}</div><div class="l">pedir já</div></div>
-    <div class="card kpi ${n('PEDIR EM 2 SEM')?'warn':''}"><div class="v">${n('PEDIR EM 2 SEM')}</div><div class="l">pedir em 2 semanas</div></div>
+    <div class="card kpi ${n('PEDIR JÁ')?'bad':''}" onclick="ir('bobinas','pedir')" style="cursor:pointer" title="Montar o pedido"><div class="v">${n('PEDIR JÁ')}</div><div class="l">pedir já → montar pedido</div></div>
+    <div class="card kpi ${n('PEDIR EM 2 SEM')?'warn':''}" onclick="ir('bobinas','pedir')" style="cursor:pointer" title="Montar o pedido"><div class="v">${n('PEDIR EM 2 SEM')}</div><div class="l">pedir em 2 semanas</div></div>
     <div class="card kpi"><div class="v">${n('SEM CONTAGEM')}</div><div class="l">tipos sem contagem</div></div>
     <div class="card kpi ${sem?'warn':''}"><div class="v">${sem}</div><div class="l">saídas sem tipo</div></div>
   </div>
+  ${(n('PEDIR JÁ')+n('PEDIR EM 2 SEM'))?`<div style="margin:-4px 0 12px"><button class="btn pri" onclick="ir('bobinas','pedir')">🛒 Pedir já — montar o pedido com preço</button></div>`:''}
   <div class="card tw"><table>
     <thead><tr><th>Status</th><th>Tipo</th><th class="n">Saldo (bob.)</th><th class="n">Saldo kg</th><th class="n">Em trânsito</th><th class="n">Consumo/sem.</th><th class="n">Cobertura (sem.)</th><th>Acaba em</th><th>Pedir até</th><th class="n">Sugestão (bob.)</th><th>Última saída</th><th></th></tr></thead>
     <tbody>${E.map(e=>`<tr>
-      <td>${pill(e.st)}${e.conf?` <span title="${e.conf[1]}: ${esc(e.conf[2])}" style="cursor:help">${e.conf[0]}</span>`:''}</td><td><b>${e.sku}</b> <span class="mut">${esc(e.tipo)}</span></td>
+      <td>${PED_URG(e.st)?`<span onclick="ir('bobinas','pedir')" style="cursor:pointer" title="Montar o pedido">${pill(e.st)}</span>`:pill(e.st)}${e.conf?` <span title="${e.conf[1]}: ${esc(e.conf[2])}" style="cursor:help">${e.conf[0]}</span>`:''}</td><td><b>${e.sku}</b> <span class="mut">${esc(e.tipo)}</span></td>
       <td class="n">${e.saldo===null?'<span class="mut">sem contagem</span>':fmt(e.saldo)}</td><td class="n">${fmt(e.kg)}</td>
       <td class="n">${fmt(e.trans)}</td><td class="n">${fmt(e.cons,2)}</td><td class="n">${fmt(e.cob,1)}</td>
       <td>${dmy(e.rup)}</td><td>${dmy(e.ate)}</td><td class="n">${fmt(e.sug)}</td><td>${dmy(e.ult)}</td><td>${(e.st==='PEDIR JÁ'||e.st==='PEDIR EM 2 SEM')?`<button class="btn" style="white-space:nowrap" onclick="pedirRapido('${e.sku}',${e.sug||1})">Registrar pedido</button>`:''}</td></tr>`).join('')}</tbody>
@@ -897,6 +898,138 @@ function bSaidas(){
     <thead><tr><th>Data</th><th>Hora</th><th>Quem pegou</th><th>Tipo</th><th>Fornecedor</th><th class="n">Peso kg</th></tr></thead>
     <tbody>${rows.map(s=>`<tr><td>${dmy(s.data)}</td><td>${esc(s.hora)}</td><td>${esc(s.autor)}</td><td>${s.sku?esc(s.sku):'<span class="pill warn">sem tipo</span>'}</td><td>${esc(s.fornecedor)||'—'}</td><td class="n">${fmt(s.peso)}</td></tr>`).join('') || '<tr><td colspan=6 class="mut">Nenhuma saída.</td></tr>'}</tbody>
   </table></div>`;
+}
+
+/* =========================================================
+   🛒 Pedir já — monta o pedido de papel por fornecedor (kg por largura), com preço estimado
+   ========================================================= */
+let PED = {modo:{}, kg:{}, rkg:{}, nome:{}};
+try { Object.assign(PED.nome, JSON.parse(localStorage.getItem('glopel-pedir-nomes')||'{}')); } catch(e) {}
+const PED_URG = st => st==='PEDIR JÁ' || st==='PEDIR EM 2 SEM';
+const r50 = v => Math.max(50, Math.round(v/50)*50);
+function pedParse(sku){ const m = /^([A-Z]+?)(\d+)-(\d+)/.exec(String(sku||'')); return m ? {tp:m[1], g:Number(m[2]), w:Number(m[3])} : null; }
+function pedNomePadrao(tp, g){ if (tp==='KB' && g===30) return 'Kraft branco liso 30 grs.'; return ({KN:'Kraft pardo 3x4', KB:'Kraft branco 3x4', MG:'Monolúcido', G:'Greasepack', ST:'Strong', N:'Semi kraft'}[tp] || tp) + ' ' + g + ' grs.'; }
+/* R$/kg da nota mais nova (cofre/email): KN35 → K35, MG30 → M30; KB30 tem dois preços (liso e 3x4) */
+function pedPreco(tp, g){
+  const P = window.GLOPEL_PAPEIS || [], base = ({KN:'K', MG:'M'}[tp] || tp) + g;
+  const ach = P.filter(p => p[0]===base || p[0]===tp+g); const alt = P.filter(p => String(p[0]).startsWith(base) && !ach.includes(p));
+  const L = ach.concat(alt).filter(p => Number(p[3]) > 0);
+  return L.length ? {rkg:Number(L[0][3]), cod:L[0][0], fonte:L[0][4]||'', alt:L.slice(1).map(p=>p[0]+' '+brl(p[3]))} : null;
+}
+function pedMontar(){
+  const E = estoque().filter(e => pedParse(e.sku)), G = {};
+  E.forEach(e => { const p = pedParse(e.sku), f = String(e.fornecedor||'—').trim() || '—', k = f+'|'+p.tp+p.g;
+    (G[k] = G[k] || {k, f, tp:p.tp, g:p.g, itens:[]}).itens.push({...e, w:p.w}); });
+  const grupos = Object.values(G).map(gr => {
+    gr.itens.sort((a,b)=>a.w-b.w); gr.urg = gr.itens.some(e=>PED_URG(e.st));
+    gr.itens.forEach(e => {
+      const pm = e.pm || Math.round(e.w*3.8);
+      const bobSug = PED_URG(e.st) ? Math.max(1, e.sug||1) : (e.cons>0 ? Math.max(1, Math.ceil(e.cons*4)) : 1);
+      e.kgSug = r50(bobSug*pm); e.pmUsado = pm;
+      e.modo = PED.modo[e.sku] || (PED_URG(e.st) ? 'pedir' : 'nao');
+      e.kgPed = PED.kg[e.sku] ?? e.kgSug; e.bobPed = Math.max(1, Math.round(e.kgPed/pm));
+    });
+    const pr = pedPreco(gr.tp, gr.g); gr.preco = pr; gr.rkg = PED.rkg[gr.k] ?? (pr ? pr.rkg : null);
+    gr.nome = PED.nome[gr.tp+gr.g] || pedNomePadrao(gr.tp, gr.g);
+    gr.kg = gr.itens.filter(e=>e.modo==='pedir').reduce((a,e)=>a+e.kgPed,0);
+    gr.kgSe = gr.itens.filter(e=>e.modo==='se').reduce((a,e)=>a+e.kgPed,0);
+    gr.valor = gr.rkg ? gr.kg*gr.rkg : null;
+    return gr;
+  });
+  const forn = {}; grupos.forEach(gr => (forn[gr.f] = forn[gr.f] || []).push(gr));
+  return Object.entries(forn).map(([f, L]) => ({f, urg:L.filter(g=>g.urg).sort((a,b)=>a.tp.localeCompare(b.tp)||a.g-b.g), outros:L.filter(g=>!g.urg).sort((a,b)=>a.tp.localeCompare(b.tp)||a.g-b.g)}))
+    .filter(x => x.urg.length || x.outros.some(g=>g.itens.some(e=>e.modo!=='nao')));
+}
+function pedMsg(F){
+  const todos = F.urg.concat(F.outros), firmes = todos.filter(g=>g.itens.some(e=>e.modo==='pedir')), tps = new Set(firmes.map(g=>g.tp));
+  const blocos = firmes.map(g => g.itens.filter(e=>e.modo==='pedir').map(e=>`${Math.round(e.kgPed)} kilos ${e.w}cm`).join('\n') + '\n\n' + g.nome);
+  todos.filter(g=>g.itens.some(e=>e.modo==='se')).forEach(g => blocos.push(`Se for produzir o ${tps.has(g.tp) ? g.g+' grs.' : g.nome}\n` + g.itens.filter(e=>e.modo==='se').map(e=>`${e.w}cm = ${e.bobPed} bobina${e.bobPed>1?'s':''}`).join('\n')));
+  return blocos.join('\n\n');
+}
+function pedSet(tipo, chave, v){
+  if (tipo==='kg' || tipo==='rkg') { const x = num(v); if (x===null || x<0) delete PED[tipo][chave]; else PED[tipo][chave] = x; }
+  else if (tipo==='nome') { PED.nome[chave] = String(v||'').trim(); if (!PED.nome[chave]) delete PED.nome[chave]; try { localStorage.setItem('glopel-pedir-nomes', JSON.stringify(PED.nome)); } catch(e) {} }
+  else PED[tipo][chave] = v;
+  render();
+}
+function pedLimpar(){ PED.modo = {}; PED.kg = {}; PED.rkg = {}; render(); }
+function pedCopiar(i, btn){ const t = document.getElementById('pedMsg'+i); if (!t) return; t.select();
+  (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).catch(()=>document.execCommand('copy')).finally(()=>{ btn.textContent='Copiado ✓'; setTimeout(()=>btn.textContent='Copiar texto',1500); }); }
+function pedWhats(i){ const t = document.getElementById('pedMsg'+i); if (t) window.open('https://wa.me/?text='+encodeURIComponent(t.value), '_blank', 'noopener'); }
+function pedRegistrar(i){
+  const F = pedMontar()[i]; if (!F) return;
+  const L = F.urg.concat(F.outros).flatMap(g => g.itens.filter(e=>e.modo==='pedir').map(e => ({e, g})));
+  if (!L.length) return;
+  const hj = iso(hoje());
+  dialogo(`Registrar o pedido à ${esc(F.f)} como em trânsito?`,
+    `<div class="mut" style="font-size:13px;margin-bottom:8px">${L.length} linha(s) em Pedidos e entradas, status PEDIDO. Bobinas = kg ÷ peso médio (arredondado). As linhas "se for produzir" não entram.</div>
+     <table style="font-size:13px;margin-bottom:10px">${L.map(({e})=>`<tr><td><b>${e.sku}</b></td><td class="n">${fmt(e.kgPed)} kg</td><td class="n">≈ ${e.bobPed} bob.</td></tr>`).join('')}</table>
+     <label style="display:block;margin-bottom:8px">Pedido em<br><input type="date" name="pedido" value="${hj}" required></label>
+     <label style="display:block">Previsão de chegada<br><input type="date" name="previsao" value="${addD(hj, Number(L[0].e.lead||40))}"></label>`,
+    'Registrar', async (f) => {
+      if (AO_VIVO()) {
+        avisoGrav('Gravando o pedido na planilha…');
+        let ok = 0;
+        try { for (const {e} of L) { await api('pedido', {sku:e.sku, qtd:e.bobPed, peso:e.kgPed, fornecedor:F.f, pedido:f.pedido, previsao:f.previsao||'', obs:'montado no Pedir já: '+e.kgPed+' kg'}); ok++; }
+          await lerAoVivo(); avisoGrav(`Pedido à ${F.f} registrado: ${ok} linha(s) em trânsito.`, 'ok'); }
+        catch(x) { avisoGrav(`Parou na linha ${ok+1} de ${L.length}: ${x.message||x}. As ${ok} primeiras ficaram na planilha.`, 'erro'); }
+      } else {
+        L.forEach(({e}) => DB.ent.push({status:'PEDIDO', pedido:f.pedido, previsao:f.previsao, receb:'', sku:e.sku, fornecedor:F.f, qtd:e.bobPed, peso:e.kgPed, nf:''}));
+        salvar(); avisoGrav(`Pedido à ${F.f} guardado neste navegador (${L.length} linhas).`, 'ok');
+      }
+      L.forEach(({e}) => { delete PED.modo[e.sku]; delete PED.kg[e.sku]; }); render();
+    });
+}
+function bPedir(){
+  const FS = pedMontar(), FRETE = 0.05, IPI = 0.0325;
+  if (!FS.length) return `<div class="empty"><div class="ic">✅</div><b>Nada para pedir agora</b><div>Nenhum tipo de bobina está em PEDIR JÁ ou PEDIR EM 2 SEMANAS.</div></div>`;
+  const modoSel = e => `<select onchange="pedSet('modo','${e.sku}',this.value)" style="padding:3px 2px;font-size:13px;width:auto">${[['pedir','Pedir'],['se','Se produzir'],['nao','—']].map(([v,t])=>`<option value="${v}" ${e.modo===v?'selected':''}>${t}</option>`).join('')}</select>`;
+  const linha = e => `<tr style="${e.modo==='nao'?'opacity:.55':''}">
+    <td>${modoSel(e)}</td><td><b>${e.w} cm</b> <span class="mut" style="font-size:12px">${e.sku}</span></td>
+    <td>${pill(e.st)}${e.conf?` <span title="${e.conf[1]}: ${esc(e.conf[2])}" style="cursor:help">${e.conf[0]}</span>`:''}</td>
+    <td class="n" style="white-space:nowrap">${e.saldo===null?'<span class="mut">sem contagem</span>':fmt(e.saldo)+(e.trans?` <span class="mut">+${fmt(e.trans)}</span>`:'')+` <span class="mut" style="font-size:12px">· ${fmt(e.cons,1)}/sem.</span>`}</td>
+    <td style="white-space:nowrap">${e.rup?dmy(e.rup).slice(0,5):'—'}</td>
+    <td class="n" style="white-space:nowrap"><input value="${e.kgPed}" inputmode="numeric" style="width:64px;text-align:right" onchange="pedSet('kg','${e.sku}',this.value)"> <span class="mut" style="font-size:12px" title="peso médio ${fmt(e.pmUsado)} kg/bob.">≈ ${e.bobPed} bob.</span>${PED.kg[e.sku]!=null&&PED.kg[e.sku]!==e.kgSug?` <span class="mut" style="font-size:11px">(sug. ${fmt(e.kgSug)})</span>`:''}</td></tr>`;
+  const grupo = g => {
+    const pr = g.preco;
+    return `<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div><b style="font-size:16px">${g.tp}${g.g}</b> <input value="${esc(g.nome)}" onchange="pedSet('nome','${g.tp}${g.g}',this.value)" title="nome do papel na mensagem" style="min-width:220px"></div>
+      <div style="display:flex;gap:8px;align-items:center;font-size:13px">R$/kg <input value="${g.rkg!=null?String(g.rkg).replace('.',','):''}" placeholder="sem preço" inputmode="decimal" style="width:70px;text-align:right" onchange="pedSet('rkg','${g.k}',this.value)">
+        <span class="mut" style="font-size:12px">${pr?esc(pr.cod)+(pr.fonte?' · '+esc(pr.fonte):'')+(pr.alt.length?' · outros: '+esc(pr.alt.join(', ')):''):'sem nota deste papel — digite o preço'}</span></div>
+    </div>
+    <div class="tw"><table><thead><tr><th></th><th>Largura</th><th>Status</th><th class="n" title="bobinas na fábrica (+ em trânsito) · consumo por semana">Saldo · consumo</th><th>Acaba</th><th class="n">Pedir (kg)</th></tr></thead>
+    <tbody>${g.itens.map(linha).join('')}</tbody></table></div>
+    <div style="text-align:right;margin-top:6px;font-size:14px">${fmt(g.kg)} kg${g.valor!=null?` × ${brl(g.rkg)} = <b>${brl(g.valor)}</b>`:''}${g.kgSe?` <span class="mut">· + ${fmt(g.kgSe)} kg se produzir</span>`:''}</div></div>`;
+  };
+  return FS.map((F, i) => {
+    const todos = F.urg.concat(F.outros), kg = todos.reduce((a,g)=>a+g.kg,0), semP = todos.filter(g=>g.kg && g.rkg==null);
+    const prod = todos.reduce((a,g)=>a+(g.valor||0),0), ipi = prod*IPI, fr = prod*FRETE;
+    const msg = pedMsg(F);
+    return `<h3 style="margin:6px 0 10px">${esc(F.f)}</h3>
+    <div class="grid kpis">
+      <div class="card kpi"><div class="v">${fmt(kg/1000,2)} t</div><div class="l">${fmt(kg)} kg em ${todos.flatMap(g=>g.itens).filter(e=>e.modo==='pedir').length} larguras</div></div>
+      <div class="card kpi"><div class="v">${brl(prod)}</div><div class="l">produtos (preço da nota)</div></div>
+      <div class="card kpi"><div class="v">${brl(prod+ipi)}</div><div class="l">nota com IPI 3,25%</div></div>
+      <div class="card kpi ${semP.length?'warn':''}"><div class="v">${brl(prod+ipi+fr)}</div><div class="l">custo total com frete ≈5%${semP.length?' · falta preço de '+semP.map(g=>g.tp+g.g).join(', '):''}</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start">
+      <div style="flex:3 1 600px;min-width:0">${F.urg.map(grupo).join('')}
+        ${F.outros.length?`<details class="card" style="margin-bottom:12px" ${F.outros.some(g=>g.itens.some(e=>e.modo!=='nao'))?'open':''}><summary><b>Carona</b> — outros papéis da ${esc(F.f)} que não estão no alerta (marque "Se produzir" para pedir só se a fábrica for rodar essa gramatura)</summary><div style="margin-top:10px">${F.outros.map(grupo).join('')}</div></details>`:''}
+      </div>
+      <div class="card" style="flex:1 1 280px;max-width:420px;position:sticky;top:10px">
+        <b>Mensagem para a ${esc(F.f)}</b>
+        <textarea id="pedMsg${i}" rows="${Math.min(24, msg.split('\n').length+2)}" style="width:100%;margin:8px 0;font:14px ui-monospace,monospace;box-sizing:border-box">${esc(msg)}</textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="pedCopiar(${i},this)">Copiar texto</button>
+          <button class="btn" onclick="pedWhats(${i})">Abrir no WhatsApp</button>
+          <button class="btn pri" onclick="pedRegistrar(${i})" ${kg?'':'disabled'}>Registrar como em trânsito</button>
+        </div>
+        <div class="mut" style="font-size:12px;margin-top:8px">Dá para editar o texto antes de copiar. Registrar grava as linhas "Pedir" em Pedidos e entradas (status PEDIDO), então o alerta para de gritar.</div>
+      </div>
+    </div>`;
+  }).join('<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">') + `
+  <p class="note">Sugestão em kg = bobinas sugeridas × peso médio da bobina, arredondado a 50 kg. Bobinas sugeridas cobrem o prazo de entrega + margem + 4 semanas, descontando saldo e trânsito (mesma conta da aba Estoque). Na carona, a sugestão é ~4 semanas de consumo. Preço = último R$/kg da nota (cofre ou email), sem IPI; IPI 3,25% por fora e frete ≈5% pago pela Globo. <button class="btn" style="padding:1px 8px" onclick="pedLimpar()">Voltar às sugestões</button></p>`;
 }
 
 let PRE = null;

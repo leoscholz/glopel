@@ -78,7 +78,7 @@ function ler() {
 /* ---------- gravação ---------- */
 function pedido(d) {
   exigir(d, ['sku', 'qtd', 'pedido']);
-  aba('Bob_Entradas').appendRow(['PEDIDO', data(d.pedido), data(d.previsao), '', d.sku, d.fornecedor || '', num(d.qtd), '', '', '']);
+  aba('Bob_Entradas').appendRow(['PEDIDO', data(d.pedido), data(d.previsao), '', d.sku, d.fornecedor || '', num(d.qtd), d.peso ? num(d.peso) : '', '', '', d.obs || '', d.peso ? 'site (Pedir já)' : '']);
   return { msg: 'Pedido registrado.' };
 }
 function chegou(d) {
