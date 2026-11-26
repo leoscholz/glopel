@@ -233,3 +233,49 @@ function registrarLog(acao, quem, d) {
 function saida(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
+
+/* ---------- Portal do cliente (link secreto no WhatsApp) → ficha WA-GLS-XXXXX ----------
+ * Instalar (uma vez):
+ *   1. Apps Script › ⚙️ Configurações do projeto › Propriedades do script › PORTAL_SEGREDO = <valor que o SQL portal.sql mostrou>
+ *   2. Rodar portalSync() uma vez à mão (autorizar o acesso a "serviço externo").
+ *   3. Rodar instalaPortalSync() uma vez → cria o gatilho que roda portalSync a cada 5 minutos.
+ * A ficha nasce NOVA, origem "Portal WhatsApp": uma pessoa confere (CONFERIDA) antes de lançar no Start.
+ */
+const SB_URL = 'https://dzfelcufnsltutxeidow.supabase.co', SB_KEY = 'sb_publishable_kKBiEe6G8D_uEYO8NiWDCA_foi3zxwl';
+function sbRpc(fn, args) {
+  const r = UrlFetchApp.fetch(SB_URL + '/rest/v1/rpc/' + fn, { method: 'post', contentType: 'application/json',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }, payload: JSON.stringify(args), muteHttpExceptions: true });
+  const t = r.getContentText();
+  if (r.getResponseCode() >= 300) throw new Error(fn + ': ' + t.slice(0, 300));
+  return t ? JSON.parse(t) : null;
+}
+function portalSync() {
+  const seg = PropertiesService.getScriptProperties().getProperty('PORTAL_SEGREDO');
+  if (!seg) throw new Error('falta PORTAL_SEGREDO nas Propriedades do script');
+  const trava = LockService.getScriptLock();
+  if (!trava.tryLock(20000)) return 'ocupado';
+  const feitos = [];
+  try {
+    (sbRpc('portal_pendentes', { p_segredo: seg }) || []).forEach(p => {
+      const id = 'WA-' + p.codigo;
+      const its = (p.itens || []).map(l => ({ pid: l.pid || String(l.id || '').replace(/#arte.*$/, ''), prod: l.nome + (l.variacao ? ' · ' + l.variacao : ''),
+        arte: l.arte_nome || 'de sempre', arte_nova: false, cores: '', mil: Number(l.qtd), preco: Number(l.preco), obs: '' }));
+      const quando = p.criado_em ? new Date(p.criado_em) : new Date();
+      upsert({ aba: 'Fichas_pedido', registro: { id: id, num: '', data: Utilities.formatDate(quando, 'America/Sao_Paulo', 'yyyy-MM-dd'),
+        status: 'NOVA', origem: 'Portal WhatsApp', empresa: 'Globo', cliente: p.nome, cliente_chave: p.cliente_chave || '', cliente_doc: '',
+        cliente_fone: p.telefone || '', cliente_local: '', vendedor: p.vendedor || '', tabela: p.tabela || 'I',
+        itens_txt: its.map(i => i.mil + ' mil ' + i.prod + ' / ' + i.arte).join(' | '), itens: JSON.stringify(its),
+        total_itens: String(p.total), acrescimo: '0', desconto: '0', total: String(p.total), pagamento: '', vencimento: '', entrega_prev: '',
+        obs: 'Pedido feito pelo cliente no link (' + p.codigo + ')' + (p.obs ? ' — ' + p.obs : ''), start_num: '', criado_em: quando.toISOString() } }, 'portal');
+      sbRpc('portal_marca', { p_segredo: seg, p_codigo: p.codigo, p_ficha: id });
+      registrarLog('portal', 'portal', { codigo: p.codigo, ficha: id, total: p.total, cliente: p.nome });
+      feitos.push(id);
+    });
+  } finally { trava.releaseLock(); }
+  return feitos;
+}
+function instalaPortalSync() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'portalSync').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('portalSync').timeBased().everyMinutes(5).create();
+  return 'gatilho criado: portalSync a cada 5 min';
+}

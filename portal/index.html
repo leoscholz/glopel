@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Embalagens Globo — seus pedidos</title>
+<meta property="og:title" content="Embalagens Globo — faça seu pedido">
+<meta property="og:description" content="Seus produtos, com a sua arte de sempre. Escolha as quantidades e pronto.">
+<style>
+:root{--azul:#1f5fae;--azul2:#2f7fd0;--verde:#1a8f4a;--txt:#1b2430;--sub:#667085;--line:#e4e7ec;--pg:#f4f6f9;--amar:#fff6db;--amarb:#f0c64a;--verm:#c0392b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--pg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px}
+button{font:inherit;cursor:pointer}
+header{background:var(--azul);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+header .marca{font-weight:800;letter-spacing:.3px;font-size:17px}
+header .marca small{display:block;font-weight:400;opacity:.85;font-size:12px;letter-spacing:0}
+header .voltar{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;padding:8px 10px;font-size:15px}
+main{max-width:560px;margin:0 auto;padding:16px 14px 120px}
+.teste{background:#fdecea;color:#8a1c12;border:1px solid #f5b7b1;border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:12px;text-align:center}
+h1{font-size:22px;margin:6px 0 4px}
+h2{font-size:17px;margin:22px 0 8px}
+.sub{color:var(--sub);font-size:14px;margin:0 0 14px}
+.grande{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin:10px 0;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.grande .ic{font-size:30px;width:46px;height:46px;border-radius:12px;background:#eaf1fb;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.grande b{display:block;font-size:18px}
+.grande span{color:var(--sub);font-size:14px}
+.grande.prim{background:var(--azul);color:#fff;border-color:var(--azul)}
+.grande.prim span{color:#dce8f8}.grande.prim .ic{background:rgba(255,255,255,.18)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;margin:12px 0;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.prod{display:flex;gap:12px;padding:12px}
+.prod .foto{width:104px;height:130px;border-radius:12px;background:#f2ede4;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.prod .foto img{width:100%;height:100%;object-fit:contain}
+.prod .info{flex:1;min-width:0}
+.prod .nome{font-weight:700;font-size:17px;margin:2px 0}
+.prod .det{color:var(--sub);font-size:13px;line-height:1.35}
+.prod .preco{font-size:14px;margin-top:6px}
+.selo{display:inline-block;background:#e8f5ee;color:var(--verde);font-size:12px;font-weight:600;border-radius:20px;padding:2px 8px;margin-bottom:2px}
+.qtd{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.qtd button.pm{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:22px;font-weight:700;color:var(--azul)}
+.qtd input{width:64px;height:44px;border-radius:12px;border:1px solid var(--line);text-align:center;font-size:18px;font-weight:700}
+.qtd .un{color:var(--sub);font-size:13px}
+.chip{border:1px dashed var(--azul2);color:var(--azul);background:#f5f9ff;border-radius:20px;padding:6px 10px;font-size:13px}
+.aviso{background:var(--amar);border:1px solid var(--amarb);border-radius:10px;padding:6px 9px;font-size:13px;margin-top:8px}
+.barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:6}
+.barra .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.barra .res{flex:1;font-size:14px;color:var(--sub)}
+.barra .res b{display:block;color:var(--txt);font-size:18px}
+.btn{background:var(--verde);color:#fff;border:0;border-radius:14px;padding:14px 18px;font-weight:700;font-size:17px}
+.btn:disabled{background:#b9c2cc}
+.btn.azul{background:var(--azul)}
+.btn.claro{background:#fff;color:var(--azul);border:1px solid var(--line)}
+.btn.larga{width:100%;margin-top:10px}
+.lin{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:15px}
+.lin:first-child{border-top:0}
+.lin small{color:var(--sub);display:block;font-size:13px}
+.tot{font-weight:800;font-size:18px}
+textarea{width:100%;min-height:70px;border-radius:12px;border:1px solid var(--line);padding:10px;font:inherit;font-size:15px}
+.hist .top{display:flex;justify-content:space-between;padding:12px 14px 6px}
+.hist .top b{font-size:16px}
+.hist ul{margin:0;padding:0 14px 6px 30px;color:var(--txt);font-size:14px;line-height:1.6}
+.hist .acoes{padding:6px 14px 14px}
+.ok{text-align:center;padding:26px 10px 6px}
+.ok .gr{font-size:56px}
+.ok h1{margin:6px 0}
+.cod{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:22px;font-weight:800;background:#eaf1fb;color:var(--azul);border-radius:10px;padding:6px 12px;margin:8px 0}
+.muted{color:var(--sub);font-size:14px;line-height:1.45}
+.centro{text-align:center}
+.carreg{text-align:center;color:var(--sub);padding:60px 0}
+a{color:var(--azul)}
+.erro{background:#fdecea;border:1px solid #f5b7b1;color:#8a1c12;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px}
+</style>
+</head>
+<body>
+<header><button class="voltar" id="bVoltar" style="display:none" onclick="voltar()">‹</button><div class="marca">Embalagens Globo<small id="hSub">Sacos de papel com a sua marca</small></div></header>
+<main id="app"><div class="carreg">Carregando…</div></main>
+<div class="barra" id="barra" style="display:none"></div>
+<script>
+/* Portal do cliente — Embalagens Globo · v1 (26-11-2026)
+   Link secreto por cliente: <site>/<TOKEN>/  ·  /<TOKEN>/fazerpedido  ·  /<TOKEN>/pedidos
+   (também funciona como portal/?t=<TOKEN>#fazerpedido). Sem login: o token É a identidade.
+   Dados: Supabase, só pelas funções portal_get e portal_pedido (a tabela de clientes é fechada).
+   O preço é recalculado no banco; o site nunca manda preço. */
+const SB_URL='https://dzfelcufnsltutxeidow.supabase.co', SB_KEY='sb_publishable_kKBiEe6G8D_uEYO8NiWDCA_foi3zxwl';
+const WA_GLOBO='554191455539';
+const BASE = location.pathname.startsWith('/glopel/') ? '/glopel/' : '/';
+const RX = /^([A-Za-z0-9]{16})(?:\/(fazerpedido|pedidos))?\/?$/;
+let TOKEN=null, MODO_PATH=false, VIEW='inicio', D=null, CARR={}, ULTIMO=null, ENVIANDO=false;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=v=>(+v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dataBR=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?`${m[3]}/${m[2]}/${m[1]}`:esc(s)};
+const mil=q=>q+' milheiro'+(q==1?'':'s');
+const img=p=>!p?'':/^https?:/.test(p)?p:BASE+p.split('/').map(encodeURIComponent).join('/');
+
+function lerRota(){
+  const rel=location.pathname.slice(BASE.length), m=RX.exec(rel);
+  if(m){ MODO_PATH=true; TOKEN=m[1]; return m[2]||'inicio'; }
+  const t=new URLSearchParams(location.search).get('t');
+  if(t && /^[A-Za-z0-9]{16}$/.test(t)){ TOKEN=t; return (location.hash.slice(1)||'inicio'); }
+  return null;
+}
+function ir(v, sub){
+  VIEW=v;
+  if(MODO_PATH){ const u=BASE+TOKEN+'/'+(v==='inicio'||v==='revisar'||v==='ok'?'':v); if(!sub) history.pushState({v},'',u); }
+  else if(!sub) history.pushState({v},'',location.pathname+location.search+'#'+v);
+  render(); scrollTo(0,0);
+}
+function voltar(){ if(VIEW==='revisar') ir('fazerpedido'); else ir('inicio'); }
+onpopstate=e=>{ VIEW=(e.state&&e.state.v)||lerRota()||'inicio'; render(); };
+
+async function rpc(fn, args){
+  const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok) throw new Error((j&&j.message)||('erro '+r.status));
+  return j;
+}
+const chaveCarr=()=>'globo_carr_'+TOKEN;
+function salvaCarr(){ try{ localStorage.setItem(chaveCarr(),JSON.stringify(CARR)); }catch(_){} }
+function leCarr(){ try{ CARR=JSON.parse(localStorage.getItem(chaveCarr())||'{}')||{}; }catch(_){ CARR={}; } }
+const prods=()=>[...(D.produtos||[])].sort((a,b)=>(b.vezes||0)-(a.vezes||0)||String(a.nome).localeCompare(b.nome,'pt'));
+const prod=pid=>(D.produtos||[]).find(p=>p.pid===pid);
+function itensCarr(){ return Object.entries(CARR).filter(([pid,q])=>q>0&&prod(pid)).map(([pid,q])=>({p:prod(pid),q})); }
+const totalCarr=()=>itensCarr().reduce((t,{p,q})=>t+q*p.preco,0);
+
+function setQ(pid,q){ q=Math.max(0,Math.min(500,parseInt(q)||0)); if(q) CARR[pid]=q; else delete CARR[pid]; salvaCarr(); render(true); }
+
+function render(soParte){
+  const A=$('#app'), B=$('#barra');
+  $('#bVoltar').style.display = (VIEW==='inicio'||VIEW==='ok')?'none':'';
+  B.style.display='none';
+  if(!D){ return; }
+  const teste = D.teste?`<div class="teste">🧪 Cliente de TESTE — nada aqui é produzido ou faturado</div>`:'';
+  if(VIEW==='inicio'){
+    $('#hSub').textContent='Pedidos de '+D.nome;
+    const n=itensCarr().length;
+    A.innerHTML=teste+`<h1>Olá, ${esc(D.nome)}!</h1><p class="sub">Seus sacos com a arte de sempre. É só escolher as quantidades.</p>
+      <button class="grande prim" onclick="ir('fazerpedido')"><div class="ic">🛒</div><div><b>Fazer pedido</b><span>${n?`${n} produto${n>1?'s':''} já escolhido${n>1?'s':''} — continuar`:'Escolher produtos e quantidades'}</span></div></button>
+      <button class="grande" onclick="ir('pedidos')"><div class="ic">🧾</div><div><b>Pedidos anteriores</b><span>Ver e repetir um pedido</span></div></button>
+      ${(D.abertos||[]).length?`<h2>Enviados por aqui</h2><div class="card">${D.abertos.slice(0,3).map(a=>`<div class="lin"><div><b>${esc(a.codigo)}</b><small>${new Date(a.quando).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></div><div>${brl(a.total)}</div></div>`).join('')}</div>`:''}
+      <p class="muted centro" style="margin-top:26px">Arte nova, saco diferente ou dúvida?<br><a href="https://wa.me/${WA_GLOBO}">Falar com a Globo no WhatsApp</a></p>`;
+    return;
+  }
+  if(VIEW==='pedidos'){
+    $('#hSub').textContent='Pedidos anteriores';
+    const H=D.historico||[];
+    A.innerHTML=teste+`<h1>Pedidos anteriores</h1><p class="sub">Toque em “Repetir” para usar as mesmas quantidades. Você ainda pode mudar antes de enviar.</p>`+
+      (H.length?H.map((h,i)=>{ const its=(h.itens||[]).filter(x=>prod(x.pid)&&x.qtd>0);
+        return `<div class="card hist"><div class="top"><b>${dataBR(h.data)}</b><span>${brl(h.total)}</span></div>
+          <ul>${(h.itens||[]).map(x=>{const p=prod(x.pid);return `<li>${mil(x.qtd)} — ${esc(p?p.nome+' · '+p.variacao:(x.nome||x.pid))}</li>`}).join('')}</ul>
+          <div class="acoes">${its.length?`<button class="btn azul larga" onclick="repetir(${i})">🔁 Repetir este pedido</button>`:`<span class="muted">Produtos fora da sua lista atual — fale com a Globo.</span>`}</div></div>`;}).join('')
+       :`<div class="card"><div class="lin">Ainda não temos pedidos anteriores aqui.</div></div>`);
+    return;
+  }
+  if(VIEW==='fazerpedido'){
+    $('#hSub').textContent='Fazer pedido';
+    const L=prods(), topo=L.filter(p=>p.vezes>0).slice(0,3).map(p=>p.pid);
+    const html=teste+`<h1>Fazer pedido</h1><p class="sub">Quantidades em <b>milheiros</b> (1 milheiro = 1.000 sacos). Todos com a sua arte de sempre.</p>`+
+      L.map(p=>{ const q=CARR[p.pid]||0, abaixo=q>0&&p.minimo&&q<p.minimo;
+        return `<div class="card"><div class="prod">
+          <div class="foto" onclick="trocaFoto(this,'${esc(p.pid)}')">${p.img?`<img loading="lazy" alt="" src="${esc(img(p.img))}">`:'🛍️'}</div>
+          <div class="info">${topo.includes(p.pid)?'<span class="selo">★ Você mais pede</span>':''}
+            <div class="nome">${esc(p.nome)}</div>
+            <div class="det">${esc(p.variacao)}${p.medidas?' · '+esc(p.medidas)+' cm':''}<br>Arte: ${esc(p.arte||'a de sempre')}</div>
+            <div class="preco"><b>${brl(p.preco)}</b> / milheiro</div>
+            <div class="qtd"><button class="pm" aria-label="menos" onclick="setQ('${p.pid}',${q-1})">−</button>
+              <input inputmode="numeric" pattern="[0-9]*" value="${q||''}" placeholder="0" onchange="setQ('${p.pid}',this.value)" aria-label="milheiros">
+              <button class="pm" aria-label="mais" onclick="setQ('${p.pid}',${q+1})">+</button>
+              ${!q&&p.ultimo?`<button class="chip" onclick="setQ('${p.pid}',${p.ultimo})">Último: ${p.ultimo}</button>`:''}</div>
+            ${q?`<div class="det" style="margin-top:6px">${mil(q)} = <b>${brl(q*p.preco)}</b></div>`:''}
+            ${abaixo?`<div class="aviso">Pedido mínimo deste saco: ${mil(p.minimo)}. A Globo confere com você.</div>`:''}
+          </div></div></div>`; }).join('')+
+      `<p class="muted centro" style="margin-top:18px">Precisa de outro produto ou de arte nova?<br><a href="https://wa.me/${WA_GLOBO}">Falar com a Globo</a></p>`;
+    const y=scrollY; A.innerHTML=html; if(soParte) scrollTo(0,y);
+    const n=itensCarr().length;
+    B.style.display=''; B.innerHTML=`<div class="in"><div class="res">${n?`${n} produto${n>1?'s':''}`:'Nenhum produto ainda'}<b>${brl(totalCarr())}</b></div>
+      <button class="btn" ${n?'':'disabled'} onclick="ir('revisar')">Revisar pedido ›</button></div>`;
+    return;
+  }
+  if(VIEW==='revisar'){
+    $('#hSub').textContent='Revisar pedido';
+    const I=itensCarr(); if(!I.length){ ir('fazerpedido',true); return; }
+    A.innerHTML=teste+`<h1>Confira seu pedido</h1><p class="sub">Tudo com a sua arte de sempre.</p>
+      <div class="card">${I.map(({p,q})=>`<div class="lin"><div>${mil(q)} — <b>${esc(p.nome)}</b><small>${esc(p.variacao)} · ${brl(p.preco)}/milheiro</small></div><div>${brl(q*p.preco)}</div></div>`).join('')}
+        <div class="lin"><div class="tot">Total</div><div class="tot">${brl(totalCarr())}</div></div></div>
+      <label class="muted" for="obs">Alguma observação? (prazo, entrega, forma de pagamento)</label>
+      <textarea id="obs" maxlength="500" placeholder="Opcional">${esc(sessionStorage.getItem('globo_obs_'+TOKEN)||'')}</textarea>
+      <div id="err"></div>
+      <button class="btn larga" id="bEnviar" onclick="enviar()">✅ Fazer pedido</button>
+      <button class="btn claro larga" onclick="ir('fazerpedido')">Mudar quantidades</button>
+      <p class="muted centro">A Globo confere preço e prazo e te confirma pelo WhatsApp.</p>`;
+    $('#obs').oninput=e=>{ try{ sessionStorage.setItem('globo_obs_'+TOKEN,e.target.value); }catch(_){} };
+    return;
+  }
+  if(VIEW==='ok' && ULTIMO){
+    $('#hSub').textContent='Pedido enviado';
+    A.innerHTML=teste+`<div class="ok"><div class="gr">✅</div><h1>Pedido recebido!</h1><div class="cod">${esc(ULTIMO.codigo)}</div>
+      <p class="muted">A Globo já recebeu e vai te confirmar pelo WhatsApp.<br><b>Não precisa mandar mais nada.</b></p></div>
+      <div class="card">${ULTIMO.linhas.map(l=>`<div class="lin"><div>${mil(l.qtd)} — <b>${esc(l.nome)}</b><small>${esc(l.variacao||'')}</small></div><div>${brl(l.total)}</div></div>`).join('')}
+        <div class="lin"><div class="tot">Total</div><div class="tot">${brl(ULTIMO.total)}</div></div></div>
+      <a class="btn azul larga" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/${WA_GLOBO}?text=${encodeURIComponent('Fiz o pedido '+ULTIMO.codigo+' pelo link 👍')}">Voltar ao WhatsApp</a>
+      <button class="btn claro larga" onclick="ir('inicio')">Início</button>`;
+    return;
+  }
+  ir('inicio',true);
+}
+function trocaFoto(el,pid){ const p=prod(pid); if(!p||!p.img2) return; const i=el.querySelector('img'); if(!i) return; i.src = i.src.endsWith(encodeURI(p.img2).split('/').pop()) ? img(p.img) : img(p.img2); }
+function repetir(i){ const h=(D.historico||[])[i]; if(!h) return; CARR={}; (h.itens||[]).forEach(x=>{ if(prod(x.pid)&&x.qtd>0) CARR[x.pid]=x.qtd; }); salvaCarr(); ir('fazerpedido'); }
+async function enviar(){
+  if(ENVIANDO) return; ENVIANDO=true;
+  const b=$('#bEnviar'); b.disabled=true; b.textContent='Enviando…'; $('#err').innerHTML='';
+  try{
+    const r=await rpc('portal_pedido',{p_token:TOKEN, p_itens:itensCarr().map(({p,q})=>({pid:p.pid,qtd:q})), p_obs:($('#obs').value||'').trim()||null});
+    ULTIMO=r; CARR={}; salvaCarr(); try{ sessionStorage.removeItem('globo_obs_'+TOKEN); }catch(_){}
+    D.abertos=[{codigo:r.codigo,total:r.total,quando:new Date().toISOString()}].concat(D.abertos||[]);
+    ir('ok');
+  }catch(e){
+    $('#err').innerHTML=`<div class="erro">Não consegui enviar: ${esc(e.message)}.<br>Tente de novo em instantes ou <a href="https://wa.me/${WA_GLOBO}">fale com a Globo</a>.</div>`;
+    b.disabled=false; b.textContent='✅ Fazer pedido';
+  }finally{ ENVIANDO=false; }
+}
+async function inicia(){
+  const v=lerRota();
+  if(!TOKEN){ $('#app').innerHTML=`<div class="carreg"><h1>Página não encontrada</h1><p class="muted"><a href="${BASE}editor-sacolas/">Ir para a loja da Embalagens Globo</a></p></div>`; return; }
+  try{ D=await rpc('portal_get',{p_token:TOKEN}); }catch(e){ D=null; }
+  if(!D){ $('#app').innerHTML=`<div class="carreg"><h1>Link inválido ou expirado</h1><p class="muted">Peça um link novo para a Globo.<br><a href="https://wa.me/${WA_GLOBO}">Falar no WhatsApp</a></p></div>`; return; }
+  leCarr(); VIEW=v; history.replaceState({v},'' ,location.href); render();
+}
+inicia();
+</script>
+</body>
+</html>
