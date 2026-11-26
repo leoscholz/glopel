@@ -228,6 +228,32 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 @media(max-width:900px){.try .wrap{grid-template-columns:1fr;gap:20px}.scene{height:480px;order:-1}}
 @media(max-width:480px){.bag3d{transform-origin:center;scale:.8}.scene{height:440px;margin-top:-20px}.row2{grid-template-columns:1fr}}
 
+
+/* ===== orçamento na hora ===== */
+.quote .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
+.qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.qty input{-moz-appearance:textfield}
+.qform{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;display:grid;gap:18px;align-content:start}
+.qcats{display:flex;flex-wrap:wrap;gap:8px}
+.qcats button{font:inherit;font-size:14px;font-weight:700;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.qcats button[aria-pressed=true]{background:var(--night);border-color:var(--night);color:#fff}
+.qform select{width:100%;font:inherit;font-size:16px;padding:12px 40px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--mist) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234a5873' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center;appearance:none;color:var(--ink)}
+.qform select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,127,208,.15)}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:22px;font-weight:700;cursor:pointer;color:var(--ink)}
+.qty input{width:110px;text-align:center;font:inherit;font-size:20px;font-weight:900;padding:9px;border:1px solid var(--line);border-radius:12px;background:var(--mist)}
+.qty span{color:var(--ink-2);font-weight:700}
+.qres{position:relative;overflow:hidden;isolation:isolate;border-radius:var(--r);padding:28px;background:var(--night);color:#fff;display:flex;flex-direction:column;gap:14px}
+.qres::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(70% 60% at 100% 0%,rgba(47,127,208,.5),transparent 70%)}
+.qres .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.qres .tot{font-size:clamp(40px,5vw,60px);font-weight:900;letter-spacing:-.04em;line-height:1}
+.qres .ln{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid rgba(255,255,255,.1);font-size:15px;color:rgba(255,255,255,.8)}
+.qres .ln b{color:#fff}
+.qres .warn{font-size:14px;background:rgba(212,174,116,.14);border:1px solid rgba(212,174,116,.35);color:#f3dcb4;padding:10px 12px;border-radius:12px}
+.qres .note{font-size:13px;color:rgba(255,255,255,.55)}
+.qres .ctas{margin-top:auto}
+.qres .btn{flex:1}
+@media(max-width:900px){.quote .wrap{grid-template-columns:1fr}}
+
 /* entrada suave */
 .js .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
 .js .rv.on{opacity:1;transform:none}
@@ -268,7 +294,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <nav>
       <a href="#produtos">Produtos</a>
       <a href="#experimente">Experimente</a>
-      <a href="#personalize">Editor</a>
+      <a href="#orcamento">Orçamento</a>
       <a href="#sobre">Sobre</a>
       <a href="#contato">Contato</a>
       <a class="btn btn-pri" href="editor-sacolas/#loja">Catálogo</a>
@@ -373,6 +399,31 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
       <span class="chip"><i style="background:#fff;box-shadow:inset 0 0 0 3px #f0e6e4"></i>Antigordura</span>
       <span class="chip"><i style="background:linear-gradient(135deg,#fff,#e9edf0)"></i>Monolúcido</span>
       <span class="chip">+ plásticos e descartáveis para revenda</span>
+    </div>
+  </div>
+</section>
+
+<section class="quote light" id="orcamento">
+  <div class="wrap" style="display:block">
+    <div class="head rv"><div><span class="tag"><i></i>Orçamento na hora</span><h2>Quanto custa? Veja agora.</h2></div><p>Preços da tabela 2026, direto do catálogo. Escolha o produto e a quantidade.</p></div>
+  </div>
+  <div class="wrap rv">
+    <div class="qform">
+      <div class="fld"><label>Categoria</label><div class="qcats" id="qCat"></div></div>
+      <div class="row2">
+        <div class="fld"><label for="qProd">Produto</label><select id="qProd"></select></div>
+        <div class="fld"><label for="qPap">Papel</label><select id="qPap"></select></div>
+      </div>
+      <div class="fld"><label for="qQtd">Quantidade</label><div class="qty"><button type="button" id="qMenos" aria-label="Menos">−</button><input id="qQtd" type="number" min="1" step="1" inputmode="numeric"><button type="button" id="qMais" aria-label="Mais">+</button><span id="qUn">milheiros</span></div></div>
+    </div>
+    <div class="qres" aria-live="polite">
+      <span class="lbl">Total estimado</span>
+      <div class="tot" id="qTot">—</div>
+      <div class="ln"><span id="qLinha">—</span><b id="qPreco"></b></div>
+      <div class="ln"><span>Por unidade</span><b id="qUnit">—</b></div>
+      <div class="warn" id="qWarn" hidden></div>
+      <p class="note">Arte nova paga o clichê (chapa de impressão) uma vez; nos pedidos seguintes ele é reaproveitado. A Globo confirma preço, prazo e pagamento no WhatsApp.</p>
+      <div class="ctas"><a class="btn btn-wa" id="qWa" href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg> Pedir este orçamento</a><a class="btn btn-glass" href="editor-sacolas/#loja">Montar no catálogo</a></div>
     </div>
   </div>
 </section>
@@ -553,6 +604,59 @@ document.querySelectorAll('.rv').forEach(el => io ? io.observe(el) : el.classLis
   scene.addEventListener('pointerup', up); scene.addEventListener('pointercancel', up);
   scene.style.touchAction = 'pan-y'; scene.style.cursor = 'grab';
   if (!reduce) (function loop(now) { if (idle && !drag) { ry = -18 + Math.sin((now - t0) / 1000 * .7) * 22; bag.style.transition = 'none'; set(); } requestAnimationFrame(loop); })(t0);
+})();
+
+
+// ===== orçamento na hora: lê o mesmo catálogo da loja (preço exibido = coluna "preco") =====
+(() => {
+  const box = document.getElementById('orcamento'); if (!box) return;
+  const CATS = {pao:'Pão', lanche:'Lanches', envelope:'Envelopes', talher:'Porta-talher', lamina:'Lâminas', bandeja:'Bandejas', bobina:'Bobinas', outros:'Outros'};
+  const brl = v => v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2, maximumFractionDigits: v < 1 ? 3 : 2});
+  const $ = id => document.getElementById(id);
+  let itens = [], cat = 'pao';
+  const nomeProd = i => i.nome + (i.medidas && !/×/.test(i.nome) ? ' · ' + i.medidas + ' cm' : '');
+  const minQ = i => typeof i.minimo === 'number' ? Math.ceil(i.minimo / 1000) : parseInt(i.minimo) || 1;
+  function prods() { const seen = new Map(); itens.filter(i => i.cat === cat).forEach(i => { const k = nomeProd(i); if (!seen.has(k)) seen.set(k, []); seen.get(k).push(i); }); return seen; }
+  function fillCats() {
+    const have = new Set(itens.map(i => i.cat));
+    $('qCat').innerHTML = Object.entries(CATS).filter(([k]) => have.has(k)).map(([k, n]) => `<button type="button" data-v="${k}" aria-pressed="${k === cat}">${n}</button>`).join('');
+  }
+  function fillProds() { const m = prods(); $('qProd').innerHTML = [...m.keys()].map(k => `<option>${k}</option>`).join(''); fillPap(true); }
+  function fillPap(resetQ) {
+    const list = prods().get($('qProd').value) || [];
+    $('qPap').innerHTML = list.map((i, n) => `<option value="${n}">${i.papel}</option>`).join('');
+    if (resetQ) { const it = cur(); if (it) $('qQtd').value = minQ(it); }
+    calc();
+  }
+  const cur = () => (prods().get($('qProd').value) || [])[+$('qPap').value || 0];
+  function calc() {
+    const it = cur(); if (!it) return;
+    const q = Math.max(1, parseInt($('qQtd').value) || 1), kg = it.un === 'kg';
+    $('qUn').textContent = kg ? 'kg' : (q === 1 ? 'milheiro' : 'milheiros') + ' (' + (q * 1000).toLocaleString('pt-BR') + ' un.)';
+    const tot = q * it.preco;
+    $('qTot').textContent = brl(tot);
+    $('qLinha').textContent = (kg ? q + ' kg × ' : q + ' × milheiro de ') + it.nome.toLowerCase().replace(/^saco /, 'saco ') ;
+    $('qPreco').textContent = brl(it.preco) + (kg ? '/kg' : '/milh.');
+    $('qUnit').textContent = kg ? '—' : brl(it.preco / 1000) + ' por saco';
+    const mq = minQ(it), w = $('qWarn');
+    if (q < mq) { w.hidden = false; w.textContent = `Pedido mínimo: ${typeof it.minimo === 'number' ? it.minimo.toLocaleString('pt-BR') + ' un. (1 cor)' : it.minimo}. Abaixo disso, a Globo avalia caso a caso.`; } else w.hidden = true;
+    const msg = `Olá! Fiz um orçamento no site embalagens.app: ${kg ? q + ' kg' : q + ' milheiro(s)'} de ${nomeProd(it)} · ${it.papel} → ${brl(tot)} (${brl(it.preco)}${kg ? '/kg' : '/milheiro'}). Pode confirmar?`;
+    $('qWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(msg);
+  }
+  $('qCat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; cat = b.dataset.v; fillCats(); fillProds(); });
+  $('qProd').addEventListener('change', () => fillPap(true));
+  $('qPap').addEventListener('change', () => { const it = cur(); if (it && (+$('qQtd').value || 0) < minQ(it)) $('qQtd').value = minQ(it); calc(); });
+  $('qQtd').addEventListener('input', calc);
+  $('qMenos').onclick = () => { $('qQtd').value = Math.max(1, (+$('qQtd').value || 1) - 1); calc(); };
+  $('qMais').onclick = () => { $('qQtd').value = (+$('qQtd').value || 0) + 1; calc(); };
+  let loaded = false;
+  const load = () => { if (loaded) return; loaded = true;
+    fetch('editor-sacolas/src/catalogo/catalogo_tabela.json').then(r => r.json()).then(d => {
+      itens = (d.itens || []).filter(i => !i.fora_site && typeof i.preco === 'number');
+      fillCats(); fillProds();
+    }).catch(() => { $('qTot').textContent = 'Indisponível'; $('qLinha').textContent = 'Veja os preços no catálogo.'; });
+  };
+  'IntersectionObserver' in window ? new IntersectionObserver(([e], o) => { if (e.isIntersecting) { load(); o.disconnect(); } }, {rootMargin:'400px'}).observe(box) : load();
 })();
 
 // vídeo: respeita "reduzir movimento" e pausa fora da tela
