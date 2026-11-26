@@ -137,7 +137,8 @@ body.vloja, body.vloja #loja{background:#f4f6f9}
 #loja .card .ilu{position:relative}
 #loja .card .ilu img.artecli{height:190px;max-width:92%;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}
 #loja .card .selocli{position:absolute;left:8px;top:8px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;background:#e8f5ee;color:#1a7a40;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-#loja .card .selocli.sug{background:#fff6db;color:#8a6100}   /* fundo NEUTRO: as fotos entram em multiply; fundo azulado deixava o papel branco azul */
+#loja .card .selocli.sug{background:#fff6db;color:#8a6100}
+#loja .card .notasug{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:11px;color:#8a6100}   /* fundo NEUTRO: as fotos entram em multiply; fundo azulado deixava o papel branco azul */
 #loja .cn{color:#1f2933} #loja .cd{color:#6b7480} #loja .cp{color:var(--azul)}
 #loja .papel button.on{border-color:var(--azul);color:var(--azul);background:#eef4fc}
 #loja .qtdrow{color:#6b7480}
@@ -2583,6 +2584,8 @@ function sacolaIlustra(id, alt=150){
 function statusArte(id){
   const b=design.sacolas[id]; if(!b) return ['⚪','Sem arte','#a49a8e'];
   if(arteDeSempre(id)) return ['🔁','Arte de sempre (já aprovada)','#2f6b3f'];
+  if(semPersonalizar() && b.doCliente==='sempre') return ['🔁','Sua arte de sempre','#2f6b3f'];
+  if(semPersonalizar() && b.doCliente==='sugestao') return ['💡','Arte sugerida — a Globo confirma com você','#8a6100'];
   return ({nenhum:['⚪','Falta criar a arte','#a49a8e'], auto:['🟡','Falta aprovar a arte','#b07f00'], conferida:['✅','Arte aprovada','#2f6b3f']})[b.estado];
 }
 function novaHistoria(){ hist=[snap()]; hpos=0; histSacolas(); ultimoBag=JSON.stringify(arte.camadas); agendaSalvar(); }
@@ -2730,7 +2733,7 @@ function renderLoja(){
     const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : med;
     const unQ = v.un==='kg'?'kg':v.un==='milheiro'?'milheiro'+(q>1?'s':''):v.un+(q>1?'s':'');
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
-      <div class="ilu">${ilu}${sCli?`<span class="selocli ${sCli.doCliente==='sempre'?'sempre':'sug'}">${sCli.doCliente==='sempre'?'✅ Sua arte de sempre':'💡 Sugestão com a sua arte'}</span>`:''}</div>
+      <div class="ilu">${ilu}${sCli?`<span class="selocli ${sCli.doCliente==='sempre'?'sempre':'sug'}">${sCli.doCliente==='sempre'?'✅ Sua arte de sempre':'💡 Sugestão com a sua arte'}</span>`:''}${sCli&&sCli.doCliente!=='sempre'?'<span class="notasug">Clichê novo · a Globo confirma a arte com você</span>':''}</div>
       <div class="cb">
         <div class="cn">${esc(p.nome)}</div>
         ${p.revenda&&!v.papel?'':`<div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>`}
@@ -2740,7 +2743,7 @@ function renderLoja(){
         ${pers?`
         <div class="acts">
           <button data-a="add" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button>
-          <button data-a="pers">🎨 Personalizar</button>
+          ${semPersonalizar()?'':'<button data-a="pers">🎨 Personalizar</button>'}
         </div>`:`<div class="acts"><button data-a="addi" class="${dentro?'':'pri'}">${dentro?'✓ No carrinho':'🛒 Adicionar ao carrinho'}</button></div>${p.revenda?'':'<div class="soband">Impressão com a sua marca sob pedido com o vendedor.</div>'}`}
       </div></div>`; }).join('');
   $('vitrine').querySelectorAll('.card').forEach(c=>{
@@ -2798,13 +2801,16 @@ const WA_TOKEN = URLP.get('wa') || null;
    já aprovada. Personalizar vira opcional; só é obrigatório para cliente novo (acesso direto ao site). */
 const recorrente = () => !!(WA_TOKEN || (typeof design!=='undefined' && design && design.wa));
 const arteDeSempre = id => recorrente() && design.sacolas[id] && design.sacolas[id].estado==='nenhum';
-const faltaAprovar = () => design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida' && !arteDeSempre(id));
+/* (26-11, Leo) Cliente que entra pelo link do portal NÃO personaliza: a arte vem pronta da Globo (de sempre ou sugerida).
+   Sem botão Personalizar/Editar arte; sugestão vai no pedido como arte:'sugestao' (arte_nova → atendente confirma). */
+const semPersonalizar = () => !!(typeof design!=='undefined' && design && design.clientePortal);
+const faltaAprovar = () => design.carrinho.filter(id=>design.sacolas[id].estado!=='conferida' && !arteDeSempre(id) && !(semPersonalizar() && design.sacolas[id].doCliente));
 const qtdTxt = (q,un) => un==='kg' ? q+' kg' : un==='milheiro' ? q+' milheiro'+(q>1?'s':'') : q+' '+un+(q>1?'s':'');
 function linhasPedido(){
   const L=[];
   design.carrinho.forEach(id=>{ const g=CATALOGO[id]; if(!g) return; const it=variacaoDe(id), q=(design.qtd&&design.qtd[id])||1, b=design.sacolas[id], cop=(String(id).match(/~\d+$/)||[''])[0], c=cliche(id);
     L.push({id:(it?it.id:'faca_'+idBase(id))+'#arte'+cop, sacola:id, tipo:'personalizado', nome:g.nome.replace(/ · (Kraft|Branco)$/,''), variacao:it?it.papel:PAPEIS[g.papel]+' (preço ilustrativo)',
-      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:(arteDeSempre(id) || (b && b.doCliente==='sempre' && b.estado==='conferida' && c && c.novo===false))?'de_sempre':(b?b.estado:'nenhum'), cliche:c&&c.novo?c.valor:0}); });
+      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:(arteDeSempre(id) || (b && b.doCliente==='sempre' && b.estado==='conferida' && c && c.novo===false))?'de_sempre':(semPersonalizar() && b && b.doCliente==='sugestao')?'sugestao':(b?b.estado:'nenhum'), cliche:c&&c.novo?c.valor:0}); });
   Object.entries(design.itens||{}).forEach(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a||!q) return; const {p,v}=a;
     L.push({id:k, tipo:p.revenda?'revenda':'catalogo', nome:p.nome, variacao:v.papel, cod:v.cod||'', qtd:q, un:v.un, preco:v.preco, total:Math.round(q*v.preco*100)/100}); });
   return L;
@@ -2814,7 +2820,7 @@ function pedidoAtual(){
   return {versao:1, origem:'site', wa:WA_TOKEN, cupom:(design.cupom||'').trim()||null, linhas, subtotal:+sub.toFixed(2), cliches:+cli.toFixed(2), total:+(sub+cli).toFixed(2), criado:new Date().toISOString()};
 }
 function mensagemWhatsApp(ped){
-  const ARTE={conferida:'arte aprovada', auto:'arte a aprovar', nenhum:'sem arte', de_sempre:'arte de sempre'};
+  const ARTE={conferida:'arte aprovada', auto:'arte a aprovar', nenhum:'sem arte', de_sempre:'arte de sempre', sugestao:'arte sugerida pela Globo (confirmar com o cliente)'};
   const ls=ped.linhas.map((l,i)=>`${i+1}) ${qtdTxt(l.qtd,l.un)} — ${l.nome}${l.variacao?' · '+l.variacao:''}${l.tipo==='personalizado'?` · personalizado (${ARTE[l.arte]||l.arte})`:''}\n    ${brl(l.preco)}/${l.un} = ${brl(l.total)}${l.cliche?` + clichê novo ${brl(l.cliche)}`:''}\n    [${l.id}]`);
   return `Olá! Quero fazer este pedido pelo site da Embalagens Globo:\n\n${ls.join('\n')}\n\n`+
     (ped.cliches?`Produtos: ${brl(ped.subtotal)}\nClichês novos: ${brl(ped.cliches)}\n`:'')+
@@ -2851,7 +2857,7 @@ function renderCarrinho(){
     return `<div class="ci" data-id="${id}"><div class="cil">${(()=>{ const f=facaDe(id), p=produtoDaFaca(f.faca), fo=p&&fotoDe(p,{edit:g.papel,k:''}); return fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:FOTOS[f.fonte]?`<img class="foto ${CATALOGO[id].papel}" src="${FOTOS[f.fonte]}" style="height:64px">`:sacolaIlustra(id,64); })()}</div>
       <div class="cim"><b>${esc(g.nome.replace(/ · (Kraft|Branco)$/,''))}</b><div class="cist" style="color:#6b7480">${esc((variacaoDe(id)||{}).papel||PAPEIS[g.papel]+' · preço ilustrativo')}</div><div class="cist" style="color:${cor}">${ic} ${txt}</div>
         <div class="step sm"><button data-a="m">−</button><b>${q}</b><button data-a="p">+</button><span>milh. · ${brl(q*PRECO[id])}</span></div>${linhaCliche(id)}
-        <div class="ciacts"><button data-a="pers" class="${temArte||sempre?'':'pri'}">🎨 ${temArte?'Editar arte':sempre?'Mudar a arte (opcional)':'Personalizar'}</button><button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
+        <div class="ciacts">${semPersonalizar()?'':`<button data-a="pers" class="${temArte||sempre?'':'pri'}">🎨 ${temArte?'Editar arte':sempre?'Mudar a arte (opcional)':'Personalizar'}</button>`}<button data-a="rem" class="lnk">Remover</button></div></div></div>`; }).join('');
   const avs = Object.entries(design.itens).filter(([,q])=>q).map(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a) return ''; const {p,v}=a, fo=fotoDe(p,v); tot+=q*v.preco;
     return `<div class="ci av" data-k="${k}"><div class="cil">${fo?`<img class="foto ${fo.cls}" src="${fo.src}" style="height:64px">`:`<div class="semfoto" style="font-size:12px"><span style="font-size:28px">${ICONE_CAT[p.cat]||'📦'}</span></div>`}</div>
       <div class="cim"><b>${esc(p.nome)}</b><div class="cist" style="color:#6b7480">${esc(v.papel)}</div>
