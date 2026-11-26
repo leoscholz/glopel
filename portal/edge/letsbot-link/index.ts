@@ -1,4 +1,4 @@
-// Supabase Edge Function: letsbot-link — v1 (26-11-2026)
+// Supabase Edge Function: letsbot-link — v1.1 (26-11-2026: só registra clientes do portal)
 // LetsBot (webhook message_notification) → se quem escreveu é cliente do portal e a mensagem fala em "pedido",
 // responde no WhatsApp com o link secreto dele (embalagens.app/<token>/). Quem não é do portal: não faz nada.
 //
@@ -50,16 +50,19 @@ Deno.serve(async (req) => {
   const deMim = !!pega(d, "from_me", "fromMe", "key.fromMe", "message.from_me");
   const texto = String(pega(d, "body", "text", "message.body", "message.text", "message.conversation", "message.extendedTextMessage.text", "caption") ?? "");
   const tel = digitos(remoto);
-  const base = { evento, telefone: tel, texto: texto.slice(0, 300), bruto: JSON.stringify(j).slice(0, 4000) };
-
-  if (evento && evento !== "message_notification") { await log({ ...base, acao: "ignorado: evento" }); return new Response("ok"); }
-  if (deMim || !tel || remoto.includes("@g.us")) { await log({ ...base, acao: deMim ? "ignorado: enviada pela Globo" : "ignorado: sem número/grupo" }); return new Response("ok"); }
-  if (!GATILHO.test(texto)) { await log({ ...base, acao: "ignorado: sem gatilho" }); return new Response("ok"); }
+  // PRIVACIDADE: o webhook recebe TODAS as mensagens do chip da Globo. Só guarda conteúdo de quem é cliente do portal.
+  // Dos outros: nada (nem número). Se não deu para ler o número, guarda só a ESTRUTURA do payload (nomes dos campos, sem valores).
+  const estrutura = (o: any): any => Array.isArray(o) ? [o.length ? estrutura(o[0]) : null] : (o && typeof o === "object") ? Object.fromEntries(Object.keys(o).map(k => [k, estrutura(o[k])])) : typeof o;
+  if (evento && evento !== "message_notification") return new Response("ok");
+  if (deMim || remoto.includes("@g.us")) return new Response("ok");
+  if (!tel) { await log({ evento, acao: "sem número no payload (estrutura)", bruto: JSON.stringify(estrutura(j)).slice(0, 4000) }); return new Response("ok"); }
 
   const vs = variantes(tel);
   const { data: cs } = await SB.from("portal_clientes").select("token,nome,telefone,dados,ativo").eq("ativo", true);
   const c = (cs || []).find((x: any) => vs.includes(String(x.telefone)) || (x.dados?.telefones || []).some((t: string) => vs.includes(String(t))));
-  if (!c) { await log({ ...base, acao: "ignorado: não é cliente do portal" }); return new Response("ok"); }
+  if (!c) return new Response("ok");   // não é cliente do portal: não registra nada
+  const base = { evento, telefone: tel, texto: texto.slice(0, 300), bruto: JSON.stringify(j).slice(0, 4000), cliente: c.nome };
+  if (!GATILHO.test(texto)) { await log({ ...base, acao: "ignorado: sem gatilho" }); return new Response("ok"); }
 
   const desde = new Date(Date.now() - ESPERA_MIN * 60e3).toISOString();
   const { data: rec } = await SB.from("portal_bot_log").select("id").eq("telefone", tel).eq("acao", "link enviado").gte("quando", desde).limit(1);
@@ -73,6 +76,6 @@ Deno.serve(async (req) => {
     const r = await fetch("https://letsbot.net/api/v1/message/send", { method: "POST", headers: { Authorization: `Bearer ${KEY}`, Accept: "application/json", "X-LetsBot-Validation": "strict" }, body: fd });
     resp = (await r.text()).slice(0, 1000); ok = r.ok;
   } catch (e) { resp = String(e); }
-  await log({ ...base, acao: ok ? "link enviado" : "erro ao enviar", cliente: c.nome, resposta: resp });
+  await log({ ...base, acao: ok ? "link enviado" : "erro ao enviar", resposta: resp });
   return new Response("ok");
 });
