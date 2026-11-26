@@ -10,6 +10,8 @@ Ferramentas da consultoria/automação da Glopel (Embalagens Globo).
 | [`whatsapp/`](whatsapp/) | **Globo no WhatsApp** — protótipo clicável da conversa de pedidos: Meus produtos, repetir pedido, arte nova pelo GloboEditor, Pix, prova da clicheria e status. Roteiro editável. Dados e Pix ilustrativos. |
 | [`mesa/`](mesa/) | **Mesa da Glopel** — réplica 3D clicável da mesa física. Cada objeto (monitor, pedidos, notas fiscais, caixa da Daiane, gavetas, LEADS…) abre os papéis que moram ali. Papéis de exemplo. |
 
+Vitrine (home): https://leoscholz.github.io/glopel/ — futuro https://embalagens.app
+
 Sistema: https://leoscholz.github.io/glopel/sistema/
 
 Site (GitHub Pages): https://leoscholz.github.io/glopel/mesa/
