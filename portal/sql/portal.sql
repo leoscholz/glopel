@@ -1,4 +1,4 @@
--- Portal do cliente (link secreto por WhatsApp) — Embalagens Globo · v1 (26-11-2026)
+-- Portal do cliente (link secreto por WhatsApp) — Embalagens Globo · v1.1 (26-11-2026: + artes do cliente no GloboEditor)
 -- Cole TUDO no SQL Editor do Supabase e clique em Run. Pode rodar de novo: não duplica nem apaga pedidos.
 --
 -- Como funciona
@@ -27,6 +27,9 @@ alter table public.portal_clientes enable row level security;   -- sem política
 create table if not exists public.portal_config (chave text primary key, valor text not null);
 alter table public.portal_config enable row level security;
 
+-- (26-11) linha de artes do cliente para o GloboEditor: {versao, recursos:{logo_…}, paleta, papel, sacolas:{'f1_branco':{aprovada, camadas}}}
+alter table public.portal_clientes add column if not exists artes jsonb;
+
 alter table public.pedidos_site add column if not exists ficha text;   -- id da ficha criada pelo Porteiro
 alter table public.pedidos_site add column if not exists criado_em timestamptz default now();   -- (já existe? não muda nada)
 
@@ -39,11 +42,22 @@ begin
   select * into r from public.portal_clientes where token = p_token and ativo;
   if not found then return null; end if;
   update public.portal_clientes set visto = now() where token = p_token;
-  return jsonb_build_object('nome', r.nome, 'teste', r.cliente_chave = 'TESTE',
+  return jsonb_build_object('nome', r.nome, 'teste', r.cliente_chave = 'TESTE', 'tem_artes', r.artes is not null,
     'produtos', coalesce(r.dados->'produtos', '[]'::jsonb),
     'historico', coalesce(r.dados->'historico', '[]'::jsonb),
     'abertos', coalesce((select jsonb_agg(jsonb_build_object('codigo', codigo, 'total', total, 'quando', criado_em) order by criado_em desc)
                          from public.pedidos_site where ref_interna = 'portal:' || p_token and criado_em > now() - interval '30 days'), '[]'::jsonb));
+end $f$;
+
+-- 1b) Loja/GloboEditor com as artes do cliente (link ?wa=<token>): devolve só nome + artes (pesado: o site guarda por 6 h)
+create or replace function public.portal_artes(p_token text)
+returns jsonb language plpgsql security definer set search_path = public as $f$
+declare r public.portal_clientes;
+begin
+  if p_token !~ '^[A-Za-z0-9]{16}$' then return null; end if;
+  select * into r from public.portal_clientes where token = p_token and ativo;
+  if not found or r.artes is null then return null; end if;
+  return jsonb_build_object('nome', r.nome, 'artes', r.artes);
 end $f$;
 
 -- 2) Fazer pedido: itens = [{"pid":"c_k35_k35_1_kg","qtd":3}, …]  (qtd em milheiros)
@@ -110,9 +124,9 @@ begin
     vendedor = excluded.vendedor, tabela = excluded.tabela, dados = excluded.dados;
 end $f$;
 
-revoke all on function public.portal_get(text), public.portal_pedido(text, jsonb, text), public.portal_pendentes(text),
+revoke all on function public.portal_get(text), public.portal_artes(text), public.portal_pedido(text, jsonb, text), public.portal_pendentes(text),
   public.portal_marca(text, text, text), public.portal_salva_cliente(text, text, text, text, text, text, text, jsonb) from public;
-grant execute on function public.portal_get(text), public.portal_pedido(text, jsonb, text), public.portal_pendentes(text),
+grant execute on function public.portal_get(text), public.portal_artes(text), public.portal_pedido(text, jsonb, text), public.portal_pendentes(text),
   public.portal_marca(text, text, text), public.portal_salva_cliente(text, text, text, text, text, text, text, jsonb) to anon, authenticated;
 
 -- 5) Cliente de TESTE (número de testes do Leo). Dados fictícios; nenhuma saída do sistema conta a chave TESTE.

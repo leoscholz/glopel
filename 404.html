@@ -93,7 +93,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const brl=v=>(+v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const dataBR=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?`${m[3]}/${m[2]}/${m[1]}`:esc(s)};
 const mil=q=>q+' milheiro'+(q==1?'':'s');
-const img=p=>!p?'':/^https?:/.test(p)?p:BASE+p.split('/').map(encodeURIComponent).join('/');
+const img=p=>!p?'':/^(https?:|data:)/.test(p)?p:BASE+p.split('/').map(encodeURIComponent).join('/');   // data: = miniatura com a arte do cliente (vem do banco)
 
 function lerRota(){
   const rel=location.pathname.slice(BASE.length), m=RX.exec(rel);
@@ -139,6 +139,7 @@ function render(soParte){
     A.innerHTML=teste+`<h1>Olá, ${esc(D.nome)}!</h1><p class="sub">Seus sacos com a arte de sempre. É só escolher as quantidades.</p>
       <button class="grande prim" onclick="ir('fazerpedido')"><div class="ic">🛒</div><div><b>Fazer pedido</b><span>${n?`${n} produto${n>1?'s':''} já escolhido${n>1?'s':''} — continuar`:'Escolher produtos e quantidades'}</span></div></button>
       <button class="grande" onclick="ir('pedidos')"><div class="ic">🧾</div><div><b>Pedidos anteriores</b><span>Ver e repetir um pedido</span></div></button>
+      ${D.tem_artes?`<a class="grande" style="text-decoration:none;color:inherit" href="${BASE}editor-sacolas/?wa=${TOKEN}"><div class="ic">🎨</div><div><b>Todos os produtos com a sua arte</b><span>Ver a loja completa já com o seu logo — e ideias novas</span></div></a>`:''}
       ${(D.abertos||[]).length?`<h2>Enviados por aqui</h2><div class="card">${D.abertos.slice(0,3).map(a=>`<div class="lin"><div><b>${esc(a.codigo)}</b><small>${new Date(a.quando).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></div><div>${brl(a.total)}</div></div>`).join('')}</div>`:''}
       <p class="muted centro" style="margin-top:26px">Arte nova, saco diferente ou dúvida?<br><a href="https://wa.me/${WA_GLOBO}">Falar com a Globo no WhatsApp</a></p>`;
     return;
@@ -149,8 +150,8 @@ function render(soParte){
     A.innerHTML=teste+`<h1>Pedidos anteriores</h1><p class="sub">Toque em “Repetir” para usar as mesmas quantidades. Você ainda pode mudar antes de enviar.</p>`+
       (H.length?H.map((h,i)=>{ const its=(h.itens||[]).filter(x=>prod(x.pid)&&x.qtd>0);
         return `<div class="card hist"><div class="top"><b>${dataBR(h.data)}</b><span>${brl(h.total)}</span></div>
-          <ul>${(h.itens||[]).map(x=>{const p=prod(x.pid);return `<li>${mil(x.qtd)} — ${esc(p?p.nome+' · '+p.variacao:(x.nome||x.pid))}</li>`}).join('')}</ul>
-          <div class="acoes">${its.length?`<button class="btn azul larga" onclick="repetir(${i})">🔁 Repetir este pedido</button>`:`<span class="muted">Produtos fora da sua lista atual — fale com a Globo.</span>`}</div></div>`;}).join('')
+          <ul>${(h.itens||[]).length?'':`<li class="muted">Pedido nº ${esc(h.num)}</li>`}${(h.itens||[]).map(x=>{const p=prod(x.pid);return `<li>${mil(x.qtd)} — ${esc(p?p.nome+' · '+p.variacao:(x.nome||x.pid))}</li>`}).join('')}</ul>
+          <div class="acoes">${its.length?`<button class="btn azul larga" onclick="repetir(${i})">🔁 Repetir este pedido</button>`:(h.itens||[]).length?`<span class="muted">Produtos fora da sua lista atual — fale com a Globo.</span>`:`<span class="muted">Os itens deste pedido ainda estão sendo copiados do sistema da Globo. Para pedir agora, use <a href="#" onclick="ir('fazerpedido');return false">Fazer pedido</a>.</span>`}</div></div>`;}).join('')
        :`<div class="card"><div class="lin">Ainda não temos pedidos anteriores aqui.</div></div>`);
     return;
   }

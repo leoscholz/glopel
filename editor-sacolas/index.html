@@ -133,7 +133,11 @@ body.vloja, body.vloja #loja{background:#f4f6f9}
 .sech{display:flex;align-items:baseline;gap:12px;margin-bottom:12px} .sech h2{margin:0;font-size:21px} .sech span{color:#6b7480;font-size:13px}
 #loja .card{background:#fff;border:1px solid #e3e8ee;border-radius:16px;box-shadow:0 4px 16px rgba(20,40,80,.06);transition:transform .12s, box-shadow .12s}
 #loja .card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,40,80,.12)}
-#loja .card .ilu{background:linear-gradient(180deg,#ffffff 55%,#f1f1ef)}   /* fundo NEUTRO: as fotos entram em multiply; fundo azulado deixava o papel branco azul */
+#loja .card .ilu{background:linear-gradient(180deg,#ffffff 55%,#f1f1ef)}
+#loja .card .ilu{position:relative}
+#loja .card .ilu img.artecli{height:190px;max-width:92%;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}
+#loja .card .selocli{position:absolute;left:8px;top:8px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;background:#e8f5ee;color:#1a7a40;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+#loja .card .selocli.sug{background:#fff6db;color:#8a6100}   /* fundo NEUTRO: as fotos entram em multiply; fundo azulado deixava o papel branco azul */
 #loja .cn{color:#1f2933} #loja .cd{color:#6b7480} #loja .cp{color:var(--azul)}
 #loja .papel button.on{border-color:var(--azul);color:var(--azul);background:#eef4fc}
 #loja .qtdrow{color:#6b7480}
@@ -2590,6 +2594,7 @@ function noCarrinho(id){ return design.carrinho.includes(id); }
 function addCarrinho(id, qtd){
   design.qtd = design.qtd || {};
   if(!design.sacolas[id]) design.sacolas[id]={estado:'nenhum', proprio:[], camadas:[]};
+  if(typeof poeArteCliente==='function') poeArteCliente(id);   // cliente do portal: a arte dele volta sozinha
   if(!noCarrinho(id)) design.carrinho.push(id);
   design.qtd[id] = Math.max(1, (qtd||design.qtd[id]||1));
 }
@@ -2720,14 +2725,16 @@ function renderLoja(){
     design.qtdItem=design.qtdItem||{}; design.itens=design.itens||{};
     const q=pers?((design.qtd&&design.qtd[id])||1):(design.itens[v.k]||design.qtdItem[v.k]||1), dentro=pers?noCarrinho(id):!!design.itens[v.k];
     const hFoto = Math.round(105+80*(p.h||altMax*0.6)/altMax);
-    const fo = fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
+    const sCli = pers && typeof arteCliente==='function' && design.clientePortal ? (design.sacolas[id]&&design.sacolas[id].camadas.length&&design.sacolas[id].pal==='cli' ? design.sacolas[id] : null) : null;
+    const thCli = sCli ? miniaturaSacola(id) : null;
+    const fo = thCli ? {src:thCli, cls:'natural artecli'} : fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
     const ilu = fo ? `<img class="foto ${fo.cls}" src="${fo.src}" alt="${esc(p.nome)}" style="height:${nat?(/suri/.test(fo.cls)?190:150):hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
     const med = !pers && !p.revenda && v.it && v.it.medidas ? `Medidas: ${v.it.medidas} cm (${v.it.medidas.split('×').length>2?'largura × altura × sanfona':'largura × altura'}).` : '';
     const desc = pers ? `Frente ${String(p.faca.w).replace('.',',')} × ${String(p.faca.h).replace('.',',')} cm${p.faca.g?` · sanfona ${String(p.faca.g).replace('.',',')} cm`:''}. ${p.uso}.` : p.revenda ? esc(p.desc||'') : med;
     const unQ = v.un==='kg'?'kg':v.un==='milheiro'?'milheiro'+(q>1?'s':''):v.un+(q>1?'s':'');
     return `<div class="card${pers?'':' cat-only'}" data-k="${p.key}">
-      <div class="ilu">${ilu}</div>
+      <div class="ilu">${ilu}${sCli?`<span class="selocli ${sCli.doCliente==='sempre'?'sempre':'sug'}">${sCli.doCliente==='sempre'?'✅ Sua arte de sempre':'💡 Sugestão com a sua arte'}</span>`:''}</div>
       <div class="cb">
         <div class="cn">${esc(p.nome)}</div>
         ${p.revenda&&!v.papel?'':`<div class="papel vars">${p.vars.map(x=>`<button data-a="var" data-v="${x.k}" class="${x.k===v.k?'on':''}" title="${x.ilu?'Fora da tabela: preço ilustrativo':''}"><i style="background:${COR_VAR(x.cod)}"></i>${esc(x.papel)}${x.ilu?' *':''}</button>`).join('')}</div>`}
@@ -2801,7 +2808,7 @@ function linhasPedido(){
   const L=[];
   design.carrinho.forEach(id=>{ const g=CATALOGO[id]; if(!g) return; const it=variacaoDe(id), q=(design.qtd&&design.qtd[id])||1, b=design.sacolas[id], cop=(String(id).match(/~\d+$/)||[''])[0], c=cliche(id);
     L.push({id:(it?it.id:'faca_'+idBase(id))+'#arte'+cop, sacola:id, tipo:'personalizado', nome:g.nome.replace(/ · (Kraft|Branco)$/,''), variacao:it?it.papel:PAPEIS[g.papel]+' (preço ilustrativo)',
-      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:arteDeSempre(id)?'de_sempre':(b?b.estado:'nenhum'), cliche:c&&c.novo?c.valor:0}); });
+      cod:it?it.cod:'', qtd:q, un:'milheiro', preco:PRECO[id], total:Math.round(q*PRECO[id]*100)/100, arte:(arteDeSempre(id) || (b && b.doCliente==='sempre' && b.estado==='conferida' && c && c.novo===false))?'de_sempre':(b?b.estado:'nenhum'), cliche:c&&c.novo?c.valor:0}); });
   Object.entries(design.itens||{}).forEach(([k,q])=>{ const a=ITEM_AVULSO(k); if(!a||!q) return; const {p,v}=a;
     L.push({id:k, tipo:p.revenda?'revenda':'catalogo', nome:p.nome, variacao:v.papel, cod:v.cod||'', qtd:q, un:v.un, preco:v.preco, total:Math.round(q*v.preco*100)/100}); });
   return L;
@@ -4174,6 +4181,62 @@ $('carLoad').onclick=()=>{ fechaCarrinho(); meusPedidos(); }; $('carSave').oncli
 $('fechaWa').onclick=fechaWhatsApp;
 $('cupom').oninput=e=>{ design.cupom=e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g,''); agendaSalvar(); };
 if(WA_TOKEN && /^[A-Za-z0-9]{8,16}$/.test(WA_TOKEN)) design.wa=WA_TOKEN;   // lembra que veio do WhatsApp (recarregar mantém)
+/* ===== Cliente do portal (26-11-2026) =====
+   O link que o robô manda (?wa=<token de 16> ou ?t=<token>) é o mesmo token do portal (embalagens.app/<token>).
+   portal_artes(token) traz a LINHA de artes do cliente — uma arte por faca, já desenhada para cada tamanho.
+   Ela entra em TODAS as sacolas personalizáveis: as que o cliente já compra vêm ✅ aprovadas (arte de sempre, clichê conhecido);
+   as outras vêm como 💡 sugestão (🟡 falta aprovar, clichê novo). Grupo de cores próprio ('cli'). Só no site (NUVEM).
+   A linha fica guardada à parte (CHAVE_ARTES_CLI), fora do histórico, e volta sozinha se a sacola sair e entrar no carrinho. */
+const PORTAL_TOKEN = [URLP.get('t'), WA_TOKEN].find(t=>t && /^[A-Za-z0-9]{16}$/.test(t)) || null;
+if(PORTAL_TOKEN) design.wa = PORTAL_TOKEN;
+const CHAVE_ARTES_CLI = 'glopel_artes_cliente_v1';
+let ARTES_CLI = null; try{ ARTES_CLI = JSON.parse(localStorage.getItem(CHAVE_ARTES_CLI)||'null'); }catch(_){ ARTES_CLI=null; }
+if(ARTES_CLI && design.clientePortal!==ARTES_CLI.token) ARTES_CLI=null;
+const THUMB_CLI = {};
+const arteCliente = id => ARTES_CLI && ARTES_CLI.sacolas && ARTES_CLI.sacolas[id];
+function poeArteCliente(id){   // sacola vazia + linha do cliente tem arte para ela → aplica (true se aplicou)
+  const s=arteCliente(id); if(!s || !CATALOGO[id]) return false;
+  const b=design.sacolas[id]||(design.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}); if(b.camadas && b.camadas.length) return false;
+  design.paletas=design.paletas||{}; design.paletas.cli=JSON.parse(JSON.stringify(ARTES_CLI.paleta));
+  const R=ARTES_CLI.recursos||{}, ex=c=>{ if(c.svgRef){ if(R[c.svgRef]) c.svg=R[c.svgRef]; delete c.svgRef; } (c.filhos||[]).forEach(ex); return c; };   // logo vai 1 vez só no banco
+  b.camadas=JSON.parse(JSON.stringify(s.camadas)).map(ex).filter(c=>c.tipo!=='vetor'||c.svg); b.pal='cli'; b.proprio=[]; b.estado=s.aprovada?'conferida':'auto'; b.doCliente=s.aprovada?'sempre':'sugestao';
+  if(s.aprovada){ design.cliches=design.cliches||{}; const h=assinaturaArte(b.camadas, ARTES_CLI.paleta), l=design.cliches[idBase(id)]=design.cliches[idBase(id)]||[]; if(!l.includes(h)) l.push(h); }
+  return true;
+}
+function aplicaArtesCliente(){ let n=0; if(ARTES_CLI) Object.keys(ARTES_CLI.sacolas||{}).forEach(id=>{ if(poeArteCliente(id)) n++; }); design.limpaFora=true; return n; }
+// miniatura da sacola com a arte do cliente: frente + meia sanfona de cada lado (SVG puro, sem canvas)
+function miniaturaSacola(id){
+  const g=CATALOGO[id], b=design.sacolas[id]; if(!g || !b || !b.camadas.length) return null;
+  const hh=assinaturaArte(b.camadas, paletaSac(id)); if(THUMB_CLI[id] && THUMB_CLI[id].h===hh) return THUMB_CLI[id].url;
+  const gA=GAB, aA=arte, mA=modo; SYNC_OFF++; let s='';
+  try{ setGab(g); arte={cliente:design.cliente, paleta:paletaSac(id), camadas:b.camadas}; modo='previa';
+    const fr=g.paineis.frente.partes[0], sg=(g.paineis.sanfona_esq&&!g.paineis.sanfona_esq.oculto)?g.paineis.sanfona_esq.w/2:0.4,
+      x0=fr.x-sg, w=fr.w+2*sg, hT=Math.max(...['frente','sanfona_esq','sanfona_dir'].map(k=>g.paineis[k]&&!g.paineis[k].oculto?g.paineis[k].h:0)), k=24;
+    s=marcaSheet({px:k, papel:COR_PAPEL[g.papel]||'#c89a62'}).replace(/viewBox="[^"]*" width="[^"]*" height="[^"]*"/, `viewBox="${x0} ${-hT-0.3} ${w} ${hT+0.3}" width="${Math.round(w*k)}" height="${Math.round((hT+0.3)*k)}"`);
+  }catch(_){ s=''; }finally{ setGab(gA); arte=aA; modo=mA; SYNC_OFF--; }
+  if(THUMB_CLI[id]) URL.revokeObjectURL(THUMB_CLI[id].url);
+  const url = s ? URL.createObjectURL(new Blob([s],{type:'image/svg+xml'})) : null; THUMB_CLI[id]={h:hh, url}; return url;
+}
+async function carregaClientePortal(){
+  if(!PORTAL_TOKEN || typeof NUVEM==='undefined' || !NUVEM) return;
+  const fresco = ARTES_CLI && ARTES_CLI.token===PORTAL_TOKEN && Date.now()-(ARTES_CLI.quando||0) < 6*3600e3;
+  if(!fresco){
+    try{ const r=await fetch(SB_URL+'/rest/v1/rpc/portal_artes',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:PORTAL_TOKEN})});
+      const j=r.ok?await r.json():null; if(!j || !j.artes || !j.artes.sacolas) return;
+      ARTES_CLI={token:PORTAL_TOKEN, nome:j.nome, paleta:j.artes.paleta, recursos:j.artes.recursos||{}, sacolas:j.artes.sacolas, quando:Date.now()};
+      try{ localStorage.setItem(CHAVE_ARTES_CLI, JSON.stringify(ARTES_CLI)); }catch(_){}
+    }catch(_){ return; }
+  }
+  const novo = design.clientePortal!==PORTAL_TOKEN; design.clientePortal=PORTAL_TOKEN;
+  if(ARTES_CLI.nome && (!design.cliente || design.cliente==='Minha padaria')){ design.cliente=ARTES_CLI.nome; if(typeof arte!=='undefined' && arte) arte.cliente=ARTES_CLI.nome; }
+  const n=aplicaArtesCliente();
+  // a loja abre no papel da arte do cliente (ex.: kraft branco 35 g), senão o card mostrava o kraft pardo sem arte
+  design.varSel=design.varSel||{}; Object.keys(ARTES_CLI.sacolas||{}).forEach(id=>{ const [fc,pp]=id.split('_'), pr=produtoDaFaca(fc); if(!pr || design.varSel[pr.key]) return;
+    const vs=pr.vars.filter(v=>v.edit===pp); const v=vs.find(v=>/35/.test(v.cod)) || vs.find(v=>!v.ilu) || vs[0]; if(v) design.varSel[pr.key]=v.k; });
+  agendaSalvar(); if(typeof renderLoja==='function') renderLoja();
+  if(novo) toast(`🎨 Olá, <b>${esc(ARTES_CLI.nome||'cliente')}</b>! Todos os sacos personalizáveis já estão com a sua arte. ✅ = a de sempre · 💡 = sugestão nova.`, 8000);
+}
+setTimeout(carregaClientePortal, 0);
 if(URLP.get('cupom')){ design.cupom=URLP.get('cupom').toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,30); }
 $('vercar').onclick=abreCarrinho; $('fechacar').onclick=fechaCarrinho; $('veu').onclick=fechaCarrinho;
 $('finalizar').onclick=()=>{
