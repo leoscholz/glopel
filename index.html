@@ -3,225 +3,277 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Embalagens Globo — sacos de papel fabricados em Curitiba desde 1975</title>
-<meta name="description" content="Sacos de papel para padarias, lanchonetes e mercados: pão, lanche, envelopes, lâminas, bandejas e bobinas. Personalize com a sua marca e peça pelo WhatsApp. Fábrica em Curitiba desde 1975.">
-<meta name="theme-color" content="#1d2a22">
+<title>Embalagens Globo — a maneira mais fácil de personalizar embalagens</title>
+<meta name="description" content="Crie a arte do seu saco de papel em 4 passos, veja em 3D e peça pelo WhatsApp. Kraft, antigordura e monolúcido para padarias, lanchonetes e mercados. Fábrica em Curitiba desde 1975.">
+<meta name="theme-color" content="#071530">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Embalagens Globo — sacos de papel desde 1975">
-<meta property="og:description" content="Sacos de papel kraft e antigordura para padarias e lanchonetes. Monte o pedido no site e confirme pelo WhatsApp.">
-<meta property="og:image" content="editor-sacolas/fotos_catalogo/pipoca.webp">
+<meta property="og:title" content="Embalagens Globo — a maneira mais fácil de personalizar embalagens">
+<meta property="og:description" content="Monte a arte, veja o saco pronto em 3D e confirme o pedido pelo WhatsApp.">
+<meta property="og:image" content="https://embalagens.app/assets/editor-3d.jpg">
+<meta property="og:url" content="https://embalagens.app/">
 <meta property="og:locale" content="pt_BR">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2a22'/%3E%3Cpath d='M16 20l4-6 4 6 4-6 4 6 4-6 4 6 4-6 4 6v30H16z' fill='%23c9a46e'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://embalagens.app/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25' r='80%25'%3E%3Cstop offset='0' stop-color='%2368c3ff'/%3E%3Cstop offset='.6' stop-color='%232f7fd0'/%3E%3Cstop offset='1' stop-color='%23163d8f'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='26' fill='url(%23g)'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2' opacity='.9'%3E%3Cpath d='M8 26q24-9 48 0M7 38q25-9 50 0'/%3E%3Cpath d='M32 6q-8 26 0 52'/%3E%3C/g%3E%3C/svg%3E">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","name":"Embalagens Globo","legalName":"Embalagens Globo Indústria e Comércio Ltda","foundingDate":"1975-12-29","telephone":"+55-41-3364-7082","address":{"@type":"PostalAddress","streetAddress":"Rod. dos Minérios (PR-092), 1158 — Taboão","addressLocality":"Curitiba","addressRegion":"PR","postalCode":"82130-570","addressCountry":"BR"}}
+{"@context":"https://schema.org","@type":"Organization","name":"Embalagens Globo","legalName":"Embalagens Globo Indústria e Comércio Ltda","url":"https://embalagens.app/","foundingDate":"1975-12-29","telephone":"+55-41-3364-7082","address":{"@type":"PostalAddress","streetAddress":"Rod. dos Minérios (PR-092), 1158 — Taboão","addressLocality":"Curitiba","addressRegion":"PR","postalCode":"82130-570","addressCountry":"BR"}}
 </script>
 <style>
-@font-face{font-family:"Archivo Narrow";font-weight:700;font-display:swap;src:url(editor-sacolas/fontes/archivo-narrow-latin-700-normal.woff) format("woff")}
 @font-face{font-family:Inter;font-weight:400;font-display:swap;src:url(editor-sacolas/fontes/inter-latin-400-normal.woff) format("woff")}
 @font-face{font-family:Inter;font-weight:700;font-display:swap;src:url(editor-sacolas/fontes/inter-latin-700-normal.woff) format("woff")}
-@font-face{font-family:Garamond;font-style:italic;font-weight:500;font-display:swap;src:url(editor-sacolas/fontes/eb-garamond-latin-500-italic.woff) format("woff")}
+@font-face{font-family:Inter;font-weight:900;font-display:swap;src:url(editor-sacolas/fontes/inter-latin-900-normal.woff) format("woff")}
+@font-face{font-family:"Archivo Narrow";font-weight:700;font-display:swap;src:url(editor-sacolas/fontes/archivo-narrow-latin-700-normal.woff) format("woff")}
 
+/* ============ Embalagens Globo · guia de marca do site ============
+   Azul Globo   #2F7FD0  (cor do logo; botões, links, destaques)
+   Azul faixa   #1F5FAE  (faixas de marca)
+   Noite        #071530  (fundos escuros, texto principal)
+   Kraft/ouro   #D4AE74  (números e detalhes sobre azul — é a cor do papel)
+   Névoa        #F3F6FB  (fundo claro)   ·   Linha  #DDE4EF
+   Tipo: Inter 900 com espaçamento apertado nos títulos; Inter 400/700 no texto.
+   Forma: cantos 20px, bordas de 1px, sombras longas e suaves, nada de ornamento.
+================================================================== */
 :root{
-  --ink:#1d2a22; --ink-2:#3d4a41; --paper:#f7f2e9; --paper-2:#efe6d6;
-  --kraft:#c9a46e; --kraft-d:#a9824c; --red:#c2382c; --white:#fff;
-  --display:"Archivo Narrow","Arial Narrow",system-ui,sans-serif;
-  --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --serif:Garamond,Georgia,serif;
-  --wrap:min(1160px,100% - 40px);
-  /* serrilha = a boca serrilhada do saco de papel */
-  --zig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 12 12 0l12 12z'/%3E%3C/svg%3E");
+  --night:#071530; --blue:#2f7fd0; --blue-d:#1f5fae; --blue-l:#68c3ff;
+  --gold:#d4ae74; --mist:#f3f6fb; --line:#dde4ef; --ink:#0b1730; --ink-2:#4a5873;
+  --r:20px; --wrap:min(1200px,100% - 40px);
+  --f:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--body);color:var(--ink);background:var(--paper);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
-img{max-width:100%;display:block}
+body{font-family:var(--f);color:var(--ink);background:#fff;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+img,video{max-width:100%;display:block}
 a{color:inherit}
 .wrap{width:var(--wrap);margin-inline:auto}
-.it{font-family:var(--serif);font-style:italic;font-weight:500;letter-spacing:0}
-h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.98;letter-spacing:-.01em}
-h2{font-size:clamp(34px,5vw,56px)}
-.eyebrow{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
-.zig-top{position:relative}
-.zig-top::before{content:"";position:absolute;left:0;right:0;top:-11px;height:12px;background:inherit;-webkit-mask:var(--zig) repeat-x;mask:var(--zig) repeat-x}
+h1,h2,h3{font-weight:900;letter-spacing:-.035em;line-height:1.02}
+h2{font-size:clamp(34px,4.6vw,56px)}
+.grad{background:linear-gradient(92deg,#fff 0%,#9fd6ff 55%,var(--blue-l) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--blue);background:rgba(47,127,208,.09);border:1px solid rgba(47,127,208,.18);padding:6px 12px;border-radius:999px}
+.tag i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(47,127,208,.15)}
+.dark .tag{color:var(--blue-l);background:rgba(104,195,255,.1);border-color:rgba(104,195,255,.25)}
 
 /* botões */
-.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 22px;border-radius:999px;font-weight:700;font-size:16px;text-decoration:none;transition:transform .15s,background .15s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 22px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s;white-space:nowrap}
 .btn:hover{transform:translateY(-2px)}
-.btn-main{background:var(--ink);color:var(--paper)}
-.btn-main:hover{background:#000}
-.btn-wa{background:#1f8f4e;color:#fff}
-.btn-wa:hover{background:#177a41}
-.btn-ghost{border:2px solid currentColor}
-.btn svg{width:20px;height:20px;flex:none}
+.btn svg{width:19px;height:19px;flex:none}
+.btn-pri{background:var(--blue);color:#fff;box-shadow:0 10px 30px -8px rgba(47,127,208,.8),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn-pri:hover{background:#3a8ce0}
+.btn-wa{background:#1fa855;color:#fff;box-shadow:0 10px 30px -10px rgba(31,168,85,.8)}
+.btn-wa:hover{background:#22b75d}
+.btn-glass{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px)}
+.btn-glass:hover{background:rgba(255,255,255,.15)}
+
+/* logo */
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.logo svg{width:42px;height:40px;flex:none}
+.logo .lt{display:flex;flex-direction:column;line-height:1}
+.logo .emb{font-size:9px;font-weight:700;letter-spacing:.46em;opacity:.7;margin-bottom:3px}
+.logo .glb{font-family:"Archivo Narrow","Arial Narrow",sans-serif;font-weight:700;font-size:25px;letter-spacing:.06em;transform:scaleX(1.18);transform-origin:left}
 
 /* topo */
-header{position:sticky;top:0;z-index:20;background:rgba(247,242,233,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(29,42,34,.08)}
-.top{display:flex;align-items:center;justify-content:space-between;height:68px}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.logo b{font-family:var(--display);font-size:24px;letter-spacing:.01em;text-transform:uppercase}
-.logo small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-top:-2px}
-nav{display:flex;align-items:center;gap:26px;font-size:15px;font-weight:700}
+header{position:fixed;inset:0 0 auto 0;z-index:40;transition:background .25s,border-color .25s;border-bottom:1px solid transparent}
+header.solid{background:rgba(7,21,48,.84);backdrop-filter:blur(14px) saturate(1.4);border-color:rgba(255,255,255,.08)}
+.top{display:flex;align-items:center;justify-content:space-between;height:72px}
+nav{display:flex;align-items:center;gap:28px;font-size:15px;font-weight:700;color:rgba(255,255,255,.78)}
 nav a{text-decoration:none}
-nav a:not(.btn):hover{color:var(--red)}
+nav a:not(.btn):hover{color:#fff}
 nav .btn{padding:10px 16px;font-size:14px}
-@media(max-width:820px){nav a:not(.btn){display:none}.logo b{font-size:19px;white-space:nowrap}.logo small{font-size:10px}}
+@media(max-width:880px){nav a:not(.btn){display:none}}
 
 /* hero */
-.hero{overflow:hidden;padding:56px 0 96px}
-.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
-.hero h1{font-size:clamp(46px,7.4vw,96px);text-transform:uppercase}
-.hero h1 .it{text-transform:none;color:var(--red);font-size:.78em;display:block;margin-top:.12em}
-.hero p.lead{font-size:clamp(18px,2vw,21px);color:var(--ink-2);max-width:34ch;margin:22px 0 30px}
+.hero{position:relative;overflow:hidden;background:var(--night);color:#fff;padding:140px 0 110px;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(60% 55% at 78% 45%,rgba(47,127,208,.45),transparent 70%),radial-gradient(40% 40% at 8% 0%,rgba(104,195,255,.16),transparent 70%),linear-gradient(180deg,#071530 0%,#0a1d42 100%)}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;opacity:.55;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;-webkit-mask:radial-gradient(70% 70% at 60% 40%,#000 30%,transparent 80%);mask:radial-gradient(70% 70% at 60% 40%,#000 30%,transparent 80%)}
+.hero .wrap{display:grid;grid-template-columns:1fr 1.12fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(42px,5.8vw,76px);margin:22px 0}
+.hero .lead{font-size:clamp(17px,1.7vw,20px);color:rgba(255,255,255,.72);max-width:38ch;margin-bottom:32px}
 .ctas{display:flex;flex-wrap:wrap;gap:12px}
-.stack{position:relative;aspect-ratio:1/1;max-width:520px;justify-self:end;width:100%}
-.stack::before{content:"";position:absolute;inset:8% 4% 0 10%;background:var(--kraft);border-radius:50%;opacity:.28}
-.stack img{position:absolute;filter:drop-shadow(0 18px 24px rgba(60,40,10,.25))}
-.stack .a{width:44%;left:8%;bottom:6%;transform:rotate(-7deg)}
-.stack .b{width:52%;left:30%;bottom:10%;z-index:2}
-.stack .c{width:34%;right:0;bottom:4%;transform:rotate(8deg);z-index:3}
-.seal{position:absolute;top:2%;right:6%;z-index:4;width:132px;height:132px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;text-align:center;transform:rotate(10deg);box-shadow:0 10px 24px rgba(194,56,44,.35)}
-.seal span{font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;line-height:1.1}
-.seal strong{display:block;font-family:var(--display);font-size:44px;line-height:1}
-@media(max-width:820px){
-  .hero{padding:28px 0 80px}
-  .hero .wrap{grid-template-columns:1fr}
-  .stack{justify-self:center;max-width:380px;order:-1;margin-bottom:-10px}
-  .seal{width:104px;height:104px}.seal strong{font-size:34px}.seal span{font-size:12px}
-}
+.trust{display:flex;gap:22px;flex-wrap:wrap;margin-top:32px;font-size:14px;color:rgba(255,255,255,.6)}
+.trust span{display:flex;align-items:center;gap:8px}
+.trust svg{width:16px;height:16px;color:var(--blue-l)}
 
-/* faixa de fatos */
-.facts{background:var(--ink);color:var(--paper);padding:44px 0 40px}
+/* janela com o vídeo do editor */
+.stage{position:relative}
+.win{position:relative;border-radius:16px;overflow:hidden;background:#0e1f44;border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 50px 100px -30px rgba(0,0,0,.7),0 0 80px -10px rgba(47,127,208,.55);
+  transform:perspective(1600px) rotateY(-7deg) rotateX(3deg);transition:transform .6s}
+.stage:hover .win{transform:perspective(1600px) rotateY(-2deg) rotateX(1deg)}
+.bar{display:flex;align-items:center;gap:7px;height:38px;padding:0 14px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08)}
+.bar i{width:11px;height:11px;border-radius:50%}
+.bar i:nth-child(1){background:#ff5f57}.bar i:nth-child(2){background:#febc2e}.bar i:nth-child(3){background:#28c840}
+.bar span{margin:0 auto;font-size:12px;color:rgba(255,255,255,.6);background:rgba(0,0,0,.25);padding:4px 14px;border-radius:8px;transform:translateX(-20px)}
+.win video{width:100%;aspect-ratio:1072/750;object-fit:cover;background:#eef2f7}
+.float{position:absolute;z-index:3;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.97);color:var(--ink);font-size:13px;font-weight:700;line-height:1.3;box-shadow:0 20px 40px -12px rgba(0,0,0,.45);animation:bob 6s ease-in-out infinite}
+.float b{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--blue);color:#fff;font-size:14px;flex:none}
+.float small{display:block;font-weight:400;color:var(--ink-2);font-size:12px}
+.f1{left:-28px;bottom:14%}
+.f2{right:-18px;top:16%;animation-delay:-3s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+@media(max-width:980px){
+  .hero{padding:110px 0 80px}
+  .hero .wrap{grid-template-columns:1fr;gap:48px}
+  .win{transform:none}.stage:hover .win{transform:none}
+  .f1{left:8px;bottom:-20px}.f2{right:8px;top:-20px}
+}
+@media(max-width:560px){.ctas .btn{width:100%}.float small{display:none}.trust{gap:14px}}
+
+/* faixa de fatos (conteúdo intacto, só a cor) */
+.facts{background:linear-gradient(90deg,#1b55a0,#1f5fae 50%,#2468b8);color:#fff;padding:42px 0}
 .facts .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
-.facts .wrap>div{border-left:2px solid var(--kraft);padding-left:16px}
-.facts strong{display:block;font-family:var(--display);font-size:clamp(30px,3.6vw,44px);line-height:1;color:var(--kraft)}
-.facts span{font-size:15px;opacity:.85}
+.facts .wrap>div{border-left:2px solid var(--gold);padding-left:16px}
+.facts strong{display:block;font-size:clamp(30px,3.6vw,44px);font-weight:900;letter-spacing:-.03em;line-height:1;color:var(--gold)}
+.facts span{font-size:15px;opacity:.88}
 @media(max-width:820px){.facts .wrap{grid-template-columns:1fr 1fr;row-gap:28px}}
 
+/* seções */
+section{padding:110px 0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:28px;margin-bottom:48px;flex-wrap:wrap}
+.head h2{margin-top:16px;max-width:16ch}
+.head p{max-width:44ch;color:var(--ink-2)}
+.light{background:var(--mist)}
+.dark{background:var(--night);color:#fff;position:relative;overflow:hidden;isolation:isolate}
+
 /* produtos */
-section{padding:96px 0}
-.head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:40px;flex-wrap:wrap}
-.head p{max-width:46ch;color:var(--ink-2)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.grid{grid-template-columns:1fr}}
-.card{background:var(--white);border-radius:18px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;box-shadow:0 1px 0 rgba(29,42,34,.06)}
-.card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(29,42,34,.12)}
-.card .ph{aspect-ratio:4/3;display:grid;place-items:center;padding:18px;background:#fff}
-.card .ph{overflow:hidden}
-.card .ph{position:relative}
-.card .ph img{position:absolute;inset:18px;width:calc(100% - 36px);height:calc(100% - 36px);object-fit:contain}
-.card .ph.kraft{background:var(--paper-2)}
-.card .tx{padding:18px 20px 22px;border-top:1px solid rgba(29,42,34,.07);flex:1;display:flex;flex-direction:column;gap:6px}
-.card h3{font-size:26px;text-transform:uppercase}
+.card{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s,border-color .25s}
+.card:hover{transform:translateY(-6px);border-color:rgba(47,127,208,.45);box-shadow:0 30px 60px -24px rgba(11,23,48,.25)}
+.card .ph{position:relative;aspect-ratio:4/3;background:#fff}
+.card .ph img{position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px);object-fit:contain;transition:transform .4s}
+.card:hover .ph img{transform:scale(1.04)}
+.card .tx{padding:20px 22px 24px;border-top:1px solid var(--line);flex:1;display:flex;flex-direction:column;gap:6px}
+.card h3{font-size:22px;letter-spacing:-.02em}
 .card p{font-size:15px;color:var(--ink-2)}
-.card .go{margin-top:auto;padding-top:8px;font-weight:700;font-size:14px;color:var(--red)}
-
-.papers{margin-top:44px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.papers b{font-size:14px;margin-right:6px}
-.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--white);font-size:14px;font-weight:700}
+.card .go{margin-top:auto;padding-top:10px;font-weight:700;font-size:14px;color:var(--blue);display:flex;align-items:center;gap:6px}
+.card .go svg{width:16px;height:16px;transition:transform .2s}
+.card:hover .go svg{transform:translateX(4px)}
+.papers{margin-top:40px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.papers b{font-size:14px;margin-right:6px;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;font-weight:700}
 .chip i{width:14px;height:14px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.12)}
 
 /* personalize */
-.custom{background:var(--kraft);}
-.custom .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
-.custom h2 .it{color:var(--white)}
-.custom p{font-size:18px;margin:18px 0 26px;max-width:42ch}
-.steps{list-style:none;padding:0;display:grid;gap:12px;margin-bottom:30px}
-.steps li{display:flex;gap:14px;align-items:baseline;font-weight:700}
-.steps li span{font-family:var(--display);font-size:22px;color:var(--red);min-width:28px}
-.mock{position:relative;background:var(--paper);border-radius:22px;padding:28px;box-shadow:0 30px 60px rgba(70,45,10,.25)}
-.mock .bar{display:flex;gap:6px;margin-bottom:18px}
-.mock .bar i{width:10px;height:10px;border-radius:50%;background:var(--paper-2)}
-.mock .bag{position:relative;width:62%;margin:0 auto}
-.mock .bag .logo-on{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:46%;aspect-ratio:1;border-radius:50%;border:3px solid var(--red);display:grid;place-items:center;text-align:center;color:var(--red);font-family:var(--display);text-transform:uppercase;line-height:1;font-size:clamp(14px,1.8vw,20px);mix-blend-mode:multiply}
-.mock .bag .logo-on small{display:block;font-family:var(--serif);font-style:italic;text-transform:none;font-size:.7em;margin-top:4px}
-.mock .tools{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
-.mock .tools span{font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;background:var(--white)}
-.mock .tools span.on{background:var(--ink);color:var(--paper)}
-@media(max-width:820px){.custom .wrap{grid-template-columns:1fr;gap:36px}}
+.custom::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(50% 60% at 85% 50%,rgba(47,127,208,.35),transparent 70%)}
+.custom .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.custom h2{margin:16px 0 18px}
+.custom p{font-size:18px;color:rgba(255,255,255,.72);max-width:44ch;margin-bottom:28px}
+.steps{list-style:none;padding:0;display:grid;gap:10px;margin-bottom:32px}
+.steps li{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-weight:700}
+.steps li span{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--blue);font-size:14px;flex:none}
+.shot{border-radius:var(--r);overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 70px -20px rgba(47,127,208,.6)}
+.shot img{width:100%}
+@media(max-width:880px){.custom .wrap{grid-template-columns:1fr;gap:40px}}
 
 /* como pedir */
 .how .grid{grid-template-columns:repeat(3,1fr)}
 @media(max-width:820px){.how .grid{grid-template-columns:1fr}}
-.how .step{background:var(--white);border-radius:18px;padding:28px}
-.how .step b{font-family:var(--display);font-size:64px;line-height:1;color:var(--kraft)}
-.how .step h3{font-size:26px;text-transform:uppercase;margin:10px 0 8px}
+.how .step{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:30px}
+.how .step b{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--blue-l),var(--blue));color:#fff;font-size:18px;font-weight:900;box-shadow:0 10px 24px -8px rgba(47,127,208,.7)}
+.how .step h3{font-size:22px;margin:18px 0 8px}
 .how .step p{color:var(--ink-2);font-size:15px}
 
 /* sobre */
-.about{background:var(--paper-2)}
-.about .wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
-.about .year{font-family:var(--display);font-size:clamp(110px,18vw,220px);line-height:.8;color:transparent;-webkit-text-stroke:2px var(--ink);letter-spacing:-.03em}
-.about .year + .it{font-size:26px;color:var(--red);margin-top:12px;display:block}
-.about p{font-size:18px;color:var(--ink-2);margin-top:16px;max-width:52ch}
-@media(max-width:820px){.about .wrap{grid-template-columns:1fr;gap:20px}}
+.about .wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:64px;align-items:center}
+.about .year{font-size:clamp(110px,17vw,210px);font-weight:900;letter-spacing:-.06em;line-height:.85;background:linear-gradient(180deg,var(--blue) 0%,rgba(47,127,208,.12) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.about .cap{display:block;margin-top:14px;font-weight:700;color:var(--ink-2)}
+.about h2{margin:16px 0}
+.about p{font-size:18px;color:var(--ink-2);margin-top:14px;max-width:52ch}
+@media(max-width:820px){.about .wrap{grid-template-columns:1fr;gap:24px}}
 
 /* contato */
-.contact{background:var(--ink);color:var(--paper)}
-.contact .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px}
-.contact h2 .it{color:var(--kraft)}
-.contact .lead{opacity:.85;margin:16px 0 28px;max-width:40ch;font-size:18px}
-.info{display:grid;gap:22px;align-content:start}
-.info div{border-top:1px solid rgba(247,242,233,.18);padding-top:16px}
-.info small{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--kraft);font-weight:700;margin-bottom:4px}
+.contact::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(45% 70% at 10% 100%,rgba(47,127,208,.35),transparent 70%)}
+.contact .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:64px}
+.contact h2{margin:16px 0}
+.contact .lead{color:rgba(255,255,255,.72);margin-bottom:30px;max-width:40ch;font-size:18px}
+.info{display:grid;gap:12px;align-content:start}
+.info div{padding:18px 20px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
+.info small{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
 .info a{text-decoration:none}
 .info a:hover{text-decoration:underline}
 @media(max-width:820px){.contact .wrap{grid-template-columns:1fr;gap:40px}}
-footer{background:#141d18;color:rgba(247,242,233,.6);font-size:13px;padding:26px 0}
+footer{background:#040d1f;color:rgba(255,255,255,.5);font-size:13px;padding:26px 0}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
-/* botão flutuante (celular) */
-.fab{position:fixed;right:16px;bottom:16px;z-index:30;width:58px;height:58px;border-radius:50%;background:#1f8f4e;color:#fff;display:none;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+/* entrada suave */
+.js .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+.js .rv.on{opacity:1;transform:none}
+
+.fab{position:fixed;right:16px;bottom:16px;z-index:30;width:58px;height:58px;border-radius:50%;background:#1fa855;color:#fff;display:none;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.3)}
 .fab svg{width:30px;height:30px}
 @media(max-width:820px){.fab{display:grid}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}.js .rv{opacity:1;transform:none}}
 </style>
+<script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="lg-b" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#68c3ff"/><stop offset=".55" stop-color="#2f7fd0"/><stop offset="1" stop-color="#163d8f"/></radialGradient>
+    <linearGradient id="lg-s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f5f8"/><stop offset="1" stop-color="#aeb6c0"/></linearGradient>
+  </defs>
   <symbol id="wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></symbol>
   <symbol id="arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="pen" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zm9-13 4 4"/></symbol>
+  <!-- logo Globo, redesenhado a partir do original -->
+  <symbol id="globo" viewBox="0 0 120 110">
+    <ellipse cx="60" cy="54" rx="56" ry="30" transform="rotate(-38 60 54)" fill="none" stroke="url(#lg-s)" stroke-width="6"/>
+    <circle cx="60" cy="53" r="45" fill="url(#lg-b)"/>
+    <g fill="none" stroke="#fff" stroke-width="2.4" opacity=".92"><path d="M16 40 Q60 24 104 40"/><path d="M15 62 Q60 46 105 62"/><path d="M22 82 Q60 68 98 82"/><path d="M41 10 Q25 53 41 96"/><path d="M60 8 Q50 53 60 98"/><path d="M79 10 Q93 53 79 96"/></g>
+    <path d="M22 96 Q70 92 104 60" fill="none" stroke="url(#lg-s)" stroke-width="5" stroke-linecap="round"/>
+  </symbol>
 </svg>
 
-<header>
+<header id="hd">
   <div class="wrap top">
     <a class="logo" href="#" aria-label="Embalagens Globo — início">
-      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d2a22"/><path d="M16 20l4-6 4 6 4-6 4 6 4-6 4 6 4-6 4 6v30H16z" fill="#c9a46e"/></svg>
-      <span><b>Embalagens Globo</b><small>Curitiba · desde 1975</small></span>
+      <svg aria-hidden="true"><use href="#globo"/></svg>
+      <span class="lt"><span class="emb">EMBALAGENS</span><span class="glb">GLOBO</span></span>
     </a>
     <nav>
       <a href="#produtos">Produtos</a>
-      <a href="#personalize">Personalize</a>
+      <a href="#personalize">Editor</a>
       <a href="#sobre">Sobre</a>
       <a href="#contato">Contato</a>
-      <a class="btn btn-main" href="editor-sacolas/#loja">Catálogo</a>
+      <a class="btn btn-pri" href="editor-sacolas/#loja">Catálogo</a>
     </nav>
   </div>
 </header>
 
 <main>
-<section class="hero" style="padding-top:56px">
+<section class="hero dark">
   <div class="wrap">
     <div>
-      <p class="eyebrow">Fábrica de embalagens de papel</p>
-      <h1>Sacos de papel para quem faz pão <span class="it">e vende todo dia.</span></h1>
+      <span class="tag"><i></i>GloboEditor · arte pronta em 4 passos</span>
+      <h1>A maneira mais fácil de <span class="grad">personalizar embalagens.</span></h1>
       <p class="lead">Kraft, antigordura e monolúcido para padarias, lanchonetes e mercados — liso ou com a sua marca impressa. Feito em Curitiba há 50 anos.</p>
       <div class="ctas">
-        <a class="btn btn-main" href="editor-sacolas/#loja">Ver catálogo e montar pedido <svg><use href="#arrow"/></svg></a>
+        <a class="btn btn-pri" href="editor-sacolas/#loja">Ver catálogo e montar pedido <svg><use href="#arrow"/></svg></a>
         <a class="btn btn-wa" data-wa href="#"><svg><use href="#wa"/></svg> Falar no WhatsApp</a>
+        <a class="btn btn-glass" href="editor-sacolas/#loja"><svg><use href="#pen"/></svg> Abrir o editor</a>
+      </div>
+      <div class="trust">
+        <span><svg><use href="#check"/></svg>Prévia em 3D</span>
+        <span><svg><use href="#check"/></svg>Sem cadastro</span>
+        <span><svg><use href="#check"/></svg>Pedido direto no WhatsApp</span>
       </div>
     </div>
-    <div class="stack" aria-hidden="true">
-      <img class="a" src="editor-sacolas/fotos/Gabarito 5 Kg.webp" alt="">
-      <img class="b" src="editor-sacolas/fotos/Gabarito Hamburgão.webp" alt="">
-      <img class="c" src="editor-sacolas/fotos/Gabarito 1 Kg.webp" alt="">
-      <div class="seal"><div><strong>50</strong><span>anos de<br>papel</span></div></div>
+    <div class="stage">
+      <div class="win">
+        <div class="bar"><i></i><i></i><i></i><span>embalagens.app/editor</span></div>
+        <video id="demo" src="assets/editor-demo.mp4" poster="assets/editor-demo-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="Demonstração do GloboEditor: criando a arte de um saco de pão e vendo em 3D"></video>
+      </div>
+      <div class="float f1"><b>✨</b><div>Arte criada em segundos<small>nome, logo, estilo e cores</small></div></div>
+      <div class="float f2"><b>3D</b><div>Veja antes de imprimir<small>gire o saco pronto</small></div></div>
     </div>
   </div>
 </section>
 
-<div class="facts zig-top">
+<div class="facts">
   <div class="wrap">
     <div><strong>1975</strong><span>fábrica fundada em Curitiba</span></div>
     <div><strong>150+</strong><span>itens no catálogo</span></div>
@@ -232,19 +284,19 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 <section id="produtos">
   <div class="wrap">
-    <div class="head">
-      <div><p class="eyebrow">Produtos</p><h2>Do pãozinho <span class="it">à bandeja do bolo.</span></h2></div>
+    <div class="head rv">
+      <div><span class="tag"><i></i>Produtos</span><h2>Do pãozinho à bandeja do bolo.</h2></div>
       <p>Tamanhos de ½ kg a 15 kg, lanches, envelopes, lâminas, bandejas e bobinas. Preços por milheiro no catálogo.</p>
     </div>
     <div class="grid">
-      <a class="card" href="editor-sacolas/#loja"><div class="ph kraft"><img src="editor-sacolas/fotos/Gabarito 1 Kg.webp" alt="Saco de pão kraft"></div><div class="tx"><h3>Pão</h3><p>Sacos de ½ kg a 15 kg em kraft pardo, kraft branco e semi kraft.</p><span class="go">Ver no catálogo →</span></div></a>
-      <a class="card" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/miniburger.webp" alt="Saco antigordura para lanche"></div><div class="tx"><h3>Lanches</h3><p>Hambúrguer, hamburgão, hot dog, batatinha e pipoca, em papel antigordura.</p><span class="go">Ver no catálogo →</span></div></a>
-      <a class="card" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/env_170x210.webp" alt="Envelope de papel"></div><div class="tx"><h3>Envelopes</h3><p>Do envelopinho ao 17 × 25 cm, para salgados, doces e farmácia.</p><span class="go">Ver no catálogo →</span></div></a>
-      <a class="card" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_lamina.webp" alt="Lâminas de papel antigordura"></div><div class="tx"><h3>Lâminas</h3><p>Folhas antigordura em vários formatos para forrar, embrulhar e servir.</p><span class="go">Ver no catálogo →</span></div></a>
-      <a class="card" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_bandeja.webp" alt="Fundos de bandeja"></div><div class="tx"><h3>Bandejas</h3><p>Fundos de bandeja em antigordura e monolúcido, de 14 × 14 a 60 × 120 cm.</p><span class="go">Ver no catálogo →</span></div></a>
-      <a class="card" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_bobina.webp" alt="Bobinas de papel"></div><div class="tx"><h3>Bobinas</h3><p>Bobinas por quilo, lisas ou impressas, para quem embala no balcão.</p><span class="go">Ver no catálogo →</span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos/Gabarito 1 Kg.webp" alt="Saco de pão kraft"></div><div class="tx"><h3>Pão</h3><p>Sacos de ½ kg a 15 kg em kraft pardo, kraft branco e semi kraft.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/miniburger.webp" alt="Saco antigordura para lanche"></div><div class="tx"><h3>Lanches</h3><p>Hambúrguer, hamburgão, hot dog, batatinha e pipoca, em papel antigordura.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/env_170x210.webp" alt="Envelope de papel"></div><div class="tx"><h3>Envelopes</h3><p>Do envelopinho ao 17 × 25 cm, para salgados, doces e farmácia.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_lamina.webp" alt="Lâminas de papel antigordura"></div><div class="tx"><h3>Lâminas</h3><p>Folhas antigordura em vários formatos para forrar, embrulhar e servir.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_bandeja.webp" alt="Fundos de bandeja"></div><div class="tx"><h3>Bandejas</h3><p>Fundos de bandeja em antigordura e monolúcido, de 14 × 14 a 60 × 120 cm.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
+      <a class="card rv" href="editor-sacolas/#loja"><div class="ph"><img src="editor-sacolas/fotos_catalogo/real_bobina.webp" alt="Bobinas de papel"></div><div class="tx"><h3>Bobinas</h3><p>Bobinas por quilo, lisas ou impressas, para quem embala no balcão.</p><span class="go">Ver no catálogo <svg><use href="#arrow"/></svg></span></div></a>
     </div>
-    <div class="papers">
+    <div class="papers rv">
       <b>Papéis:</b>
       <span class="chip"><i style="background:#c9a46e"></i>Kraft pardo</span>
       <span class="chip"><i style="background:#fbfaf6"></i>Kraft branco</span>
@@ -256,65 +308,58 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
-<section class="custom zig-top" id="personalize">
+<section class="custom dark" id="personalize">
   <div class="wrap">
-    <div>
-      <p class="eyebrow" style="color:var(--ink)">Personalize</p>
-      <h2>A sua marca <span class="it">em cada saco que sai do balcão.</span></h2>
+    <div class="rv">
+      <span class="tag"><i></i>Personalize</span>
+      <h2>A sua marca em cada saco que sai do balcão.</h2>
       <p>No editor do site você escolhe o saco, coloca o seu logo e vê a prévia antes de pedir. A gente confere a arte e prepara o clichê.</p>
       <ol class="steps">
-        <li><span>01</span>Escolha o modelo e o papel</li>
-        <li><span>02</span>Suba o logo e ajuste na prévia</li>
-        <li><span>03</span>Aprove e envie pelo WhatsApp</li>
+        <li><span>1</span>Escolha o modelo e o papel</li>
+        <li><span>2</span>Suba o logo e ajuste na prévia</li>
+        <li><span>3</span>Aprove e envie pelo WhatsApp</li>
       </ol>
-      <a class="btn btn-main" href="editor-sacolas/#loja">Abrir o editor <svg><use href="#arrow"/></svg></a>
+      <a class="btn btn-pri" href="editor-sacolas/#loja">Abrir o editor <svg><use href="#arrow"/></svg></a>
     </div>
-    <div class="mock" aria-hidden="true">
-      <div class="bar"><i></i><i></i><i></i></div>
-      <div class="bag">
-        <img src="editor-sacolas/fotos/Gabarito 1 Kg.webp" alt="">
-        <div class="logo-on"><div>Padaria<br>do Bairro<small>pão quentinho</small></div></div>
-      </div>
-      <div class="tools"><span class="on">1 kg</span><span>Kraft pardo</span><span>1 cor</span><span>Prévia 3D</span></div>
-    </div>
+    <div class="shot rv"><img src="assets/editor-3d.jpg" alt="Saco de pão personalizado na prévia 3D do GloboEditor"></div>
   </div>
 </section>
 
-<section class="how">
+<section class="how light">
   <div class="wrap">
-    <div class="head"><div><p class="eyebrow">Como pedir</p><h2>Do carrinho <span class="it">direto para a conversa.</span></h2></div></div>
+    <div class="head rv"><div><span class="tag"><i></i>Como pedir</span><h2>Do carrinho direto para a conversa.</h2></div></div>
     <div class="grid">
-      <div class="step"><b>1</b><h3>Monte o pedido</h3><p>Escolha os produtos e as quantidades no catálogo. Já é cliente? A arte de sempre continua valendo.</p></div>
-      <div class="step"><b>2</b><h3>Confirme no WhatsApp</h3><p>Um toque e o pedido vai pronto para a nossa conversa, com um código para acompanhar.</p></div>
-      <div class="step"><b>3</b><h3>A gente produz</h3><p>Conferimos preços, prazo e pagamento com você e colocamos a máquina para rodar.</p></div>
+      <div class="step rv"><b>1</b><h3>Monte o pedido</h3><p>Escolha os produtos e as quantidades no catálogo. Já é cliente? A arte de sempre continua valendo.</p></div>
+      <div class="step rv"><b>2</b><h3>Confirme no WhatsApp</h3><p>Um toque e o pedido vai pronto para a nossa conversa, com um código para acompanhar.</p></div>
+      <div class="step rv"><b>3</b><h3>A gente produz</h3><p>Conferimos preços, prazo e pagamento com você e colocamos a máquina para rodar.</p></div>
     </div>
   </div>
 </section>
 
-<section class="about zig-top" id="sobre">
+<section class="about" id="sobre">
   <div class="wrap">
-    <div><div class="year">1975</div><span class="it">empresa de família, em Curitiba</span></div>
-    <div>
-      <p class="eyebrow">Sobre a Globo</p>
-      <h2>Meio século de papel <span class="it">dobrado, colado e impresso aqui.</span></h2>
+    <div class="rv"><div class="year">1975</div><span class="cap">Empresa de família, em Curitiba</span></div>
+    <div class="rv">
+      <span class="tag"><i></i>Sobre a Globo</span>
+      <h2>Meio século de papel dobrado, colado e impresso aqui.</h2>
       <p>A Embalagens Globo nasceu em Curitiba no fim de 1975 e segue na família até hoje. Da fábrica no Taboão saem os sacos que embalam o pão de padarias, lanchonetes e mercados da região.</p>
       <p>Fábrica própria, papel nacional e atendimento de gente que conhece o produto pelo nome.</p>
     </div>
   </div>
 </section>
 
-<section class="contact zig-top" id="contato">
+<section class="contact dark" id="contato">
   <div class="wrap">
-    <div>
-      <p class="eyebrow" style="color:var(--kraft)">Contato</p>
-      <h2>Vamos conversar <span class="it">sobre o seu pedido.</span></h2>
+    <div class="rv">
+      <span class="tag"><i></i>Contato</span>
+      <h2>Vamos conversar sobre o seu pedido.</h2>
       <p class="lead">O jeito mais rápido é o WhatsApp: orçamento, repetir pedido, arte nova ou dúvida de medida.</p>
       <div class="ctas">
         <a class="btn btn-wa" data-wa href="#"><svg><use href="#wa"/></svg> (41) 9145-5539</a>
-        <a class="btn btn-ghost" href="editor-sacolas/#loja">Ver catálogo</a>
+        <a class="btn btn-glass" href="editor-sacolas/#loja">Ver catálogo</a>
       </div>
     </div>
-    <div class="info">
+    <div class="info rv">
       <div><small>Fábrica</small><a href="https://www.google.com/maps/search/?api=1&query=Rodovia+dos+Min%C3%A9rios+1158+Tabo%C3%A3o+Curitiba" target="_blank" rel="noopener">Rod. dos Minérios (PR-092), 1158<br>Taboão · Curitiba – PR · 82130-570</a></div>
       <div><small>Telefone</small><a href="tel:+554133647082">(41) 3364-7082</a></div>
       <div><small>WhatsApp</small><a data-wa href="#">(41) 9145-5539</a></div>
@@ -341,6 +386,22 @@ document.querySelectorAll('[data-wa]').forEach(a => {
   a.target = '_blank'; a.rel = 'noopener';
 });
 document.getElementById('ano').textContent = new Date().getFullYear();
+
+// topo fica sólido ao rolar
+const hd = document.getElementById('hd');
+const solid = () => hd.classList.toggle('solid', scrollY > 30);
+addEventListener('scroll', solid, {passive:true}); solid();
+
+// entrada suave das seções
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+}), {rootMargin:'0px 0px -8% 0px'}) : null;
+document.querySelectorAll('.rv').forEach(el => io ? io.observe(el) : el.classList.add('on'));
+
+// vídeo: respeita "reduzir movimento" e pausa fora da tela
+const v = document.getElementById('demo');
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; }
+else if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => e.isIntersecting ? v.play().catch(()=>{}) : v.pause()).observe(v);
 </script>
 </body>
 </html>
