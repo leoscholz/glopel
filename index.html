@@ -197,6 +197,37 @@ section{padding:110px 0}
 footer{background:#040d1f;color:rgba(255,255,255,.5);font-size:13px;padding:26px 0}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
+
+/* ===== experimente: saco 3D ao vivo ===== */
+@font-face{font-family:"Libre Baskerville";font-weight:700;font-display:swap;src:url(editor-sacolas/fontes/libre-baskerville-latin-700-normal.woff) format("woff")}
+@font-face{font-family:Garamond;font-style:italic;font-weight:500;font-display:swap;src:url(editor-sacolas/fontes/eb-garamond-latin-500-italic.woff) format("woff")}
+.try{background:linear-gradient(180deg,#fff 0%,var(--mist) 100%);overflow:hidden}
+.try .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.try h2{margin:16px 0 14px}
+.try .sub{color:var(--ink-2);font-size:18px;max-width:42ch;margin-bottom:26px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:0 30px 60px -36px rgba(11,23,48,.35);display:grid;gap:16px}
+.fld label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+.fld input{width:100%;font:inherit;font-size:17px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--mist);color:var(--ink);transition:border-color .15s,box-shadow .15s}
+.fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,127,208,.15);background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:inherit;font-size:14px;font-weight:700;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:all .15s}
+.seg button:hover{border-color:var(--blue)}
+.seg button[aria-pressed=true]{background:var(--night);border-color:var(--night);color:#fff}
+.inks{display:flex;gap:10px}
+.inks button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;transition:transform .15s}
+.inks button[aria-pressed=true]{box-shadow:0 0 0 2px var(--blue);transform:scale(1.1)}
+.try .ctas{margin-top:20px}
+.scene{position:relative;height:560px;display:grid;place-items:center;perspective:1300px}
+.scene::before{content:"";position:absolute;inset:8% 6%;border-radius:50%;background:radial-gradient(closest-side,rgba(47,127,208,.22),transparent);z-index:0}
+.bag3d{position:relative;width:260px;height:400px;transform-style:preserve-3d;transform:rotateX(6deg) rotateY(-24deg);transition:transform .25s ease-out;z-index:1}
+.bag3d .fc{position:absolute;top:0;left:0;height:100%;backface-visibility:hidden}
+.bag3d svg{display:block;width:100%;height:100%;overflow:visible}
+.floor{position:absolute;bottom:58px;left:50%;width:330px;height:46px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(11,23,48,.28),transparent);filter:blur(4px);z-index:0}
+.hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--ink-2);background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:999px;white-space:nowrap}
+@media(max-width:900px){.try .wrap{grid-template-columns:1fr;gap:20px}.scene{height:480px;order:-1}}
+@media(max-width:480px){.bag3d{transform-origin:center;scale:.8}.scene{height:440px;margin-top:-20px}.row2{grid-template-columns:1fr}}
+
 /* entrada suave */
 .js .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
 .js .rv.on{opacity:1;transform:none}
@@ -236,6 +267,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     </a>
     <nav>
       <a href="#produtos">Produtos</a>
+      <a href="#experimente">Experimente</a>
       <a href="#personalize">Editor</a>
       <a href="#sobre">Sobre</a>
       <a href="#contato">Contato</a>
@@ -281,6 +313,43 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <div><strong>1 link</strong><span>do carrinho ao WhatsApp</span></div>
   </div>
 </div>
+
+<section class="try" id="experimente">
+  <div class="wrap">
+    <div class="rv">
+      <span class="tag"><i></i>Experimente agora</span>
+      <h2>Digite o nome. Veja o saco pronto.</h2>
+      <p class="sub">Uma prévia em segundos, sem cadastro. No editor completo você coloca o seu logo, escolhe o tamanho e aprova a arte.</p>
+      <div class="panel">
+        <div class="fld"><label for="tNome">Nome do seu negócio</label><input id="tNome" value="Padaria Bela Vista" maxlength="32" autocomplete="off"></div>
+        <div class="row2">
+          <div class="fld"><label for="tFrase">Frase</label><input id="tFrase" value="Pães e Confeitaria" maxlength="32" autocomplete="off"></div>
+          <div class="fld"><label for="tTel">Telefone</label><input id="tTel" value="(41) 3333-2026" maxlength="20" autocomplete="off" inputmode="tel"></div>
+        </div>
+        <div class="fld"><label>Estilo</label><div class="seg" id="tEst"><button type="button" data-v="selo" aria-pressed="true">Selo</button><button type="button" data-v="classico" aria-pressed="false">Clássico</button><button type="button" data-v="faixas" aria-pressed="false">Faixas</button></div></div>
+        <div class="row2">
+          <div class="fld"><label>Cor da tinta</label><div class="inks" id="tTinta">
+            <button type="button" data-v="#c8102e" data-n="vermelha" aria-label="Vermelho" aria-pressed="true" style="background:#c8102e"></button>
+            <button type="button" data-v="#1f4fa3" data-n="azul" aria-label="Azul" aria-pressed="false" style="background:#1f4fa3"></button>
+            <button type="button" data-v="#1e7a3c" data-n="verde" aria-label="Verde" aria-pressed="false" style="background:#1e7a3c"></button>
+            <button type="button" data-v="#5a3418" data-n="marrom" aria-label="Marrom" aria-pressed="false" style="background:#5a3418"></button>
+            <button type="button" data-v="#151515" data-n="preta" aria-label="Preto" aria-pressed="false" style="background:#151515"></button>
+          </div></div>
+          <div class="fld"><label>Papel</label><div class="seg" id="tPapel"><button type="button" data-v="pardo" aria-pressed="true">Kraft pardo</button><button type="button" data-v="branco" aria-pressed="false">Kraft branco</button></div></div>
+        </div>
+      </div>
+      <div class="ctas">
+        <a class="btn btn-pri" href="editor-sacolas/#loja">Continuar no editor <svg><use href="#arrow"/></svg></a>
+        <a class="btn btn-wa" id="tWa" href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg> Orçar este saco</a>
+      </div>
+    </div>
+    <div class="scene" id="scene" aria-label="Prévia 3D do saco personalizado">
+      <div class="floor"></div>
+      <div class="bag3d" id="bag"></div>
+      <span class="hint">Arraste para girar</span>
+    </div>
+  </div>
+</section>
 
 <section id="produtos">
   <div class="wrap">
@@ -397,6 +466,94 @@ const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.
   if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
 }), {rootMargin:'0px 0px -8% 0px'}) : null;
 document.querySelectorAll('.rv').forEach(el => io ? io.observe(el) : el.classList.add('on'));
+
+
+// ===== experimente: saco 3D ao vivo (prévia ilustrativa; a arte final sai do editor) =====
+(() => {
+  const bag = document.getElementById('bag'); if (!bag) return;
+  const W = 260, H = 400, D = 64;               // frente, altura, sanfona
+  const PAPEL = {pardo:{c:'#c9a067', d:'#a9824c', l:'#dcb886', n:'kraft pardo'}, branco:{c:'#f4f1ea', d:'#d9d3c6', l:'#fffdf8', n:'kraft branco'}};
+  const st = {nome:'', frase:'', tel:'', est:'selo', tinta:'#c8102e', tintaN:'vermelha', papel:'pardo'};
+  const zig = (w, h, t = 9) => { let d = `M0 ${t}`; for (let x = 0; x < w; x += t) d += ` L${Math.min(x + t/2, w)} 0 L${Math.min(x + t, w)} ${t}`; return d + ` L${w} ${h} L0 ${h} Z`; };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const tex = id => `<filter id="${id}"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .25  0 0 0 0 .12  0 0 0 .55 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
+  function face(w, kind) {
+    const p = PAPEL[st.papel], id = 'k' + kind;
+    const shade = kind === 'front' ? `<linearGradient id="g${id}" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".10"/><stop offset=".35" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#000" stop-opacity=".06"/></linearGradient>`
+      : `<linearGradient id="g${id}" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".30"/><stop offset=".5" stop-color="#000" stop-opacity=".12"/><stop offset=".5" stop-color="#000" stop-opacity=".36"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>`;
+    const body = zig(w, H);
+    let extra = '';
+    if (kind === 'front') extra = `<path d="M0 ${H-58} H${w}" stroke="#000" stroke-opacity=".08"/><rect x="0" y="${H-58}" width="${w}" height="58" fill="#fff" opacity=".05"/>`;
+    if (kind === 'side') extra = `<path d="M${w/2} 12 V${H}" stroke="#000" stroke-opacity=".18"/>`;
+    return `<svg viewBox="0 0 ${w} ${H}" xmlns="http://www.w3.org/2000/svg"><defs>${tex('t'+id)}${shade}<clipPath id="c${id}"><path d="${body}"/></clipPath></defs>
+      <g clip-path="url(#c${id})"><rect width="${w}" height="${H}" fill="${p.c}"/>
+      ${kind === 'front' ? '<g id="print" opacity=".93"></g>' : ''}<rect width="${w}" height="${H}" filter="url(#t${id})" opacity=".32"/>
+      ${extra}<rect width="${w}" height="${H}" fill="url(#g${id})"/></g></svg>`;
+  }
+  function build() {
+    bag.innerHTML = `
+      <div class="fc" style="width:${W}px;transform:translateZ(${D/2}px)">${face(W,'front')}</div>
+      <div class="fc" style="width:${W}px;transform:rotateY(180deg) translateZ(${D/2}px)">${face(W,'back')}</div>
+      <div class="fc" style="width:${D}px;left:${(W-D)/2}px;transform:rotateY(90deg) translateZ(${W/2}px)">${face(D,'side')}</div>
+      <div class="fc" style="width:${D}px;left:${(W-D)/2}px;transform:rotateY(-90deg) translateZ(${W/2}px)">${face(D,'side')}</div>`;
+    paint();
+  }
+  // ajusta o texto à largura disponível
+  function fit(el, max, size) { el.setAttribute('font-size', size); const l = el.getComputedTextLength(); if (l > max) el.setAttribute('font-size', (size * max / l).toFixed(1)); }
+  function paint() {
+    const g = document.getElementById('print'); if (!g) return;
+    const ink = st.tinta, paper = PAPEL[st.papel].c, cx = W/2;
+    const nome = esc(st.nome || 'Seu nome aqui'), fr = esc(st.frase), tel = esc(st.tel);
+    let svg = '';
+    if (st.est === 'selo') {
+      svg = `<circle cx="${cx}" cy="168" r="78" fill="${ink}"/><circle cx="${cx}" cy="168" r="70" fill="none" stroke="${paper}" stroke-width="1.6"/>
+        <text id="pN" x="${cx}" y="176" text-anchor="middle" fill="${paper}" font-family="Libre Baskerville,Georgia,serif" font-weight="700">${nome}</text>
+        ${fr ? `<text id="pF" x="${cx}" y="276" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" font-weight="700" letter-spacing="2">${fr.toUpperCase()}</text>` : ''}
+        ${tel ? `<text x="${cx}" y="298" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" font-size="11">${tel}</text>` : ''}`;
+    } else if (st.est === 'classico') {
+      svg = `<text id="pN" x="${cx}" y="168" text-anchor="middle" fill="${ink}" font-family="Garamond,Georgia,serif" font-style="italic" font-weight="500">${nome}</text>
+        <path d="M${cx-70} 188 H${cx+70}" stroke="${ink}" stroke-width="1.5"/><circle cx="${cx}" cy="188" r="3.5" fill="${ink}"/>
+        ${fr ? `<text id="pF" x="${cx}" y="214" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" font-weight="700" letter-spacing="2.5">${fr.toUpperCase()}</text>` : ''}
+        ${tel ? `<text x="${cx}" y="292" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" font-weight="700" font-size="13">${tel}</text>` : ''}`;
+    } else {
+      svg = `<rect x="0" y="0" width="26" height="${H}" fill="${ink}"/><rect x="${W-26}" y="0" width="26" height="${H}" fill="${ink}"/>
+        <rect x="34" y="0" width="5" height="${H}" fill="${ink}"/><rect x="${W-39}" y="0" width="5" height="${H}" fill="${ink}"/>
+        <text id="pN" x="${cx}" y="180" text-anchor="middle" fill="${ink}" font-family="Archivo Narrow,Arial Narrow,sans-serif" font-weight="700">${nome.toUpperCase()}</text>
+        ${fr ? `<text id="pF" x="${cx}" y="206" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" letter-spacing="1.5">${fr}</text>` : ''}
+        ${tel ? `<text x="${cx}" y="300" text-anchor="middle" fill="${ink}" font-family="Inter,sans-serif" font-weight="700" font-size="13">${tel}</text>` : ''}`;
+    }
+    g.innerHTML = svg;
+    const n = document.getElementById('pN'), f = document.getElementById('pF');
+    if (st.est === 'selo') { fit(n, 124, 22); if (f) fit(f, 190, 11); }
+    else if (st.est === 'classico') { fit(n, 200, 40); if (f) fit(f, 190, 11); }
+    else { fit(n, 160, 36); if (f) fit(f, 160, 13); }
+    const msg = `Olá! Montei uma prévia no site embalagens.app e quero orçar um saco personalizado: "${st.nome || '—'}" · estilo ${({selo:'Selo',classico:'Clássico',faixas:'Faixas'})[st.est]} · tinta ${st.tintaN} · papel ${PAPEL[st.papel].n}.`;
+    document.getElementById('tWa').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(msg);
+  }
+  const bind = (id, k) => { const el = document.getElementById(id); st[k] = el.value; el.addEventListener('input', () => { st[k] = el.value; paint(); }); };
+  bind('tNome','nome'); bind('tFrase','frase'); bind('tTel','tel');
+  const group = (id, fn) => document.getElementById(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#' + id + ' button').forEach(x => x.setAttribute('aria-pressed', x === b)); fn(b);
+  });
+  group('tEst', b => { st.est = b.dataset.v; paint(); });
+  group('tTinta', b => { st.tinta = b.dataset.v; st.tintaN = b.dataset.n; paint(); });
+  group('tPapel', b => { st.papel = b.dataset.v; build(); });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(paint);
+  build();
+
+  // girar: balanço sozinho; arrastar ou passar o mouse gira
+  let ry = -24, rx = 6, drag = null, idle = true, t0 = performance.now();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const set = () => bag.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  const scene = document.getElementById('scene');
+  scene.addEventListener('pointerdown', e => { drag = {x: e.clientX, ry}; idle = false; scene.setPointerCapture(e.pointerId); bag.style.transition = 'none'; });
+  scene.addEventListener('pointermove', e => { if (!drag) return; ry = drag.ry + (e.clientX - drag.x) * .5; set(); });
+  const up = () => { if (!drag) return; drag = null; bag.style.transition = ''; setTimeout(() => { idle = true; t0 = performance.now() - Math.asin(Math.max(-1, Math.min(1, (ry + 18) / 22))) * 1000 / .7; }, 2500); };
+  scene.addEventListener('pointerup', up); scene.addEventListener('pointercancel', up);
+  scene.style.touchAction = 'pan-y'; scene.style.cursor = 'grab';
+  if (!reduce) (function loop(now) { if (idle && !drag) { ry = -18 + Math.sin((now - t0) / 1000 * .7) * 22; bag.style.transition = 'none'; set(); } requestAnimationFrame(loop); })(t0);
+})();
 
 // vídeo: respeita "reduzir movimento" e pausa fora da tela
 const v = document.getElementById('demo');
