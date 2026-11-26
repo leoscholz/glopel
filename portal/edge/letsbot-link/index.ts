@@ -1,4 +1,6 @@
-// Supabase Edge Function: letsbot-link — v1.1 (26-11-2026: só registra clientes do portal)
+// Supabase Edge Function: letsbot-link — v1.2 (26-11-2026: + confirmação automática do pedido do portal)
+// Dois usos: (1) webhook do LetsBot → responde com o link; (2) gatilho do banco (portal/sql/confirmacao.sql) a cada pedido
+// novo do portal → manda "✅ Pedido GLS-… recebido" no WhatsApp do cliente.
 // LetsBot (webhook message_notification) → se quem escreveu é cliente do portal e a mensagem fala em "pedido",
 // responde no WhatsApp com o link secreto dele (embalagens.app/<token>/). Quem não é do portal: não faz nada.
 //
@@ -39,11 +41,43 @@ async function log(r: Record<string, unknown>) {
   try { await SB.from("portal_bot_log").insert(r); } catch (_) { /* log nunca derruba a resposta */ }
 }
 
+async function envia(tel: string, msg: string): Promise<{ ok: boolean; resp: string }> {
+  const fd = new FormData(); fd.append("phone", tel); fd.append("body", msg);
+  try {
+    const r = await fetch("https://letsbot.net/api/v1/message/send", { method: "POST", headers: { Authorization: `Bearer ${KEY}`, Accept: "application/json", "X-LetsBot-Validation": "strict" }, body: fd });
+    return { ok: r.ok, resp: (await r.text()).slice(0, 1000) };
+  } catch (e) { return { ok: false, resp: String(e) }; }
+}
+const brl = (v: unknown) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const mil = (q: unknown) => `${q} milheiro${Number(q) === 1 ? "" : "s"}`;
+
+// (2) confirmação do pedido do portal — chamada pelo gatilho do banco com {"event":"pedido_portal","codigo":"GLS-XXXXX"}
+async function confirma(codigo: string) {
+  const { data: p } = await SB.from("pedidos_site").select("codigo,itens,total,obs,ref_interna,confirmado_wa").eq("codigo", codigo).maybeSingle();
+  if (!p || !String(p.ref_interna || "").startsWith("portal:")) return "sem pedido";
+  if (p.confirmado_wa) return "já confirmado";
+  const token = String(p.ref_interna).slice(7);
+  const { data: c } = await SB.from("portal_clientes").select("nome,telefone,dados,cliente_chave").eq("token", token).maybeSingle();
+  if (!c) return "sem cliente";
+  const tel = digitos(c.dados?.telefone_wa || c.telefone);
+  const linhas = (p.itens || []).map((l: any) => `• ${mil(l.qtd)} — ${l.nome}${l.variacao ? " · " + l.variacao : ""} = ${brl(l.total)}`).join("\n");
+  const cond = c.dados?.condicao_cliente ? ` (${c.dados.condicao_cliente})` : "";
+  const msg = `✅ *Pedido ${p.codigo} recebido!*\n\n${linhas}\n\n*Total: ${brl(p.total)}*${cond}` +
+    (p.obs ? `\nObs.: ${String(p.obs).slice(0, 200)}` : "") +
+    `\n\nA Globo confere o prazo e a entrega e te avisa por aqui. Qualquer ajuste, é só responder esta mensagem.` +
+    (c.cliente_chave === "TESTE" ? "\n\n🧪 _cliente de teste — não será produzido_" : "");
+  const r = await envia(tel, msg);
+  if (r.ok) await SB.from("pedidos_site").update({ confirmado_wa: new Date().toISOString() }).eq("codigo", p.codigo);
+  await log({ evento: "pedido_portal", telefone: tel, texto: p.codigo, acao: r.ok ? "confirmação enviada" : "erro na confirmação", cliente: c.nome, resposta: r.resp });
+  return r.ok ? "ok" : "erro";
+}
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   if (SEG && url.searchParams.get("s") !== SEG && req.headers.get("x-globo-secret") !== SEG) return new Response("no", { status: 401 });
   let j: any = null;
   try { j = await req.json(); } catch (_) { return new Response("ok"); }
+  if (j?.event === "pedido_portal" && j?.codigo) return new Response(await confirma(String(j.codigo)));
   const d = j?.data ?? j;
   const evento = j?.event ?? "";
   const remoto = String(pega(d, "remoteJid", "key.remoteJid", "chat_id", "chatId", "from", "phone", "contact.phone", "message.remoteJid") ?? "");
@@ -70,12 +104,7 @@ Deno.serve(async (req) => {
 
   const nome = String(c.nome || "").split(" ")[0];
   const msg = `Olá${nome ? ", " + nome : ""}! 🛒\n\nFaça seu pedido por aqui:\n${SITE}${c.token}/\n\nNo link você também vê os *pedidos anteriores* e todos os produtos com a sua arte. A Globo confere e te confirma por aqui.`;
-  const fd = new FormData(); fd.append("phone", tel); fd.append("body", msg);
-  let ok = false, resp = "";
-  try {
-    const r = await fetch("https://letsbot.net/api/v1/message/send", { method: "POST", headers: { Authorization: `Bearer ${KEY}`, Accept: "application/json", "X-LetsBot-Validation": "strict" }, body: fd });
-    resp = (await r.text()).slice(0, 1000); ok = r.ok;
-  } catch (e) { resp = String(e); }
+  const { ok, resp } = await envia(tel, msg);
   await log({ ...base, acao: ok ? "link enviado" : "erro ao enviar", resposta: resp });
   return new Response("ok");
 });
