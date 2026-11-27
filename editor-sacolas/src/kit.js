@@ -78,21 +78,35 @@ function resolveFuros(txt){
 const nomePDF = t => '/'+String(t).replace(/[^A-Za-z0-9\-_.]/g, ch=>'#'+ch.charCodeAt(0).toString(16).padStart(2,'0').toUpperCase());
 function novoPDF(w,h){ const {jsPDF}=window.jspdf; return new jsPDF({unit:'cm', format:[w,h], orientation: w>h?'landscape':'portrait', compress:true}); }
 function ligaSpots(doc, spots){   // spots: [{nome, cmyk:[c,m,y,k] 0..1, hex sentinela}]
-  const porHex={}; spots.forEach((s,i)=>{ s.cs='CS'+i; porHex[s.hex.toLowerCase()]=s; });
+  const porHex={}, csDe={}; let n=0; spots.forEach(s=>{ s.cs = csDe[s.nome] || (csDe[s.nome]='CS'+(n++)); porHex[s.hex.toLowerCase()]=s; });
+  const unicos = spots.filter((s,i)=>spots.findIndex(o=>o.nome===s.nome)===i);
   // jsPDF 2.5.1 não tem evento para o dicionário de recursos: fechamos o /XObject e abrimos o /ColorSpace
   // (o ">>" que o jsPDF escreve depois fecha o /ColorSpace). Inscrito só na hora de gerar, para ser o último.
   doc.__ligaCores = ()=> doc.internal.events.subscribe('putXobjectDict', ()=>{
-    doc.internal.write('>> /ColorSpace <<'+spots.map(s=>`/${s.cs} [/Separation ${nomePDF(s.nome)} /DeviceCMYK << /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [${s.cmyk.map(v=>(+v).toFixed(3)).join(' ')}] /N 1 >>]`).join(' ')); });
+    doc.internal.write('>> /ColorSpace <<'+unicos.map(s=>`/${s.cs} [/Separation ${nomePDF(s.nome)} /DeviceCMYK << /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [${s.cmyk.map(v=>(+v).toFixed(3)).join(' ')}] /N 1 >>]`).join(' ')); });
   const hexDe=a=>{ if(typeof a[0]==='string'){ const v=a[0].trim().toLowerCase(); if(v[0]==='#') return v.length===4?'#'+[...v.slice(1)].map(c=>c+c).join(''):v; const m=v.match(/rgb\(([^)]+)\)/); if(m) return rgb2hex(...m[1].split(',').map(x=>Math.round(+x))); return null; }
     if(a.length>=3 && a.slice(0,3).every(x=>typeof x==='number')){ const t=a.slice(0,3), u=t.every(y=>y<=1)&&t.some(y=>!Number.isInteger(y)); return rgb2hex(...t.map(x=>u?x*255:x)); } return null; };
   ['setFillColor','setDrawColor'].forEach((fn,ix)=>{ const orig=doc[fn].bind(doc);
-    doc[fn]=function(...a){ const h=hexDe(a), s=h&&porHex[h]; if(s){ doc.internal.write(`/${s.cs} ${ix?'CS':'cs'} 1 ${ix?'SCN':'scn'}`); return doc; } return orig(...a); }; });
+    doc[fn]=function(...a){ const h=hexDe(a), s=h&&porHex[h]; if(s){ doc.internal.write(`/${s.cs} ${ix?'CS':'cs'} ${(s.t??1).toFixed(3)} ${ix?'SCN':'scn'}`); return doc; } return orig(...a); }; });
   return porHex;
 }
 const SENT = i => rgb2hex(17+i*7, 3+i*5, 211-i*3);   // cores-sentinela improváveis
+const SENT_TOM = (i,j) => rgb2hex(29+i*9, 101+j*3, 7+i*5);   // sentinelas dos tons claros (retícula do mesmo Pantone)
+// tons claros usados na arte: {chave: [tons <100]}
+function tonsEmUso(){ const r={}; const vai=e=>{ if(e.visivel===false) return; if(e.tinta && e.tinta<100){ const ks=[e.cor,e.contorno,...Object.values(e.mapa||{})].filter(k=>k&&k!=='papel');
+  ks.forEach(k=>{ (r[k]=r[k]||new Set()).add(+e.tinta); }); } (e.filhos||[]).forEach(vai); }; arte.camadas.forEach(vai); const o={}; Object.keys(r).forEach(k=>o[k]=[...r[k]].sort((a,b)=>b-a)); return o; }
+// <use> vira cópia inline antes do svg2pdf: ele calcula errado a caixa (BBox) do XObject do <use> e o desenho sumia recortado
+// (texturas e fundos repetidos — girassóis, volutas). Expande até 3 níveis.
+function expandeUses(root){ const NS='http://www.w3.org/2000/svg';
+  for(let volta=0; volta<3; volta++){ const us=[...root.querySelectorAll('use')]; if(!us.length) break;
+    us.forEach(u=>{ const id=(u.getAttribute('href')||u.getAttribute('xlink:href')||'').replace(/^#/,''); const ref=id && root.querySelector('[id="'+id.replace(/"/g,'')+'"]');
+      if(!ref){ u.remove(); return; }
+      const g=document.createElementNS(NS,'g'); [...u.attributes].forEach(a=>{ if(!['href','xlink:href','x','y','width','height','transform'].includes(a.name)) g.setAttribute(a.name, a.value); });
+      const x=+u.getAttribute('x')||0, y=+u.getAttribute('y')||0; g.setAttribute('transform', `${u.getAttribute('transform')||''}${x||y?` translate(${x} ${y})`:''}`.trim());
+      const k=ref.cloneNode(true); k.removeAttribute('id'); k.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id')); g.appendChild(k); u.replaceWith(g); }); } }
 async function svgNoPDF(doc, svgTxt, x, y, w, h){
   const box=document.createElement('div'); box.style.cssText='position:fixed;left:-99999px;top:0;width:10px;height:10px;overflow:hidden'; box.innerHTML=svgTxt; document.body.appendChild(box);
-  try{ await doc.svg(box.firstElementChild, {x, y, width:w, height:h}); } finally { box.remove(); } }
+  try{ expandeUses(box.firstElementChild); await doc.svg(box.firstElementChild, {x, y, width:w, height:h}); } finally { box.remove(); } }
 
 const nomeArq = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const fmt = (v,d=1) => (+v).toFixed(d).replace('.',',');
@@ -102,12 +116,14 @@ function textoDoBloco(doc, x, y, linhas){ linhas.forEach(([t,tam,neg,cor],i)=>{ 
 async function pdfDaSacola(id, ped, previas){
   const g=CATALOGO[id], cores=infoCores(), W=xmax-xmin+MG_KIT.l+MG_KIT.r, H=ymax-ymin+MG_KIT.t+MG_KIT.b;
   const doc=novoPDF(W,H);
+  const tons=tonsEmUso(), sentTom={};
   const spots=[...cores.map(c=>({nome:c.nome, cmyk:c.cmyk, hex:c.sent})), {nome:'FACA - NAO IMPRIMIR', cmyk:[0,1,0,0], hex:'#fe00fd'}, {nome:'All', cmyk:[1,1,1,1], hex:'#010203'}];
+  cores.forEach((c,i)=>(tons[c.k]||[]).forEach((t,j)=>{ const hx=SENT_TOM(i,j); sentTom[c.k+'|'+t]=hx; spots.push({nome:c.nome, cmyk:c.cmyk, hex:hx, t:t/100}); }));
   ligaSpots(doc, spots);
   doc.setProperties({title:`Arte-final ${g.nome} — ${ped.cliente}`, subject:`Pedido ${ped.num}`, creator:'GloboEditor · Embalagens Globo', keywords:'flexografia, arte-final, Pantone'});
   // pág. 1: arte com cores especiais
   const mapa={}; cores.forEach(c=>mapa[c.k]=c.sent);
-  await svgNoPDF(doc, svgKit({cor:k=>k==='papel'?'#ffffff':(mapa[k]||'#ffffff'), faca:'#fe00fd', papel:null, marcas:'#010203'}), 0, 0, W, H);
+  await svgNoPDF(doc, svgKit({cor:(k,t)=>k==='papel'?'#ffffff':((t<100&&sentTom[k+'|'+t])||mapa[k]||'#ffffff'), faca:'#fe00fd', papel:null, marcas:'#010203'}), 0, 0, W, H);
   // bloco de informações (fica fora da faca, embaixo)
   let y=ymax-ymin+MG_KIT.t+1.3; const x0=MG_KIT.l;
   y=textoDoBloco(doc, x0, y, [[`ARTE-FINAL · ${g.nome}`, 20, true], [`Cliente: ${ped.cliente}   ·   Pedido: ${ped.num}   ·   Data: ${ped.data}   ·   Quantidade: ${ped.qtd(id)} mil`, 11],
@@ -119,7 +135,7 @@ async function pdfDaSacola(id, ped, previas){
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor('#555555'); doc.text(`ref. CMYK ${c.cmyk.map(v=>Math.round(v*100)).join('/')} (só tela)`, sx+1.9, y+0.95); sx += 9.5; });
   // pág. das chapas (uma por cor, preto 100%, mesmo registro)
   for(let i=0;i<cores.length;i++){ const c=cores[i]; doc.addPage([W,H], W>H?'landscape':'portrait');
-    await svgNoPDF(doc, svgKit({cor:k=>k===c.k?'#000000':'#ffffff', faca:'#fe00fd', papel:null, marcas:'#010203'}), 0, 0, W, H);
+    await svgNoPDF(doc, svgKit({cor:(k,t)=>k===c.k?cinzaTom(t):'#ffffff', faca:'#fe00fd', papel:null, marcas:'#010203'}), 0, 0, W, H);
     textoDoBloco(doc, x0, ymax-ymin+MG_KIT.t+1.3, [[`CHAPA ${i+1} de ${cores.length} — ${c.nome}`, 20, true], [`${g.nome} · ${ped.cliente} · pedido ${ped.num} · prova de separação em preto (a tinta é ${c.nome})`, 11]]); }
   // ficha técnica (A4)
   doc.addPage('a4','portrait'); fichaTecnica(doc, id, ped, cores, previas);
@@ -140,6 +156,9 @@ function fichaTecnica(doc, id, ped, cores, previas){
     const usos=[...new Set(arte.camadas.filter(e=>JSON.stringify(e).includes(`"${c.k}"`)).map(nomeAmigavel))]; doc.text(`Chapa ${i+1}: ${c.nome}`, L+1.2, y);
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor('#555555'); const t=doc.splitTextToSize(`usada em: ${usos.join(', ')||'—'}`, 16); doc.text(t, L+1.2, y+0.45); y+=0.45+0.4*t.length+0.35; });
   const fotos=[]; const varre=e=>{ if(e.tipo==='meiotom') fotos.push(e); (e.filhos||[]).forEach(varre); }; arte.camadas.forEach(varre);
+  const tonsF=tonsEmUso(); if(Object.keys(tonsF).length){ y+=0.2; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor('#1f5fae'); doc.text('Tons claros (retícula do mesmo Pantone)', L, y); y+=0.55;
+    Object.keys(tonsF).forEach(k=>{ const usos=[...new Set(arte.camadas.filter(e=>e.tinta<100 && JSON.stringify(e).includes(`"${k}"`)).map(nomeAmigavel))];
+      lin(arte.paleta[k]?arte.paleta[k].pantone:k, `${tonsF[k].map(t=>t+' %').join(', ')} · retícula na mesma chapa · ${lpiMax()} lpi · ${usos.join(', ')}`); }); }
   if(fotos.length){ y+=0.2; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor('#1f5fae'); doc.text('Retículas (fotos)', L, y); y+=0.55;
     fotos.forEach(f=>{ lin(nomeAmigavel(f), f.forma==='cheio' ? `cor lisa (sem retícula), ${arte.paleta[f.cor]?arte.paleta[f.cor].pantone:f.cor}` : `${f.forma==='linha'?'linhas':'pontos'} · ${lpiMax()} lpi · ângulo ${f.angulo??45}° · ponto mínimo ${GAB.regras.ponto_min_pct||6}% · ${arte.paleta[f.cor]?arte.paleta[f.cor].pantone:f.cor}`); }); }
   const fontes=[...new Set(arte.camadas.filter(e=>e.tipo==='texto').map(e=>e.fonte||'Inter'))];
@@ -197,9 +216,9 @@ async function baixarKit(op={}){
       // prévias planificadas e chapas (PNG)
       progressoKit(`${g.nome}: prévia e chapas…`, passo(0.15));
       const cores=infoCores(), papelCor=COR_PAPEL[g.papel]||'#c8a374';
-      const plan=await pngDoSvg(svgKit({cor:k=>k==='papel'?papelCor:(arte.paleta[k]?cmyk2hex(arte.paleta[k].cmyk):papelCor), faca:'#e5007e', papel:papelCor, marcas:'#000000'}), 60);
+      const plan=await pngDoSvg(svgKit({cor:(k,t)=>k==='papel'?papelCor:(arte.paleta[k]?misturaTom(cmyk2hex(arte.paleta[k].cmyk),papelCor,t):papelCor), faca:'#e5007e', papel:papelCor, marcas:'#000000'}), 60);
       pasta.file('previa_planificada.png', await blobDe(plan));
-      for(let i=0;i<cores.length;i++){ const c=cores[i], cv=await pngDoSvg(svgKit({cor:k=>k===c.k?'#000000':'#ffffff', faca:'#e5007e', papel:'#ffffff', marcas:'#000000'}), 60);
+      for(let i=0;i<cores.length;i++){ const c=cores[i], cv=await pngDoSvg(svgKit({cor:(k,t)=>k===c.k?cinzaTom(t):'#ffffff', faca:'#e5007e', papel:'#ffffff', marcas:'#000000'}), 60);
         pasta.file(`chapas/CHAPA-${i+1}_${nomeArq(c.nome)}.png`, await blobDe(cv)); }
       // 3D
       progressoKit(`${g.nome}: fotos 3D…`, passo(0.3));

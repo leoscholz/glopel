@@ -604,10 +604,14 @@ const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&
 /* ---------- cores ---------- */
 function tintaOpaca(k){ const p=arte.paleta[k]; return !!(p && p.cmyk && p.cmyk.reduce((a,b)=>a+b,0)<=12); }   // branco e quase-branco: na flexo é tinta opaca
 function cmyk2hex(c){const [C,Mg,Y,K]=c.map(v=>v/100);const r=255*(1-C)*(1-K),g=255*(1-Mg)*(1-K),b=255*(1-Y)*(1-K);return '#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}
+// tom claro = retícula do mesmo Pantone (não gasta cor a mais). Na tela: mistura da tinta com o papel na proporção do tom.
+function misturaTom(hx, base, tinta){ if(!(tinta<100)) return hx; const a=hex2rgb(hx), b=hex2rgb(base), t=Math.max(0,tinta)/100; return rgb2hex(...a.map((v,i)=>b[i]+(v-b[i])*t)); }
+const cinzaTom = t => { const g=Math.round(255*(1-Math.min(100,t||100)/100)); return `rgb(${g},${g},${g})`; };
 function cor(chave, tinta=100){
   if(!chave) return 'none';
-  if(corOverride) return corOverride(chave);
-  if(PREV()){ if(chave==='papel') return KRAFT; const p=arte.paleta[chave]; return p?cmyk2hex(p.cmyk):'#ff00ff'; }
+  if(corOverride) return corOverride(chave, tinta);
+  if(PREV()){ if(chave==='papel') return KRAFT; const p=arte.paleta[chave]; if(!p) return '#ff00ff'; const hx=cmyk2hex(p.cmyk);
+    return misturaTom(hx, KRAFT, tinta); }
   const alvo = modo.slice(4);
   if(chave===alvo){ const g=Math.round(255*(1-tinta/100)); return `rgb(${g},${g},${g})`; }
   return '#ffffff';
@@ -1069,6 +1073,9 @@ function props(){
     <div class="aj-sec">Posição</div>
     <div class="aj-bts"><button data-aj="ch">↔ Meio (largura)</button><button data-aj="cv">↕ Meio (altura)</button><button data-aj="gira">⟳ Girar</button></div>`;
   if(swatches) simples += `<div class="aj-sec">Cor</div>${swatches}`;
+  if(['texto','retangulo','elipse','linha','vetor'].includes(c.tipo)){ const tons=[[100,'Cheio (100 %)'],[70,'70 %'],[50,'50 %'],[35,'35 %'],[22,'Claro (22 %)'],[15,'Bem claro (15 %)']], tv=c.tinta||100;
+    if(!tons.some(x=>x[0]===tv)) tons.push([tv, tv+' %']);
+    simples += `<div class="row" title="Tom claro = retícula da mesma tinta: não conta como cor a mais"><label>Tom da tinta</label><select data-k="tinta" data-num="1">${tons.map(([v,n])=>`<option value="${v}" ${v===tv?'selected':''}>${n}</option>`).join('')}</select></div>`; }
   simples += `<div class="aj-sec">Ordem</div><div class="aj-bts"><button data-aj="frente">⬆ Para cima de tudo</button><button data-aj="tras">⬇ Para baixo</button></div>`;
   let h = `<div class="row"><label>Nome</label><input data-k="id" type="text" value="${esc(c.id)}"></div>`;
   if(c.tipo==='linha') h += `<div class="row2">${['x1','y1','x2','y2'].map(k=>`<div><label>${k} (cm)</label><input data-k="${k}" type="text" inputmode="decimal" data-num="1" data-step="0.1" value="${c[k]}"></div>`).join('')}</div>`;
@@ -1137,6 +1144,10 @@ function coletaEl(el, raiz, out, usadas){
   ['cor','contorno'].forEach(k=>{ const v=el[k]; if(v && v!=='papel'){ usadas.add(v); if(!arte.paleta[v]) out.push(['err',raiz,'usa uma cor que saiu da lista de cores','cor']); } });
   if(el.tipo==='texto' && (el.tamanho_pt||12)*(el.escala||1) < GAB.regras.texto_min_pt) out.push(['err',raiz,`letra pequena demais para imprimir (mínimo ${GAB.regras.texto_min_pt} pt)`,'textomin']);
   if(el.contorno && (el.traco_mm||0.5)*(el.escala||1) < GAB.regras.linha_min_mm) out.push(['err',raiz,`contorno fino demais para imprimir (mínimo ${String(GAB.regras.linha_min_mm).replace('.',',')} mm)`,'traco']);
+  if(el.tinta && el.tinta<100){
+    if(el.tinta<10) out.push(['warn',raiz,'tom claro demais: abaixo de 10 % a retícula some na impressão','tom']);
+    else if(el.tipo==='texto' && (el.tamanho_pt||12)*(el.escala||1)<10) out.push(['warn',raiz,'letra pequena em tom claro sai serrilhada (use tom cheio ou letra ≥ 10 pt)','tomtexto']);
+    else if((el.contorno || el.tipo==='linha') && (el.traco_mm||0.5)*(el.escala||1)<0.6) out.push(['warn',raiz,'linha fina em tom claro sai falhada (use tom cheio ou traço ≥ 0,6 mm)','tomtexto']); }
   if(el.tipo==='imagem') out.push(['err',raiz,'imagem raster — precisa vetorizar']);
   if(el.tipo==='vetor'){ const orig = el.asset && ASSETS[el.asset] ? Object.keys(ASSETS[el.asset].cores) : Object.keys(el.mapa||{});
     const sem = orig.filter(h=>!(el.mapa||{})[h]); if(sem.length) out.push(['err',raiz,`${sem.length} parte(s) do desenho sem cor escolhida`,'semcor']);
@@ -1144,7 +1155,7 @@ function coletaEl(el, raiz, out, usadas){
   (el.filhos||[]).forEach(f=>coletaEl(f, raiz, out, usadas));
 }
 let VAL_ULT=[];
-const ROTULO_FIX={cor:'🎨 Usar cor da lista', textomin:'🔠 Aumentar até o mínimo', traco:'✏️ Engrossar', semcor:'🎨 Escolher cores', escondido:'👁 Mostrar', borda:'🪄 Trazer para dentro', dobra:'🪄 Tirar da dobra', sobre:'🪄 Afastar', cores3:'🎨 Ver cores', semuso:'🗑 Tirar da lista'};
+const ROTULO_FIX={cor:'🎨 Usar cor da lista', textomin:'🔠 Aumentar até o mínimo', traco:'✏️ Engrossar', semcor:'🎨 Escolher cores', escondido:'👁 Mostrar', borda:'🪄 Trazer para dentro', dobra:'🪄 Tirar da dobra', sobre:'🪄 Afastar', cores3:'🎨 Ver cores', semuso:'🗑 Tirar da lista', tom:'🎨 Tom 10 %', tomtexto:'🎨 Tom cheio'};
 // leva a vista até o item (volta para a Prévia se estiver no 3D/mockup) e seleciona
 function focaItem(id, semZoom){
   if(['produto','mockup'].includes(modo)){ modo='previa'; $('modo').value='previa'; }
@@ -1182,6 +1193,7 @@ function corrigeProblema(p){ const [t,id,m,cod,extra]=p, c=layer(id);
   if(cod==='traco'){ c.traco_mm=+((GAB.regras.linha_min_mm+0.02)/(c.escala||1)).toFixed(2); return true; }
   if(cod==='semcor'){ setSel(id); render(); if(c.tipo==='vetor') editorVetor(c); return false; }
   if(cod==='escondido'){ c.visivel=true; return true; }
+  if(cod==='tom' || cod==='tomtexto'){ const vai=el=>{ if(el.tinta && el.tinta<100){ if(cod==='tom') el.tinta=Math.max(10,el.tinta); else delete el.tinta; } (el.filhos||[]).forEach(vai); }; vai(c); return true; }
   if(cod==='borda' || cod==='dobra') return encaixaNaFaixa(c);
   if(cod==='sobre'){ const o=layer(extra); render(); const a=bboxPainel(c), b=o&&bboxPainel(o); if(!a||!b) return false; const gap=0.25;
     const sobe = (a.y0+a.y1)/2 >= (b.y0+b.y1)/2, dy = sobe ? (b.y1+gap)-a.y0 : (b.y0-gap)-a.y1;
@@ -1831,7 +1843,7 @@ async function texturasSaco(){
   // resolução limitada (~2,2 Mpx) e rasterizações em paralelo; máscaras que só dependem da faca ficam em cache
   const ar=(xmax-xmin)*(ymax-ymin), PX=Math.min(34, Math.sqrt(2.2e6/ar)), W=Math.round((xmax-xmin)*PX), H=Math.round((ymax-ymin)*PX);
   const svBase = marcaSheet({px:PX, papel:KRAFT, semCamadas:true});
-  corOverride = k => k==='papel' ? '#ffffff' : (arte.paleta[k]?cmyk2hex(arte.paleta[k].cmyk):'#ffffff');
+  corOverride = (k,t) => k==='papel' ? '#ffffff' : (arte.paleta[k]?misturaTom(cmyk2hex(arte.paleta[k].cmyk),'#ffffff',t):'#ffffff');
   const svTinta = marcaSheet({px:PX, papel:'#ffffff', fundo:'#ffffff'});
   corOverride = k => k==='papel' ? '#e8e8e8' : '#6f6f6f';
   const svRug = marcaSheet({px:PX, papel:'#e8e8e8', fundo:'#e8e8e8'});
