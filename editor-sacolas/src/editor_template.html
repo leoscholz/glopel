@@ -1771,6 +1771,7 @@ function marcaSheet(opts){
   // SVG da folha planificada inteira, para virar textura
   const vb = `${xmin} ${-ymax} ${xmax-xmin} ${ymax-ymin}`;
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${opts.px*(xmax-xmin)}" height="${opts.px*(ymax-ymin)}">`;
+  if(!opts.semCamadas && !CURVAS) s += `<style>${cssFontesSVG()}</style>`;   // textura/miniatura: fontes embutidas (senão vira Times)
   if(opts.fundo) s += `<rect x="${xmin}" y="${-ymax}" width="${xmax-xmin}" height="${ymax-ymin}" fill="${opts.fundo}"/>`;
   s += `<defs>`; PAINEIS.forEach(pn=>GAB.paineis[pn].partes.forEach((p,i)=>{ s+=`<clipPath id="pc-${pn}-${i}"><rect x="${p.x}" y="${-(p.y+p.h)}" width="${p.w}" height="${p.h}"/></clipPath>`; }));
   s += `</defs><path d="${contornoD()}" fill="${opts.papel}"/>`;

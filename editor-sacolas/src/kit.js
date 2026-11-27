@@ -12,6 +12,12 @@ const FONTE_ARQ = { "Inter":"inter-latin-400-normal", "Inter Bold":"inter-latin-
   "Pagella Italic":"eb-garamond-latin-400-italic", "Chorus":"eb-garamond-latin-500-italic" };
 const FONTES_B64 = __FONTES_CURVA__;
 var OT_FONTES = {}, CURVAS = false;
+// @font-face com as fontes embutidas (só as usadas): SVG que vira imagem (textura do 3D, miniaturas, fotos do portal) não enxerga as fontes da página e caía em Times
+function cssFontesSVG(){ const usadas=new Set(); const vai=e=>{ if(e.tipo==='texto' && e.visivel!==false) usadas.add(e.fonte||'Inter'); (e.filhos||[]).forEach(vai); };
+  try{ (arte.camadas||[]).forEach(vai); }catch(_){ return ''; }
+  return [...usadas].map(n=>{ const F=FONTES[n]||FONTES.Inter, arq=FONTE_ARQ[n]||FONTE_ARQ.Inter; if(!FONTES_B64[arq]) return '';
+    const fam=String(F.f).split(',')[0].trim().replace(/['"]/g,'');
+    return `@font-face{font-family:'${fam}';font-weight:${F.w};font-style:${F.s};src:url(data:font/woff;base64,${FONTES_B64[arq]}) format('woff')}`; }).join(''); }
 function carregaScript(url){ return new Promise((ok,erro)=>{ const s=document.createElement('script'); s.src=url; s.onload=ok; s.onerror=()=>erro(new Error('não carregou '+url)); document.head.appendChild(s); }); }
 async function carregaLibsKit(){
   if(!window.jspdf) await carregaScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
