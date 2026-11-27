@@ -135,6 +135,7 @@ body.vloja, body.vloja #loja{background:#f4f6f9}
 #loja .card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,40,80,.12)}
 #loja .card .ilu{background:linear-gradient(180deg,#ffffff 55%,#f1f1ef)}
 #loja .card .ilu{position:relative}
+#loja .card .ilu img.artecli3d{height:210px!important;width:auto;max-width:100%;object-fit:cover;border-radius:10px;mix-blend-mode:normal;filter:none}
 #loja .card .ilu img.artecli{height:190px;max-width:92%;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}
 #loja .card .selocli{position:absolute;left:8px;top:8px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;background:#e8f5ee;color:#1a7a40;box-shadow:0 1px 2px rgba(0,0,0,.08)}
 #loja .card .selocli.sug{background:#fff6db;color:#8a6100}
@@ -2742,8 +2743,9 @@ function renderLoja(){
     const q=pers?((design.qtd&&design.qtd[id])||1):(design.itens[v.k]||design.qtdItem[v.k]||1), dentro=pers?noCarrinho(id):!!design.itens[v.k];
     const hFoto = Math.round(105+80*(p.h||altMax*0.6)/altMax);
     const sCli = pers && typeof arteCliente==='function' && design.clientePortal ? (design.sacolas[id]&&design.sacolas[id].camadas.length&&design.sacolas[id].pal==='cli' ? design.sacolas[id] : null) : null;
-    const thCli = sCli ? miniaturaSacola(id) : null;
-    const fo = thCli ? {src:thCli, cls:'natural artecli'} : fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
+    const f3d = sCli && ARTES_CLI && ARTES_CLI.fotos && ARTES_CLI.fotos[id];   // foto 3D da arte do cliente (gerada pelo Produto final, guardada no banco)
+    const thCli = sCli && !f3d ? miniaturaSacola(id) : null;
+    const fo = f3d ? {src:f3d, cls:'natural artecli3d'} : thCli ? {src:thCli, cls:'natural artecli'} : fotoDe(p, v), nat = fo && /natural/.test(fo.cls);
     const ilu = fo ? `<img class="foto ${fo.cls}" src="${fo.src}" alt="${esc(p.nome)}" style="height:${nat?(/suri/.test(fo.cls)?190:150):hFoto}px">`
       : `<div class="semfoto"><span>${ICONE_CAT[p.cat]||'📦'}</span><small>foto em breve</small></div>`;
     const med = !pers && !p.revenda && v.it && v.it.medidas ? `Medidas: ${v.it.medidas} cm (${v.it.medidas.split('×').length>2?'largura × altura × sanfona':'largura × altura'}).` : '';
@@ -4233,17 +4235,19 @@ if(WA_TOKEN && /^[A-Za-z0-9]{8,16}$/.test(WA_TOKEN)) design.wa=WA_TOKEN;   // le
    A linha fica guardada à parte (CHAVE_ARTES_CLI), fora do histórico, e volta sozinha se a sacola sair e entrar no carrinho. */
 const PORTAL_TOKEN = [URLP.get('t'), WA_TOKEN].find(t=>t && /^[A-Za-z0-9]{16}$/.test(t)) || null;
 if(PORTAL_TOKEN) design.wa = PORTAL_TOKEN;
-const CHAVE_ARTES_CLI = 'glopel_artes_cliente_v1';
+const CHAVE_ARTES_CLI = 'glopel_artes_cliente_v2';   // v2 (27-11): traz fotos 3D; trocar a chave força todo mundo a buscar de novo
 let ARTES_CLI = null; try{ ARTES_CLI = JSON.parse(localStorage.getItem(CHAVE_ARTES_CLI)||'null'); }catch(_){ ARTES_CLI=null; }
 if(ARTES_CLI && design.clientePortal!==ARTES_CLI.token) ARTES_CLI=null;
 const THUMB_CLI = {};
 const arteCliente = id => ARTES_CLI && ARTES_CLI.sacolas && ARTES_CLI.sacolas[id];
 function poeArteCliente(id){   // sacola vazia + linha do cliente tem arte para ela → aplica (true se aplicou)
   const s=arteCliente(id); if(!s || !CATALOGO[id]) return false;
-  const b=design.sacolas[id]||(design.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]}); if(b.camadas && b.camadas.length) return false;
+  const b=design.sacolas[id]||(design.sacolas[id]={estado:'nenhum',proprio:[],camadas:[]});
+  const cj=JSON.stringify(s.camadas), hs=hashTxt(cj)+':'+cj.length;   // hashTxt é o da nuvem
+  if(b.camadas && b.camadas.length && !(b.pal==='cli' && b.cliHash!==hs)) return false;   // arte nova no banco: troca a antiga do cliente
   design.paletas=design.paletas||{}; design.paletas.cli=JSON.parse(JSON.stringify(ARTES_CLI.paleta));
   const R=ARTES_CLI.recursos||{}, ex=c=>{ if(c.svgRef){ if(R[c.svgRef]) c.svg=R[c.svgRef]; delete c.svgRef; } (c.filhos||[]).forEach(ex); return c; };   // logo vai 1 vez só no banco
-  b.camadas=JSON.parse(JSON.stringify(s.camadas)).map(ex).filter(c=>c.tipo!=='vetor'||c.svg); b.pal='cli'; b.proprio=[]; b.estado=s.aprovada?'conferida':'auto'; b.doCliente=s.aprovada?'sempre':'sugestao';
+  b.camadas=JSON.parse(JSON.stringify(s.camadas)).map(ex).filter(c=>c.tipo!=='vetor'||c.svg); b.pal='cli'; b.cliHash=hs; b.proprio=[]; b.estado=s.aprovada?'conferida':'auto'; b.doCliente=s.aprovada?'sempre':'sugestao'; if(typeof HIST!=='undefined') delete HIST[id];
   if(s.aprovada){ design.cliches=design.cliches||{}; const h=assinaturaArte(b.camadas, ARTES_CLI.paleta), l=design.cliches[idBase(id)]=design.cliches[idBase(id)]||[]; if(!l.includes(h)) l.push(h); }
   return true;
 }
@@ -4267,7 +4271,7 @@ async function carregaClientePortal(){
   if(!fresco){
     try{ const r=await fetch(SB_URL+'/rest/v1/rpc/portal_artes',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:PORTAL_TOKEN})});
       const j=r.ok?await r.json():null; if(!j || !j.artes || !j.artes.sacolas) return;
-      ARTES_CLI={token:PORTAL_TOKEN, nome:j.nome, paleta:j.artes.paleta, recursos:j.artes.recursos||{}, sacolas:j.artes.sacolas, quando:Date.now()};
+      ARTES_CLI={token:PORTAL_TOKEN, nome:j.nome, paleta:j.artes.paleta, recursos:j.artes.recursos||{}, sacolas:j.artes.sacolas, fotos:j.artes.fotos||{}, versao:j.artes.versao||1, quando:Date.now()};
       try{ localStorage.setItem(CHAVE_ARTES_CLI, JSON.stringify(ARTES_CLI)); }catch(_){}
     }catch(_){ return; }
   }
