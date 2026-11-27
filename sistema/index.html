@@ -160,6 +160,7 @@ const MODS = [
   {id:'relatorios', ic:'📊', nome:'Relatórios', tag:'novo'},
   {grp:'Comercial'},
   {id:'pedidos', ic:'🧾', nome:'Pedidos', tag:'novo'},
+  {id:'orcamentos', ic:'📄', nome:'Orçamentos', tag:'novo'},
   {id:'clientes', ic:'👥', nome:'Clientes', tag:'novo'},
   {id:'produtos', ic:'📦', nome:'Produtos', tag:'catálogo'},
   {id:'precificador', ic:'🧮', nome:'Precificador', tag:'teste'},
@@ -348,7 +349,7 @@ function menu(){
   document.getElementById('menu').innerHTML = MODS.map(m => m.sep ? '<hr>' : m.grp ? `<div class="grp">${m.grp}</div>` :
     `<button class="${m.id===atual?'on':''}" onclick="ir('${m.id}')"><span>${m.ic}</span>${m.nome}${m.tag?`<span class="tag">${m.tag}</span>`:(m.ph?'<span class="tag">em breve</span>':'')}</button>`).join('');
 }
-function ir(id, s){ if (id==='clientes') kSel = null; if (id==='pedidos' && !FP) fpVer = null; atual = id; if (s) sub = s; location.hash = id + (id==='bobinas' ? '/'+sub : ''); document.getElementById('side').classList.remove('open'); render(); }
+function ir(id, s){ if (id==='clientes') kSel = null; if (id==='orcamentos' && typeof ORC!=='undefined' && !ORC) orcVer = null; if (id==='pedidos' && !FP) fpVer = null; atual = id; if (s) sub = s; location.hash = id + (id==='bobinas' ? '/'+sub : ''); document.getElementById('side').classList.remove('open'); render(); }
 window.addEventListener('hashchange', () => { const [a,b] = location.hash.slice(1).split('/'); if (a && a!==atual){ atual=a; if(b) sub=b; render(); } });
 
 function badgeFonte(){
@@ -378,6 +379,7 @@ function render(){
   else if (atual==='comissoes') v.innerHTML = vComissoes();
   else if (atual==='relatorios') v.innerHTML = vRelatorios();
   else if (atual==='pedidos') v.innerHTML = vPedidos();
+  else if (atual==='orcamentos') v.innerHTML = (typeof vOrcamentos==='function') ? vOrcamentos() : '<div class="banner">Carregando Orçamentos…</div>';
   else if (atual==='clientes') v.innerHTML = vClientes();
   else if (atual==='funcionarios') v.innerHTML = vFuncionarios();
   else if (atual==='apagar') v.innerHTML = vApagar();
@@ -2233,7 +2235,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos','Nibo_Guias'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','Orcamentos','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos','Nibo_Guias'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -2241,7 +2243,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), nibo: objs(D.Nibo_Guias||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), orcs: (typeof orcLer==='function') ? objs(D.Orcamentos||[]).map(orcLer) : [], nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), nibo: objs(D.Nibo_Guias||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
@@ -2350,5 +2352,6 @@ document.getElementById('fileIn').addEventListener('change', async (ev) => {
 
 destrancar();
 </script>
+<script src="orcamento/orcamento.js"></script>
 </body>
 </html>
