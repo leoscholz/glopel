@@ -60,6 +60,24 @@ tr:hover td{background:#fafaf6}
 .pill.warn{background:var(--warn2);color:var(--warn)}
 .pill.ok{background:var(--ok2);color:var(--ok)}
 .pill.grey{background:var(--grey2);color:var(--mute)}
+/* quadro do estoque de bobinas */
+.qd-top{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between;margin:2px 0 6px}
+.qd-sum{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:14px}.qd-sum span{display:inline-flex;gap:5px;align-items:center}
+.qd-leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mute);margin-bottom:10px}.qd-leg span{display:inline-flex;gap:5px;align-items:center}
+.qd-dot{display:inline-block;width:10px;height:10px;border-radius:3px}.qd-dot.bad{background:var(--bad)}.qd-dot.warn{background:var(--warn)}.qd-dot.ok{background:var(--ok)}.qd-dot.grey{background:#c4c4bd}
+.qd{columns:340px;column-gap:12px}.qd>.qd-p{break-inside:avoid;margin:0 0 12px;display:block}
+.qd-p{padding:12px}.qd-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:15px}.qd-h .sp{flex:1}
+.qd-sw{width:16px;height:16px;border-radius:50%;border:1.5px solid;flex:none}.qd-tot{font-size:13px;white-space:nowrap}
+.qd-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.qd-t{border:1px solid var(--line);border-left:5px solid #c4c4bd;border-radius:8px;padding:7px 8px 6px;background:#fff;display:flex;flex-direction:column;gap:2px;cursor:default}
+.qd-t.bad{border-left-color:var(--bad);background:var(--bad2)}.qd-t.warn{border-left-color:var(--warn);background:var(--warn2)}.qd-t.ok{border-left-color:var(--ok)}.qd-t.grey{opacity:.8}
+.qd-w{font-size:13px;font-weight:600;color:var(--mute)}.qd-n{font-size:28px;font-weight:700;line-height:1.05}
+.qd-t.bad .qd-n{color:var(--bad)}.qd-t.grey .qd-n{color:var(--mute)}
+.qd-r svg[aria-hidden]{flex:none}.qd-r{display:flex;flex-wrap:wrap;gap:1px;align-items:center;min-height:17px}.qd-r svg{display:block}
+.qd-mais{font-size:11px;color:var(--mute);margin-left:2px}.qd-zero{font-size:11px;color:var(--bad)}
+.qd-tr{font-size:11px;color:var(--mute)}.qd-st{font-size:11px;font-weight:600;color:var(--mute)}
+.qd-t.bad .qd-st{color:var(--bad)}.qd-t.warn .qd-st{color:var(--warn)}.qd-t.ok .qd-st{color:var(--ok)}
+@media (max-width:520px){.qd{columns:1}.qd-g{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}}
 .mut{color:var(--mute)}
 .note{color:var(--mute);font-size:12px;margin:8px 0 0}
 .ora{margin-bottom:16px;border-color:#cdbfe6}
@@ -834,7 +852,8 @@ function vBobinas(){
     ? `<div class="banner ok"><b>Dados reais</b> da planilha da Secretaria, publicados em ${dmy(DB.atualizado)}: contagem física de 17/11 (Márcia) + saídas do GLOBO CONTROLE. Para ver o mais recente: <i>Arquivo › Fazer download › .xlsx</i> e use <b>Carregar planilha</b>.<br>⚠️ Pedidos, chegadas e contagens registrados <b>nesta</b> página ficam só neste navegador. Para gravar na planilha, use o Sistema Globo dentro do Claude.</div>`
     : `<div class="banner ok">Dados da planilha <b>${esc(DB.fonte)}</b>, lidos neste navegador. Edições feitas aqui não voltam para a planilha.</div>`;
   const body = {estoque:bEstoque, pedir:bPedir, saidas:bSaidas, entradas:bEntradas, inventario:bInv, tipos:bTipos}[sub] || bEstoque;
-  return ban + gravBox() + t + ((sub === 'estoque' || sub === 'entradas' || !sub) ? vNotasBobina() : '') + (sub === 'estoque' || !sub ? bFichasDemanda() : '') + body();
+  const est = (sub === 'estoque' || !sub);
+  return ban + gravBox() + t + (est ? bQuadro() : '') + ((est || sub === 'entradas') ? vNotasBobina() : '') + (est ? bFichasDemanda() : '') + (est ? `<h3 style="margin:22px 0 8px">Prioridade de pedidos</h3>` : '') + body();
 }
 
 function bFichasDemanda(){
@@ -846,6 +865,47 @@ function bFichasDemanda(){
   <div class="tw" style="margin-top:8px"><table><thead><tr><th>Produto · papel</th><th class="n">Milheiros</th><th class="n">Itens</th></tr></thead><tbody>${R.map(x => `<tr><td>${esc(x.k)}</td><td class="n"><b>${fmt(x.mil, 1)}</b></td><td class="n">${x.n}</td></tr>`).join('')}</tbody></table></div>
   <p class="note">Ainda em milheiros: falta a tabela produto → bobina (largura) e kg por milheiro para virar quilos de cada SKU. Revenda (sacolas, picotados etc.) fica de fora.</p></details>`;
 }
+/* Quadro de estoque — quantas bobinas de cada temos (pedido da Márcia, 27-11-2026) */
+function qdCor(tipo){ const t = String(tipo||'');
+  if (/pardo|natural/i.test(t)) return ['#b98a5e','#8f6440'];
+  if (/branco/i.test(t)) return ['#fbf9f4','#b9b2a3'];
+  if (/mono|MG/i.test(t)) return ['#efe3cb','#b8a27a'];
+  if (/grease|antigord/i.test(t)) return ['#f3f0e2','#a9a37e'];
+  if (/strong/i.test(t)) return ['#a87a50','#7a5533'];
+  return ['#e8dcc8','#a8987c']; }
+function qdRolo(c, tr){ return `<svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><circle cx="10" cy="10" r="8.6" fill="${tr?'none':c[0]}" stroke="${c[1]}" stroke-width="1.3" ${tr?'stroke-dasharray="2.2 1.6"':''}/>${tr?'':`<circle cx="10" cy="10" r="5.6" fill="none" stroke="${c[1]}" stroke-opacity=".35" stroke-width=".8"/>`}<circle cx="10" cy="10" r="2.4" fill="${tr?'none':'#fff'}" stroke="${c[1]}" stroke-width="1"/></svg>`; }
+function qdRolos(n, c, tr, max){ n = Math.max(0, Math.round(n||0)); const v = Math.min(n, max);
+  return Array.from({length:v}, () => qdRolo(c, tr)).join('') + (n > v ? `<span class="qd-mais">+${n-v}</span>` : ''); }
+function bQuadro(){
+  const E = estoque(), G = {};
+  E.forEach(e => { const p = pedParse(e.sku);
+    const g = Number(e.gramatura) || (p ? p.g : 0), tipo = (p && {KN:'Kraft pardo', KB:'Kraft branco'}[p.tp]) || String(e.tipo || (p ? p.tp : '') || 'Outros').trim();
+    const k = (p ? p.tp : tipo) + '|' + g; (G[k] = G[k] || {tipo, g, itens:[]}).itens.push({...e, w: Number(e.largura) || (p ? p.w : 0)}); });
+  const ordTipo = t => /pardo|natural/i.test(t) ? 0 : /branco/i.test(t) ? 1 : 2;
+  const grupos = Object.values(G).sort((a,b) => ordTipo(a.tipo)-ordTipo(b.tipo) || a.tipo.localeCompare(b.tipo) || a.g-b.g);
+  const tot = E.reduce((a,e)=>a+Math.max(0, e.saldo||0),0), totKg = E.reduce((a,e)=>a+Math.max(0, e.kg||0),0), totTr = E.reduce((a,e)=>a+(e.trans||0),0);
+  const semC = E.filter(e=>e.saldo===null).length;
+  const cls = st => st==='PEDIR JÁ'||st==='RECONTAR' ? 'bad' : st==='PEDIR EM 2 SEM' ? 'warn' : st==='OK' ? 'ok' : st==='SEM CONSUMO' ? 'calmo' : 'grey';
+  const rot = e => e.st==='PEDIR JÁ' ? 'pedir já' : e.st==='PEDIR EM 2 SEM' ? 'pedir em 2 sem.' : e.st==='RECONTAR' ? 'recontar' : e.st==='SEM CONTAGEM' ? 'sem contagem' : e.st==='SEM CONSUMO' ? 'sem uso recente' : (e.cob!=null ? 'dá ~'+fmt(e.cob,0)+' sem.' : 'ok');
+  const tile = (e, c) => {
+    const n = e.saldo===null ? '?' : fmt(e.saldo);
+    const dica = [e.sku, e.saldo===null?'sem contagem':fmt(e.saldo)+' bobinas'+(e.kg?' · ~'+fmt(e.kg)+' kg':''), e.trans?fmt(e.trans)+' a caminho':'', e.cons>0?'usa ~'+fmt(e.cons,1)+' por semana':'', e.rup?'acaba ~'+dmy(e.rup):''].filter(Boolean).join(' · ');
+    return `<div class="qd-t ${cls(e.st)}" title="${esc(dica)}">
+      <div class="qd-w">${e.w ? e.w+' cm' : esc(e.sku)}</div>
+      <div class="qd-n">${n}</div>
+      <div class="qd-r">${e.saldo>0 ? qdRolos(e.saldo, c, false, 12) : e.saldo===null ? '' : '<span class="qd-zero">nenhuma</span>'}${e.trans ? qdRolos(e.trans, c, true, 6) : ''}</div>
+      ${e.trans ? `<div class="qd-tr">+${fmt(e.trans)} a caminho</div>` : ''}
+      <div class="qd-st">${rot(e)}</div></div>`; };
+  const card = gr => { const c = qdCor(gr.tipo); gr.itens.sort((a,b)=>a.w-b.w);
+    const s = gr.itens.reduce((a,e)=>a+Math.max(0,e.saldo||0),0), kg = gr.itens.reduce((a,e)=>a+Math.max(0,e.kg||0),0), tr = gr.itens.reduce((a,e)=>a+(e.trans||0),0);
+    return `<div class="card qd-p"><div class="qd-h"><span class="qd-sw" style="background:${c[0]};border-color:${c[1]}"></span><b>${esc(gr.tipo)}${gr.g ? ' '+gr.g+' g' : ''}</b><span class="sp"></span><span class="qd-tot"><b>${fmt(s)}</b> bob.${kg?' · '+fmt(kg/1000,1).replace('.',',')+' t':''}${tr?` · <span class="mut">+${fmt(tr)} a caminho</span>`:''}</span></div>
+      <div class="qd-g">${gr.itens.map(e => tile(e, c)).join('')}</div></div>`; };
+  return `<div class="qd-top"><div><b style="font-size:18px">Quadro do estoque</b> <span class="mut">— quantas bobinas temos de cada papel e largura</span></div>
+    <div class="qd-sum"><span><b>${fmt(tot)}</b> bobinas na fábrica</span><span>~<b>${fmt(totKg/1000,1).replace('.',',')}</b> t</span>${totTr?`<span>${qdRolo(['#fff','#888'],true)} <b>${fmt(totTr)}</b> a caminho</span>`:''}</div></div>
+  <div class="qd-leg"><span><i class="qd-dot bad"></i>pedir já</span><span><i class="qd-dot warn"></i>pedir em 2 semanas</span><span><i class="qd-dot ok"></i>ok</span><span><i class="qd-dot grey"></i>sem uso recente / sem contagem</span><span>${qdRolo(qdCor('pardo'))} 1 bobina na fábrica</span><span>${qdRolo(qdCor('pardo'),true)} a caminho</span>${semC?`<span class="mut">? = ainda não contado (${semC})</span>`:''}</div>
+  <div class="qd">${grupos.map(card).join('')}</div>`;
+}
+
 function bEstoque(){
   const E = estoque().sort((a,b) => ST[a.st][1]-ST[b.st][1] || a.sku.localeCompare(b.sku));
   const H = iso(hoje());
