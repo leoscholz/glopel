@@ -157,11 +157,28 @@ function upsert(d, quem) {
 /* ---------- Oráculo: perguntas sobre a empresa, respondidas pelo Claude ----------
  * A chave da API da Anthropic fica SÓ aqui, nas Propriedades do script (nunca no site nem no GitHub):
  *   Apps Script › ⚙️ Configurações do projeto › Propriedades do script › ANTHROPIC_KEY = sk-ant-…
- * Opcional: MODELO (padrão claude-sonnet-5-5).
+ * Opcional: MODELO (padrão claude-opus-5-5; para gastar metade, claude-sonnet-5-5).
+ * Teste: Executar › testeOraculo (a 1ª vez pede para autorizar).
  * O site manda a pergunta + o histórico da conversa + um retrato dos dados que ele já tem abertos
  * (cofre destrancado, planilha do site, bobinas). Aqui juntamos a base do Oráculo (fatos com fonte).
  */
-const ORACULO = '1SUSBDzyd0ItjMlJEcnhSSr6kij_3RgWgktdikrAPf34'; // Glopel_Oraculo_Base › Fatos
+const ORACULO = '1SUSBDzyd0ItjMlJEcnhSSr6kij_3RgWgktdikrAPf34'; // Glopel_Oraculo_Base › Fatos e › Memoria
+
+// Memória do projeto (resumo de negócio dos docs da consultoria): aba Memoria, colunas secao | texto | atualizado
+function memoriaOraculo() {
+  try {
+    const sh = SpreadsheetApp.openById(ORACULO).getSheetByName('Memoria');
+    if (!sh || sh.getLastRow() < 2) return '(memória vazia)';
+    return sh.getRange(2, 1, sh.getLastRow() - 1, 3).getDisplayValues()
+      .filter(r => r[1]).map(r => '## ' + r[0] + (r[2] ? ' (atualizado ' + r[2] + ')' : '') + '\n' + r[1]).join('\n\n');
+  } catch (x) { return '(não consegui ler a memória do Oráculo: ' + x + ')'; }
+}
+
+// Teste manual no editor do Apps Script (Executar › testeOraculo): mostra no registro se a chave, o modelo e a memória estão ok
+function testeOraculo() {
+  const r = perguntar({ pergunta: 'Em uma frase: quem é você e quantas seções de memória você recebeu?', hoje: Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'dd/MM/yyyy') }, 'teste');
+  Logger.log(r.modelo + ' · ' + JSON.stringify(r.uso) + '\n' + r.resposta);
+}
 
 function baseOraculo() {
   try {
@@ -177,25 +194,29 @@ function perguntar(d, quem) {
   const props = PropertiesService.getScriptProperties();
   const key = props.getProperty('ANTHROPIC_KEY');
   if (!key) throw new Error('falta a chave da Anthropic no porteiro (Propriedades do script › ANTHROPIC_KEY)');
-  const modelo = props.getProperty('MODELO') || 'claude-sonnet-5-5';
+  const modelo = props.getProperty('MODELO') || 'claude-opus-5-5';
   const pergunta = String(d.pergunta || '').trim();
   if (!pergunta) throw new Error('pergunta vazia');
   const hist = (d.historico || []).slice(-10).filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.content)
     .map(m => ({ role: m.role, content: String(m.content).slice(0, 8000) }));
   while (hist.length && hist[0].role !== 'user') hist.shift();
   const instr = [
-    'Você é o Oráculo da Glopel (Embalagens Globo Indústria e Comércio Ltda, fábrica de sacos de papel para padarias em Curitiba).',
+    'Você é o Oráculo da Embalagens Globo (Embalagens Globo Indústria e Comércio Ltda + Globo Impressos Ltda, fábrica de sacos de papel para padarias em Curitiba). Nunca chame a empresa de Glopel.',
     'Quem pergunta é alguém da empresa (Márcia, a dona; Daiane, do escritório; ou Leo, o consultor). Hoje é ' + (d.hoje || '') + '. Quem está perguntando: ' + (quem || 'não informado') + '.',
     'Responda em português do Brasil, curto e direto, como uma secretária experiente: a resposta primeiro, depois o detalhe necessário. Use listas curtas e tabelas pequenas quando ajudarem. Valores em R$ com vírgula decimal; datas dd/mm/aaaa.',
     'Use SÓ os dados abaixo. Não invente número, nome, data nem prazo. Se a informação não estiver nos dados, diga claramente que não sabe e onde provavelmente está (Sage Start, Drive, uma pessoa) — essa resposta é útil.',
     'Diga de onde veio cada número importante, entre parênteses e curto: (base do Oráculo F0012), (planilha do site), (bobinas ao vivo), (retrato de produção 17/11), (vendas do Start até 16/11)…',
     'Se dois dados se contradizem, mostre os dois e diga qual é mais recente. Avise quando um dado for retrato antigo ou estimativa (ex.: comissão 5% é chute).',
-    'Você só lê: não consegue gravar nada. Se pedirem para registrar algo, diga em qual página do Sistema Globo fazer isso.'
+    'Você só lê: não consegue gravar nada. Se pedirem para registrar algo, diga em qual página do Sistema Globo fazer isso.',
+    'A <memoria_do_projeto> é o resumo do trabalho de organização da empresa feito com o Leo (sistemas, decisões, números levantados, o que ainda falta). Use para explicar como as coisas funcionam e o que já foi decidido; cite como (memória do projeto). Para números do dia a dia, prefira os <dados_do_sistema>, que são mais recentes.',
+    'Fale com a Márcia como uma colega de confiança: simples, sem termos técnicos de informática (nada de API, script, commit, JSON). Se ela perguntar algo técnico do sistema, explique em uma frase e diga que o Leo cuida disso.'
   ].join('\n');
   const dadosSite = JSON.stringify(d.contexto || {});
+  // Ordem pensada para o cache: o que muda pouco primeiro (1 h), os dados do site por último (5 min)
   const system = [
     { type: 'text', text: instr },
-    { type: 'text', text: '<base_oraculo>\nFatos sobre a empresa, cada um com fonte e data de referência (vale o mais recente):\n' + baseOraculo() + '\n</base_oraculo>\n\n<dados_do_sistema>\n' + dadosSite.slice(0, 400000) + '\n</dados_do_sistema>', cache_control: { type: 'ephemeral' } }
+    { type: 'text', text: '<memoria_do_projeto>\n' + memoriaOraculo() + '\n</memoria_do_projeto>\n\n<base_oraculo>\nFatos sobre a empresa, cada um com fonte e data de referência (vale o mais recente):\n' + baseOraculo() + '\n</base_oraculo>', cache_control: { type: 'ephemeral', ttl: '1h' } },
+    { type: 'text', text: '<dados_do_sistema>\n' + dadosSite.slice(0, 400000) + '\n</dados_do_sistema>', cache_control: { type: 'ephemeral' } }
   ];
   const corpo = { model: modelo, max_tokens: 2000, system: system, messages: hist.concat([{ role: 'user', content: pergunta }]) };
   const r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {

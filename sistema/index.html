@@ -1159,8 +1159,9 @@ function oraSalva(){ try { sessionStorage.setItem('glopel-oraculo', JSON.stringi
 const ORA_EX = ['Quais bobinas preciso pedir esta semana?','Quanto temos para pagar nos próximos 15 dias?','Quem mais vendeu em outubro?','Qual é o CNPJ e o regime tributário da empresa?','O que as máquinas produziram ontem?','Quais clientes estão na fila de conversão de arte?'];
 function oraContexto(){
   const H = iso(hoje()), S = Object.assign({}, SEG||{});
-  delete S.api; delete S.bob; delete S.contas; delete S.funcionarios;
-  const C = {gerado_em: new Date().toISOString(), cofre: S};
+  delete S.api; delete S.bob; delete S.contas; delete S.funcionarios; delete S.cli;
+  // o cofre vai por último (ver abaixo): antes ia primeiro com a base de clientes inteira (~900 KB) e o porteiro cortava em 400 mil caracteres — bobinas, A pagar e funcionários se perdiam
+  const C = {gerado_em: new Date().toISOString()};
   try {
     C.bobinas = {fonte: DB.fonte, atualizado: DB.atualizado, tipos: DB.skus,
       estoque: estoque().map(e=>({sku:e.sku, tipo:e.tipo, status:e.st, alerta:e.conf?e.conf[1]+': '+e.conf[2]:'', saldo_bob:e.saldo, saldo_kg:e.kg, em_transito:e.trans, consumo_por_semana:e.cons, cobertura_semanas:e.cob, acaba_em:e.rup, pedir_ate:e.ate, sugestao_bob:e.sug, ultima_saida:e.ult})),
@@ -1170,6 +1171,15 @@ function oraContexto(){
   try { C.contas_fixas = {fonte: REM?'planilha do site':'navegador/cofre', lista: contas()}; } catch(e) {}
   try { C.a_pagar = {de: addD(H,-30), ate: addD(H,90), obs:'pago=true se marcado como pago; vencidas antes de '+DESDE_SIS+' contam como pagas; comissões são estimadas (8% = padrão do Start; taxa por vendedor não confirmada)',
       itens: ocorrencias(addD(H,-30), addD(H,90)).map(o=>({vencimento:o.data, conta:o.nome, categoria:o.cat, valor:o.valor, origem:o.fonte, pago:pago(o), pagamento:REM&&REM.pagos[o.id]||null}))}; } catch(e) {}
+  try { if (SEG && SEG.cli) {
+    // clientes: só quem comprou nos últimos 24 meses ou tem pedido aguardando, com os campos que respondem perguntas comuns
+    const lim = addD(H, -730);
+    C.clientes = {fonte: 'Start — export de 16/11/2026 (pedidos até ' + SEG.cli.atualizado + '); situação recalculada hoje', total_cadastro: SEG.cli.c.length,
+      obs: 'valor_12m e pedidos_12m = últimos 12 meses do export; aguardando = pedidos com recebimento Aguardando no Start (jun–ago/2026 parece baixa não lançada, conferir antes de cobrar)',
+      lista: kBase().filter(c => (c.ultimo && c.ultimo >= lim) || c.abTot > 0).sort((a,b) => (b.val12||0) - (a.val12||0)).map(c => ({nome:c.nome, razao:c.razao||'', cidade:c.cidade, bairro:c.bairro, vendedor:c.vn,
+        situacao:c.sit, ultimo_pedido:c.ultimo, proximo_previsto:c.prox, ciclo_dias:c.ciclo, pedidos_total:c.ped, pedidos_12m:c.ped12, valor_12m:c.val12, ticket:c.ticket, aguardando:Math.round(c.abTot), aguardando_60d:Math.round(c.ab60), fone:[c.cel,c.tel].filter(Boolean).join(' / ')}))};
+  } } catch(e) { C.clientes = {erro: String(e)}; }
+  C.cofre = S;
   return C;
 }
 async function oraPerguntar(txt){
@@ -1183,7 +1193,7 @@ async function oraPerguntar(txt){
   } catch(e) {
     ORA.hist.pop(); ORA.rasc = txt;
     const m = e.message||String(e);
-    ORA.erro = /ação desconhecida/.test(m) ? 'O porteiro ainda não tem o Oráculo: falta publicar a versão nova do script (v3).' : m;
+    ORA.erro = /ação desconhecida/.test(m) ? 'O porteiro ainda não tem o Oráculo: falta colar a versão nova do porteiro (Oráculo com Opus 5.5) e publicar "Nova versão".' : m;
   }
   ORA.carregando = false; oraSalva(); render();
   const el = document.getElementById('oraLog'); if (el) el.scrollTop = el.scrollHeight;
