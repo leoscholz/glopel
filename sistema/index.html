@@ -184,7 +184,7 @@ const MODS = [
   {id:'precificador', ic:'🧮', nome:'Precificador', tag:'teste'},
   {id:'comissoes', ic:'🤝', nome:'Comissões', tag:'novo'},
   {grp:'Produção'},
-  {id:'producao', ic:'🏭', nome:'Produção', tag:'retrato'},
+  {id:'producao', ic:'🏭', nome:'Produção', tag:'fila'},
   {id:'bobinas', ic:'🧻', nome:'Bobinas', tag:'ativo'},
   {id:'fornecedores', ic:'🚚', nome:'Fornecedores', tag:'papel'},
   {id:'artes', ic:'🎨', nome:'Artes/clichês', tag:'novo'},
@@ -540,7 +540,7 @@ let rcEmp = 'todas';
 function vReceber(){
   if (!REM) return REM_ERRO ? remBanner() : !API() ? `<div class="banner">Destranque o sistema (senha do cofre) para ler a planilha.</div>`
     : `<div class="banner">Lendo a planilha… <button class="btn" onclick="lerSis()">Tentar de novo</button></div>`;
-  return vPix() + vReceberNF();
+  return vAFaturar() + vPix() + vReceberNF();
 }
 function vReceberNF(){
   const H = iso(hoje()), mes = H.slice(0,7);
@@ -690,7 +690,396 @@ function prodServicos(E){
   Object.values(ab).forEach(a => { if (a) S.push({...a, fim:null, aberto:true}); });
   return S;
 }
-function vProducao(){
+/* =========================================================
+   Gerenciador de produção (27-11-2026)
+   Topo da aba Produção: "Para mandar à produção" (automático das fichas + manual)
+   → fila por operador (ordem e operador sugeridos) → EM PRODUÇÃO (demora) → PRONTA
+   → cobrança provisória "a faturar" no A receber, que sai quando a NF-e do pedido chega.
+   Abas da planilha do site (pelo porteiro, upsert): Producao_fila, A_faturar.
+   A ficha do pedido NÃO é alterada (trava 1: ST- só a cópia do Start grava).
+   ========================================================= */
+const PG_OPS0 = ['Wilton','Ricardo','Raul','Marcelo','Gabriel','Hemerson'];
+const PG_ST = {'A MANDAR':'warn','NA FILA':'grey','EM PRODUÇÃO':'ok','PRONTA':'ok','DISPENSADO':'grey','CANCELADO':'bad'};
+const PG_DIA = [7*60+30, 17*60+30];   /* expediente usado para contar demora (seg–sex) */
+const PG_FICHA_ST = ['NOVA','CONFERIDA','NO START','EM PRODUÇÃO'];
+let pgProntosDias = 7, pgAddAberto = false;
+const pgAgora = () => { const d = new Date(), p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+const pgSemAc = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const PG_STOP = new Set(('panificadora padaria supermercado supermercados confeitaria ltda eireli comercio alimentos paes doces mercado restaurante lanchonete pizzaria cia industria filial matriz casa ' +
+  'com sem kraft pardo branco liso lisa saco sacos padrao generico obrigado pela preferencia finalizado iniciando inicio foto amostra pilha talher porta estreito largo bobina timbrada mil kg cm provavel iniciado desde pedido daiane servico msg via letsbot').split(' '));
+const pgPal = t => [...new Set(pgSemAc(t).replace(/['’`]/g, '').split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !/^\d/.test(w) && !PG_STOP.has(w) && !/^(kb?|g|m|n)\d{2}$/.test(w)))];
+const pgHM = t => t && t.length > 10 ? (+t.slice(11,13)) * 60 + (+t.slice(14,16)) : 0;
+const pgDig = s => String(s || '').replace(/\D/g, '');
+const pgMed = a => { const s = a.filter(x => x != null && isFinite(x)).sort((x,y) => x-y); return s.length ? s[Math.floor(s.length/2)] : null; };
+
+/* família de setup: tipo (saco/talher/hamburgão/bobina/folha) + tamanho + medida + papel */
+function pgFam(texto){
+  const s = pgSemAc(texto).replace(/(\d),(\d)/g, '$1.$2');
+  let tam = '';
+  if (/(^|[^\d])(1\/2|½)/.test(s) || /meio\s*kg/.test(s)) tam = '0.5kg';
+  else { const m = /(\d+(?:\.\d+)?)\s*kg/.exec(s); if (m) tam = m[1] + 'kg'; }
+  const dm = /(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/.exec(s), dim = dm ? dm[1] + 'x' + dm[2] : '';
+  const tipo = /talher/.test(s) ? 'talher' : /hamburg|\bgao\b/.test(s) ? 'gao' : /\bbob(ina)?s?\b/.test(s) ? 'bobina' : /envelope/.test(s) ? 'envelope'
+    : /sticks/.test(s) ? 'sticks' : /miniburger/.test(s) ? 'miniburger' : /batatinha/.test(s) ? 'batatinha' : (dim && !tam) ? 'folha' : tam ? 'saco' : '';
+  const pm = /\b(kb|k|g|m|n)\s?(\d{2})\b/.exec(s), pap = /\bswm\b/.test(s) ? 'swm' : /strong/.test(s) ? 'strong' : pm ? pm[1] + pm[2] : '';
+  return {tipo, tam, dim, pap, chave: [tipo, tam, dim].filter(Boolean).join(' ')};
+}
+const pgFamPts = (a, b) => (a.tipo && a.tipo === b.tipo ? 2 : 0) + (a.tam && a.tam === b.tam ? 2 : 0) + (a.dim && a.dim === b.dim ? 2 : 0) + (a.pap && a.pap === b.pap ? 1 : 0);
+/* mesma família = mesmo tamanho (saco), mesma medida (folha) ou mesmo tipo especial (talher, hamburgão, bobina…) */
+const pgFamIgual = (a, b) => (a.tam || b.tam) ? (a.tam === b.tam && (a.tipo === b.tipo || !a.tipo || !b.tipo)) : (a.dim || b.dim) ? a.dim === b.dim : !!(a.tipo && a.tipo === b.tipo && a.tipo !== 'saco');
+
+/* minutos dentro do expediente (seg–sex, 7h30–17h30) — noite e fim de semana não contam como demora */
+function pgMinUteis(a, b){
+  if (!a || !b || b <= a) return 0;
+  let tot = 0; const d0 = a.slice(0,10), d1 = b.slice(0,10);
+  for (let d = d0, k = 0; d <= d1 && k < 400; d = addD(d, 1), k++){
+    const wd = new Date(d + 'T12:00:00Z').getUTCDay(); if (wd === 0 || wd === 6) continue;
+    const i0 = d === d0 ? pgHM(a) : 0, i1 = d === d1 ? pgHM(b) : 1440;
+    const s = Math.max(i0, PG_DIA[0]), e = Math.min(i1, PG_DIA[1]); if (e > s) tot += e - s;
+  }
+  return tot;
+}
+/* quantidade escrita no FIM → milheiros ("20 mil", "40.000", "31.704 un", "500 un") */
+function pgMil(q){
+  const s = pgSemAc(q); if (!s || /bob/.test(s)) return null;
+  let m = /(\d+(?:[.,]\d+)?)\s*mil/.exec(s); if (m) return parseFloat(m[1].replace(',', '.'));
+  m = /(\d{1,3}(?:\.\d{3})+)/.exec(s); if (m) return Number(m[1].replace(/\./g, '')) / 1000;
+  m = /(\d+)\s*un/.exec(s); if (m) return Number(m[1]) / 1000;
+  return null;
+}
+
+/* histórico do grupo PRODUÇÃO GLOBO (retrato do cofre) → quem faz o quê e em quanto tempo */
+let PG_HIST = null, PG_HIST_DE = null;
+function pgHist(){
+  const PR = SEG && SEG.prod; if (PG_HIST && PG_HIST_DE === PR) return PG_HIST;
+  const E = PR ? PR.eventos : [];
+  const ev = E.filter(e => e.maq && (/^IN/.test(e.ev) || e.ev === 'FIM')).map(e => ({...e, fam: pgFam(`${e.serv} ${e.msg}`), pal: pgPal(`${e.cli} ${e.serv} ${e.msg}`)}));
+  const serv = (PR ? prodServicos(E) : []).filter(s => s.ini && s.fim).map(s => {
+    const fam = pgFam(s.serv), mil = pgMil(s.qtd), min = pgMinUteis(s.ini, s.fim);
+    return {...s, fam, mil, uteis: min, porMil: mil && min > 0 ? min / mil : null};
+  });
+  const porChave = {}; serv.forEach(s => { if (s.porMil && s.fam.chave) (porChave[s.fam.chave] = porChave[s.fam.chave] || []).push(s.porMil); });
+  const ops = [...new Set([...PG_OPS0, ...(PR ? PR.maquinas.map(m => m.maq) : [])])].filter(Boolean);
+  PG_HIST = {ev, serv, porChave, ops, medPorMil: pgMed(serv.map(s => s.porMil)), medServ: pgMed(serv.map(s => s.uteis).filter(m => m > 0))};
+  PG_HIST_DE = PR;
+  return PG_HIST;
+}
+const pgItemFam = r => pgFam(r.pid && fpProd(r.pid) ? fpRot(fpProd(r.pid)) : r.produto);
+/* tempo previsto (min úteis): mediana min/milheiro da mesma família; sem histórico, mediana geral */
+function pgPrevisto(r){
+  const H = pgHist(), fam = pgItemFam(r), mil = fpN(r.mil);
+  const a = H.porChave[fam.chave];
+  if (a && a.length >= 2 && mil) return {min: Math.round(pgMed(a) * mil), base: `mediana de ${a.length} serviços de ${fam.chave}`};
+  if (H.medPorMil && mil) return {min: Math.round(H.medPorMil * mil), base: 'mediana geral por milheiro (sem histórico desta família)'};
+  if (H.medServ) return {min: Math.round(H.medServ), base: 'mediana de um serviço (sem quantidade)'};
+  return {min: null, base: 'sem histórico'};
+}
+/* operador sugerido: quem já rodou este cliente / esta família, desempatando por quem tem menos fila */
+function pgSugOp(r, carga){
+  const H = pgHist(), fam = pgItemFam(r), cw = pgPal(r.cliente);
+  const sc = H.ops.map(op => {
+    const E = H.ev.filter(e => e.maq === op && /^IN/.test(e.ev));
+    const ehCli = e => cw.length && e.pal.some(w => cw.includes(w));
+    const cli = E.filter(ehCli).length, fm = E.filter(e => pgFamIgual(fam, e.fam)).length, cf = E.filter(e => ehCli(e) && pgFamIgual(fam, e.fam)).length;
+    return {op, pts: fm + cli + cf * 4, cli, fm, cf, carga: (carga && carga[op]) || 0};
+  });
+  const best = Math.max(0, ...sc.map(s => s.pts));
+  const cand = sc.filter(s => best > 0 ? s.pts >= best * 0.6 : true).sort((a,b) => a.carga - b.carga || b.pts - a.pts);
+  const s = cand[0] || {op: PG_OPS0[0], cli: 0, fm: 0, carga: 0};
+  const pq = [s.cf ? `já fez este produto deste cliente ${s.cf}×` : s.cli ? `rodou este cliente ${s.cli}×` : '', s.fm ? `${fam.chave || 'esta família'} ${s.fm}×` : '', `fila ~${durTxt(s.carga)}`].filter(Boolean).join(' · ');
+  return {op: s.op, pq: best > 0 ? pq : 'sem histórico parecido — escolhido por fila menor', ranking: sc.sort((a,b) => b.pts - a.pts)};
+}
+
+/* dados */
+const pgFila = () => (REM && REM.fila) || [];
+const pgAF = () => (REM && REM.afat) || [];
+const pgRec = id => pgFila().find(x => x.id === id);
+function pgCarga(){
+  const c = {};
+  pgFila().filter(r => r.status === 'NA FILA' || r.status === 'EM PRODUÇÃO').forEach(r => {
+    const prev = fpN(r.previsto_min) || 0, feito = r.status === 'EM PRODUÇÃO' ? pgMinUteis(r.inicio, pgAgora()) : 0;
+    c[r.operador] = (c[r.operador] || 0) + Math.max(prev - feito, 30);
+  });
+  return c;
+}
+/* itens das fichas que ainda não foram para a fila */
+function pgAuto(){
+  const ids = new Set(pgFila().map(r => r.id)), out = [];
+  fichas().filter(f => PG_FICHA_ST.includes(f.status)).forEach(f => {
+    const its = (f.itens || []).map((it, i) => ({it, i, id: `PF:${f.id}:${i}`})).filter(x => !ids.has(x.id) && fpN(x.it.mil) > 0);
+    if (its.length) out.push({f, its});
+  });
+  return out.sort((a,b) => (a.f.entrega || '9999') < (b.f.entrega || '9999') ? -1 : 1);
+}
+function pgRegItem(f, it, i){
+  return {id: `PF:${f.id}:${i}`, origem: 'Pedido', ficha: f.id, item: String(i), cliente: f.cli_nome || '', cliente_chave: f.cli_chave || '', cliente_doc: f.cli_doc || '',
+    empresa: f.empresa || '', produto: it.prod || '', pid: it.pid || '', mil: String(fpN(it.mil)), arte: it.arte || '', cores: it.cores || '', entrega: f.entrega || '',
+    valor: String(fpR2(fpN(it.mil) * fpN(it.preco))), pagamento: f.pag || '', vencimento: f.venc || '', pedido_em: f.data || '', teste: fpTeste(f) ? '1' : ''};
+}
+
+/* ordem: manual (campo ordem) primeiro; o resto na ordem sugerida = entrega, agrupando a mesma família (troca rápida) */
+function pgOrdem(its, famAtual){
+  const man = its.filter(r => fpN(r.ordem) > 0).sort((a,b) => fpN(a.ordem) - fpN(b.ordem));
+  const rest = its.filter(r => !(fpN(r.ordem) > 0)).sort((a,b) => (a.entrega || '9999') < (b.entrega || '9999') ? -1 : (a.entrega || '9999') > (b.entrega || '9999') ? 1 : (a.enviado_em < b.enviado_em ? -1 : 1));
+  const out = man.map(r => ({r, pq: 'ordem definida à mão'}));
+  let fam = man.length ? pgItemFam(man[man.length-1]) : famAtual;
+  while (rest.length){
+    const e0 = rest[0].entrega, lim = e0 ? addD(e0, 2) : null;
+    const jan = rest.filter(r => !e0 ? !r.entrega : (r.entrega && r.entrega <= lim));
+    let pick = fam && jan.find(r => { const f = pgItemFam(r); return f.chave && f.chave === fam.chave && f.pap === fam.pap; });
+    let pq = pick ? 'mesma família e papel do anterior: troca rápida' : '';
+    if (!pick && fam) { pick = jan.find(r => { const f = pgItemFam(r); return f.chave && f.chave === fam.chave; }); if (pick) pq = 'mesmo tamanho do anterior'; }
+    if (!pick) { pick = rest[0]; pq = pick.entrega ? 'entrega mais próxima' : 'ordem de chegada'; }
+    out.push({r: pick, pq}); rest.splice(rest.indexOf(pick), 1); fam = pgItemFam(pick);
+  }
+  return out;
+}
+/* casar com o grupo PRODUÇÃO GLOBO: INÍCIO do mesmo operador citando o cliente; FIM do mesmo operador depois do início */
+function pgWA(r){
+  const PR = SEG && SEG.prod; if (!PR) return null;
+  const H = pgHist(), usados = new Set(pgFila().flatMap(x => [x.wa_ini, x.wa_fim]).filter(Boolean).map(t => r.operador + '|' + t));
+  const livre = e => !usados.has(e.maq + '|' + e.t);
+  if (r.status === 'NA FILA'){
+    const cw = pgPal(r.cliente); if (!cw.length) return null;
+    const desde = r.pedido_em || String(r.enviado_em || '').slice(0,10);   /* INÍCIO depois do pedido feito (pode ser antes de entrar na fila) */
+    const e = H.ev.find(e => e.maq === r.operador && /^IN/.test(e.ev) && e.t >= desde && livre(e) && e.pal.some(w => cw.includes(w)));
+    return e ? {tipo: 'ini', e} : null;
+  }
+  if (r.status === 'EM PRODUÇÃO' && r.inicio){
+    const e = H.ev.find(e => e.maq === r.operador && e.ev === 'FIM' && e.t > r.inicio && livre(e));
+    return e ? {tipo: 'fim', e} : null;
+  }
+  return null;
+}
+function pgDemora(r){
+  const prev = fpN(r.previsto_min) || null;
+  const real = r.status === 'PRONTA' ? pgMinUteis(r.inicio, r.fim) : pgMinUteis(r.inicio, pgAgora());
+  const x = prev ? real / prev : null;
+  return {prev, real, x, cls: x == null ? 'grey' : x <= 1 ? 'ok' : x <= 1.5 ? 'warn' : 'bad'};
+}
+
+/* gravação */
+async function pgGrava(regs, okTxt){
+  if (!API() || !REM){ avisoGrav('Destranque o sistema e espere ler a planilha antes de mexer na produção.', 'erro'); return false; }
+  avisoGrav('Gravando na planilha…');
+  try {
+    for (const x of regs) await api('upsert', {aba: x.aba, registro: x.reg});
+    await lerSis(); avisoGrav(okTxt, 'ok'); return true;
+  } catch(e) { avisoGrav('Parou no meio: ' + (e.message || e) + '. O que já foi gravado ficou na planilha; confira e tente de novo.', 'erro'); await lerSis(); return false; }
+}
+const pgOpSel = (nome, sel) => `<select name="${nome}" style="width:100%">${pgHist().ops.map(o => `<option ${o === sel ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+function pgNovoReg(base){
+  const carga = pgCarga(), sug = pgSugOp(base, carga), pv = pgPrevisto(base);
+  return {...base, sugerido: sug.op, previsto_min: pv.min != null ? String(pv.min) : '', _pq: sug.pq};
+}
+function pgMandarDlg(regsBase, titulo){
+  const regs = regsBase.map(pgNovoReg);
+  const linhas = regs.map((r, k) => `<div style="margin:8px 0;padding:8px;border:1px solid #e5e7eb;border-radius:8px"><b>${esc(r.cliente)}</b> · ${esc(r.produto)} · ${fmt(fpN(r.mil),1)} mil
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">${pgOpSel('op' + k, r.sugerido)}</div>
+    <div class="mut" style="font-size:12px;margin-top:4px">Sugestão: <b>${esc(r.sugerido)}</b> — ${esc(r._pq)} · previsto ${durTxt(fpN(r.previsto_min) || null)} úteis</div></div>`).join('');
+  dialogo(titulo, `<div style="max-height:60vh;overflow:auto;min-width:min(520px,86vw)">${linhas}</div>`, 'Mandar para a fila', (fm) => {
+    const ag = pgAgora();
+    pgGrava(regs.map((r, k) => { const {_pq, ...reg} = r; return {aba: 'Producao_fila', reg: {...reg, status: 'NA FILA', operador: fm['op' + k] || r.sugerido, enviado_em: ag, ordem: ''}}; }),
+      `${regs.length} serviço(s) na fila.`);
+  });
+}
+function pgMandarFicha(fid){ const g = pgAuto().find(x => x.f.id === fid); if (g) pgMandarDlg(g.its.map(x => pgRegItem(g.f, x.it, x.i)), `Mandar ${esc(fid)} para a produção`); }
+function pgMandarItem(fid, i){ const g = pgAuto().find(x => x.f.id === fid), x = g && g.its.find(y => y.i === i); if (x) pgMandarDlg([pgRegItem(g.f, x.it, x.i)], 'Mandar para a produção'); }
+function pgMandarMan(id){ const r = pgRec(id); if (r) pgMandarDlg([r], 'Mandar para a produção'); }
+function pgDispensarFicha(fid){
+  const g = pgAuto().find(x => x.f.id === fid); if (!g) return;
+  dialogo(`Dispensar ${esc(fid)}?`, `<div style="max-width:420px">Os ${g.its.length} item(ns) saem da lista <b>sem ir para a fila</b> (ex.: pedido antigo que já foi produzido). A ficha não muda. Dá para desfazer na planilha (<code>Producao_fila</code>, status DISPENSADO).</div><label style="display:block;margin-top:8px">Motivo<input name="obs" value="já produzido antes do gerenciador" style="width:100%"></label>`, 'Dispensar',
+    (fm) => pgGrava(g.its.map(x => ({aba: 'Producao_fila', reg: {...pgRegItem(g.f, x.it, x.i), status: 'DISPENSADO', obs: fm.obs || '', enviado_em: pgAgora()}})), `${fid} dispensada.`));
+}
+function pgDispensarAntes(){
+  const L = pgAuto(); if (!L.length) return;
+  dialogo('Dispensar fichas antigas', `<div style="max-width:420px">Dispensa todas as fichas desta lista com data <b>até</b> o dia escolhido (não vão para a fila; a ficha não muda).</div><label style="display:block;margin-top:8px">Até o dia<input type="date" name="ate" value="${addD(iso(hoje()), -3)}" style="width:100%"></label>`, 'Dispensar',
+    (fm) => { const G = L.filter(g => g.f.data && g.f.data <= fm.ate); if (!G.length) { avisoGrav('Nenhuma ficha até essa data.', 'erro'); return; }
+      pgGrava(G.flatMap(g => g.its.map(x => ({aba: 'Producao_fila', reg: {...pgRegItem(g.f, x.it, x.i), status: 'DISPENSADO', obs: 'dispensada em lote (até ' + dBR(fm.ate) + ')', enviado_em: pgAgora()}}))), `${G.length} ficha(s) dispensada(s).`); });
+}
+function pgIniciar(id, t, waT){
+  const r = pgRec(id); if (!r) return;
+  const go = (ini) => pgGrava([{aba: 'Producao_fila', reg: {id, status: 'EM PRODUÇÃO', inicio: ini, wa_ini: waT || ''}}], `${r.cliente}: em produção com ${r.operador}.`);
+  if (t) return go(t);
+  dialogo(`▶ Iniciar — ${esc(r.cliente)}`, `<label>Começou em<input type="datetime-local" name="t" value="${pgAgora()}" style="width:100%"></label>`, 'Iniciar', fm => go(fm.t || pgAgora()));
+}
+function pgPronto(id, t, qtd, waT){
+  const r = pgRec(id); if (!r) return;
+  dialogo(`✔ Pronto — ${esc(r.cliente)}`, `<div class="mut" style="font-size:13px;margin-bottom:8px">${esc(r.produto)} · pedido ${fmt(fpN(r.mil),1)} mil</div>
+    <label>Terminou em<input type="datetime-local" name="t" value="${t || pgAgora()}" style="width:100%"></label>
+    <label style="display:block;margin-top:8px">Quantidade feita (milheiros)<input name="q" inputmode="decimal" value="${qtd != null ? fmt(qtd, 3) : fmt(fpN(r.mil), 3)}" style="width:100%"></label>`, 'Marcar pronto', fm => pgFechar(r, fm.t || pgAgora(), fm.q, waT));
+}
+async function pgFechar(r, fim, q, waT){
+  const reg = {id: r.id, status: 'PRONTA', fim, qtd_feita: String(nV(q) ?? ''), wa_fim: waT || ''};
+  const regs = [{aba: 'Producao_fila', reg}];
+  const af = pgAFPara({...r, ...reg});
+  if (af) regs.push({aba: 'A_faturar', reg: af});
+  await pgGrava(regs, af ? `${r.cliente}: pronto. Entrou no A receber como “a faturar” (${brl(fpN(af.valor))}).` : `${r.cliente}: pronto.`);
+}
+/* cobrança provisória: ficha inteira pronta → A_faturar com o total da ficha; item manual com valor → A_faturar */
+function pgAFPara(r){
+  const dia = String(r.fim || pgAgora()).slice(0,10);
+  const venc = (pag, vencFicha) => { const p = FP_PAG.find(x => x[0] === pag); return p && p[1] != null ? addD(dia, p[1]) : (vencFicha || ''); };
+  if (r.origem === 'Manual'){
+    if (!(fpN(r.valor) > 0) || pgAF().some(a => a.id === 'AF:' + r.id)) return null;
+    return {id: 'AF:' + r.id, origem: 'Manual', ficha: '', cliente: r.cliente, cliente_chave: r.cliente_chave || '', cliente_doc: r.cliente_doc || '', empresa: r.empresa || '',
+      valor: String(fpN(r.valor)), pagamento: r.pagamento || '', vencimento: r.vencimento || venc(r.pagamento, ''), pronta_em: r.fim, status: 'A FATURAR', nf: '', teste: r.teste || ''};
+  }
+  const f = fichas().find(x => x.id === r.ficha); if (!f || pgAF().some(a => a.id === 'AF:' + f.id)) return null;
+  const est = (f.itens || []).map((it, i) => i === Number(r.item) ? 'PRONTA' : (pgRec(`PF:${f.id}:${i}`) || {}).status || (fpN(it.mil) > 0 ? 'FALTA' : 'DISPENSADO'));
+  if (!est.every(s => s === 'PRONTA' || s === 'DISPENSADO' || s === 'CANCELADO')) return null;
+  return {id: 'AF:' + f.id, origem: 'Pedido', ficha: f.id, cliente: f.cli_nome, cliente_chave: f.cli_chave || '', cliente_doc: f.cli_doc || '', empresa: f.empresa || '',
+    valor: String(f.total), pagamento: f.pag || '', vencimento: venc(f.pag, f.venc), pronta_em: r.fim, status: 'A FATURAR', nf: '', teste: fpTeste(f) ? '1' : ''};
+}
+function pgVoltar(id){ const r = pgRec(id); if (r) pgGrava([{aba: 'Producao_fila', reg: {id, status: 'NA FILA', inicio: '', wa_ini: ''}}], `${r.cliente}: voltou para a fila.`); }
+function pgTirar(id){
+  const r = pgRec(id); if (!r) return;
+  dialogo(`Tirar da fila — ${esc(r.cliente)}`, `<label><input type="radio" name="a" value="A MANDAR" checked> Voltar para “Para mandar à produção”</label><br><label><input type="radio" name="a" value="CANCELADO"> Cancelar este serviço</label><label style="display:block;margin-top:8px">Obs.<input name="obs" style="width:100%"></label>`, 'Confirmar',
+    fm => pgGrava([{aba: 'Producao_fila', reg: {id, status: fm.a, operador: fm.a === 'A MANDAR' ? '' : r.operador, ordem: '', obs: fm.obs || r.obs || ''}}], fm.a === 'CANCELADO' ? 'Serviço cancelado.' : 'Voltou para a lista de mandar.'));
+}
+function pgTrocar(id){
+  const r = pgRec(id); if (!r) return;
+  const sug = pgSugOp(r, pgCarga());
+  dialogo(`Trocar operador — ${esc(r.cliente)}`, `${pgOpSel('op', r.operador)}<div class="mut" style="font-size:12px;margin-top:6px">${sug.ranking.slice(0,4).map(s => `${esc(s.op)}: cliente ${s.cli}× · mesma família ${s.fm}× · os dois ${s.cf}×`).join('<br>')}</div>`, 'Trocar',
+    fm => pgGrava([{aba: 'Producao_fila', reg: {id, operador: fm.op, ordem: ''}}], `Agora com ${fm.op}.`));
+}
+function pgMover(op, id, d){
+  const L = pgOrdem(pgFila().filter(r => r.operador === op && r.status === 'NA FILA'), null).map(x => x.r);
+  const k = L.findIndex(r => r.id === id), j = k + d; if (k < 0 || j < 0 || j >= L.length) return;
+  [L[k], L[j]] = [L[j], L[k]];
+  pgGrava(L.map((r, n) => ({aba: 'Producao_fila', reg: {id: r.id, ordem: String(n + 1)}})), 'Ordem salva.');
+}
+function pgSugAuto(op){ pgGrava(pgFila().filter(r => r.operador === op && r.status === 'NA FILA' && fpN(r.ordem) > 0).map(r => ({aba: 'Producao_fila', reg: {id: r.id, ordem: ''}})), 'Voltou para a ordem sugerida.'); }
+function pgAddSalvar(ev){
+  const f = fd(ev), dl = fpDL();
+  const achaCli = t => dl.cli[t] || (/^cliente teste$/i.test(String(t).trim()) ? 'TESTE' : (Object.entries(dl.cli).find(([k]) => k.toUpperCase().startsWith(String(t).trim().toUpperCase() + ' — ')) || [])[1] || '');
+  const chave = achaCli(f.cliente), c = chave ? fpCli(chave) : null, pid = dl.prod[f.produto] || '', p = pid ? fpProd(pid) : null;
+  if (!f.cliente || !f.produto || !(nV(f.mil) > 0)) { avisoGrav('Falta cliente, produto ou milheiros.', 'erro'); return; }
+  const reg = {id: 'PM:' + Date.now().toString(36).toUpperCase(), origem: 'Manual', ficha: '', item: '', cliente: c ? c.nome : f.cliente, cliente_chave: chave, cliente_doc: c ? (c.doc || '') : '',
+    empresa: c ? (c.emp === 2 ? 'Impressos' : 'Globo') : '', produto: p ? fpRot(p) : f.produto, pid, mil: String(nV(f.mil)), arte: f.arte || '', cores: f.cores || '', entrega: f.entrega || '',
+    valor: String(nV(f.valor) ?? ''), pagamento: f.pagamento || '', vencimento: '', status: 'A MANDAR', obs: f.obs || '', teste: chave === 'TESTE' ? '1' : '', enviado_em: pgAgora()};
+  pgAddAberto = false;
+  pgGrava([{aba: 'Producao_fila', reg}], 'Adicionado. Agora é só mandar para a fila.');
+}
+
+/* ---------- telas ---------- */
+const pgTag = r => r.teste === '1' ? ' <span class="pill grey">🧪 teste</span>' : '';
+const pgEnt = e => { if (!e) return '<span class="mut">sem entrega</span>'; const H = iso(hoje()); return `<span class="pill ${e < H ? 'bad' : e === H ? 'warn' : 'grey'}">entrega ${dBR(e)}</span>`; };
+const pgLinkF = fid => fid ? `<a href="javascript:void 0" onclick="fpVer='${esc(fid)}';ir('pedidos')" class="cod">${esc(fid)}</a>` : '<span class="mut">manual</span>';
+function vProdGerenciador(){
+  if (!API()) return `<div class="banner">🏭 <b>Gerenciador de produção:</b> destranque o sistema (senha do cofre) para ler a fila.</div>`;
+  if (!REM) return REM_ERRO ? remBanner() : `<div class="banner">Lendo a fila de produção… <button class="btn" onclick="lerSis()">Tentar de novo</button></div>`;
+  const auto = pgAuto(), man = pgFila().filter(r => r.status === 'A MANDAR'), carga = pgCarga(), H = pgHist();
+  const prontas = (auto.filter(g => g.f.status !== 'NOVA'));
+  const novas = auto.filter(g => g.f.status === 'NOVA');
+  const ativos = pgFila().filter(r => r.status === 'NA FILA' || r.status === 'EM PRODUÇÃO');
+  const demorando = ativos.filter(r => r.status === 'EM PRODUÇÃO' && pgDemora(r).x > 1.5);
+  const H0 = iso(hoje()), atrasados = ativos.filter(r => r.entrega && r.entrega < H0);
+  const fichaCard = (g, bloq) => `<div class="card" style="margin-bottom:10px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(g.f.cli_nome)}</b>${fpTeste(g.f) ? ' <span class="pill grey">🧪 teste</span>' : ''} ${pgLinkF(g.f.id)} <span class="mut">${dBR(g.f.data)} · ${esc(g.f.status)}</span> ${pgEnt(g.f.entrega)}<span class="sp" style="flex:1"></span>
+      ${bloq ? '<span class="mut" style="font-size:12px">conferir na aba Pedidos antes</span>' : `<button class="btn pri" onclick="pgMandarFicha('${esc(g.f.id)}')">Mandar ${g.its.length > 1 ? 'tudo' : ''} →</button>`} <button class="btn" onclick="pgDispensarFicha('${esc(g.f.id)}')">Dispensar</button></div>
+    <div class="tw"><table><tbody>${g.its.map(x => { const b = pgRegItem(g.f, x.it, x.i), s = pgSugOp(b, carga); return `<tr><td>${esc(x.it.prod)}${x.it.arte ? `<div class="mut" style="font-size:11px">arte: ${esc(x.it.arte)}${x.it.cores ? ' · ' + esc(x.it.cores) + ' cor(es)' : ''}</div>` : ''}</td><td class="n">${fmt(fpN(x.it.mil),1)} mil</td>
+      <td style="font-size:12px">sugestão <b>${esc(s.op)}</b><div class="mut">${esc(s.pq)}</div></td><td>${bloq ? '' : `<button class="btn" onclick="pgMandarItem('${esc(g.f.id)}',${x.i})">Só este →</button>`}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+  const manCard = r => { const s = pgSugOp(r, carga); return `<tr><td><b>${esc(r.cliente)}</b>${pgTag(r)}<div class="mut" style="font-size:11px">${esc(r.obs || '')}</div></td><td>${esc(r.produto)}</td><td class="n">${fmt(fpN(r.mil),1)} mil</td><td>${pgEnt(r.entrega)}</td><td class="n">${fpN(r.valor) > 0 ? brl(fpN(r.valor)) : '<span class="mut">sem valor</span>'}</td>
+    <td style="font-size:12px">sugestão <b>${esc(s.op)}</b><div class="mut">${esc(s.pq)}</div></td><td><button class="btn pri" onclick="pgMandarMan('${esc(r.id)}')">Mandar →</button> <button class="btn" onclick="pgGrava([{aba:'Producao_fila',reg:{id:'${esc(r.id)}',status:'CANCELADO'}}],'Removido.')">✕</button></td></tr>`; };
+  const dl = fpDL();
+  const form = pgAddAberto ? `${dl.html}<form class="card" onsubmit="pgAddSalvar(event)" style="margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;align-items:end">
+      <label>Cliente<input name="cliente" list="dlCli" required style="width:100%"></label>
+      <label>Produto<input name="produto" list="dlProd" required style="width:100%"></label>
+      <label>Milheiros<input name="mil" inputmode="decimal" required style="width:100%"></label>
+      <label>Entrega<input type="date" name="entrega" style="width:100%"></label>
+      <label>Arte<input name="arte" style="width:100%"></label>
+      <label>Cores<input name="cores" inputmode="numeric" style="width:100%"></label>
+      <label>Valor total (R$) — gera a cobrança<input name="valor" inputmode="decimal" placeholder="opcional" style="width:100%"></label>
+      <label>Pagamento<select name="pagamento" style="width:100%"><option value="">—</option>${FP_PAG.map(p => `<option>${esc(p[0])}</option>`).join('')}</select></label>
+      <label style="grid-column:1/-1">Obs.<input name="obs" style="width:100%" placeholder="ex.: estoque de padrão, reposição, pedido que não passou por ficha"></label>
+      <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn" onclick="pgAddAberto=false;render()">Fechar</button><button class="btn pri">Adicionar</button></div></form>` : '';
+  /* fila por operador */
+  const col = op => {
+    const emp = pgFila().filter(r => r.operador === op && r.status === 'EM PRODUÇÃO').sort((a,b) => a.inicio < b.inicio ? -1 : 1);
+    const fila = pgOrdem(pgFila().filter(r => r.operador === op && r.status === 'NA FILA'), emp.length ? pgItemFam(emp[emp.length-1]) : null);
+    const mq = SEG.prod ? SEG.prod.maquinas.find(m => m.maq === op) : null, temMan = fila.some(x => fpN(x.r.ordem) > 0);
+    const empH = emp.map(r => { const d = pgDemora(r), w = pgWA(r); return `<div style="border-left:4px solid ${d.cls === 'bad' ? '#dc2626' : d.cls === 'warn' ? '#f59e0b' : '#16a34a'};padding:6px 8px;margin:6px 0;background:#f8fafc;border-radius:6px">
+      <div><b>${esc(r.cliente)}</b>${pgTag(r)} <span class="mut" style="font-size:11px">${pgLinkF(r.ficha)}</span></div><div style="font-size:12px">${esc(r.produto)} · ${fmt(fpN(r.mil),1)} mil</div>
+      <div style="font-size:12px;margin-top:3px"><span class="pill ${d.cls}">${d.x != null && d.x > 1.5 ? '🟠 demorando · ' : ''}${durTxt(d.real)} de ~${durTxt(d.prev)}</span> <span class="mut">desde ${dtBR(r.inicio)}</span></div>
+      ${w && w.tipo === 'fim' ? `<div class="banner ok" style="margin:6px 0 0;padding:6px 8px;font-size:12px">📲 FIM no grupo ${dtBR(w.e.t)}${w.e.qtd ? ' · ' + esc(w.e.qtd) : ''} <button class="btn pri" onclick="pgPronto('${esc(r.id)}','${w.e.t}',${pgMil(w.e.qtd) ?? 'null'},'${w.e.t}')">Confirmar pronto</button></div>` : ''}
+      <div style="margin-top:6px;display:flex;gap:6px"><button class="btn pri" onclick="pgPronto('${esc(r.id)}')">✔ Pronto</button><button class="btn" onclick="pgVoltar('${esc(r.id)}')" title="voltar para a fila">↩</button></div></div>`; }).join('');
+    const filaH = fila.map((x, n) => { const r = x.r, w = pgWA(r); return `<div style="padding:6px 8px;margin:6px 0;border:1px solid #e5e7eb;border-radius:6px">
+      <div style="display:flex;gap:6px;align-items:baseline"><b style="color:#64748b">${n + 1}.</b><div style="flex:1"><b>${esc(r.cliente)}</b>${pgTag(r)} <span class="mut" style="font-size:11px">${pgLinkF(r.ficha)}</span><div style="font-size:12px">${esc(r.produto)} · ${fmt(fpN(r.mil),1)} mil · ~${durTxt(fpN(r.previsto_min) || null)}</div>
+      <div style="font-size:11px;margin-top:2px">${pgEnt(r.entrega)} <span class="mut">${esc(x.pq)}</span></div></div></div>
+      ${w && w.tipo === 'ini' ? `<div class="banner ok" style="margin:6px 0 0;padding:6px 8px;font-size:12px">📲 INÍCIO no grupo ${dtBR(w.e.t)}: “${esc(w.e.serv)}”${w.e.cli ? ' · ' + esc(w.e.cli) : ''} <button class="btn pri" onclick="pgIniciar('${esc(r.id)}','${w.e.t}','${w.e.t}')">Confirmar início</button></div>` : ''}
+      <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap"><button class="btn" onclick="pgIniciar('${esc(r.id)}')">▶ Iniciar</button><button class="btn" onclick="pgMover('${esc(op)}','${esc(r.id)}',-1)" ${n ? '' : 'disabled'}>↑</button><button class="btn" onclick="pgMover('${esc(op)}','${esc(r.id)}',1)" ${n < fila.length - 1 ? '' : 'disabled'}>↓</button><button class="btn" onclick="pgTrocar('${esc(r.id)}')" title="trocar operador">⇄</button><button class="btn" onclick="pgTirar('${esc(r.id)}')" title="tirar da fila">✕</button></div></div>`; }).join('');
+    return `<div class="card" style="min-width:230px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">${esc(op)}</b><span class="mut" style="font-size:12px">fila ~${durTxt(carga[op] || 0)}</span></div>
+      ${mq ? `<div class="mut" style="font-size:11px;margin-top:2px">📷 grupo (retrato): ${esc((mq.status || '').split(' ')[0])} ${esc((mq.serv || '').slice(0, 70))}</div>` : ''}
+      ${empH || '<div class="mut" style="font-size:12px;margin:8px 0">nada em produção pelo gerenciador</div>'}${filaH}
+      ${temMan ? `<button class="btn" style="margin-top:4px;font-size:12px" onclick="pgSugAuto('${esc(op)}')">voltar à ordem sugerida</button>` : ''}</div>`;
+  };
+  const opsVis = [...new Set([...H.ops, ...ativos.map(r => r.operador)])].filter(Boolean);
+  const desde = addD(H0, -pgProntosDias), pr = pgFila().filter(r => r.status === 'PRONTA' && String(r.fim).slice(0,10) >= desde).sort((a,b) => a.fim < b.fim ? 1 : -1);
+  const afIds = new Set(pgAF().map(a => a.id));
+  return `${gravBox()}
+  <h3 style="margin-top:0">📥 Para mandar à produção</h3>
+  <div class="grid kpis">
+    <div class="card kpi ${prontas.length ? 'warn' : ''}"><div class="v">${prontas.reduce((a,g) => a + g.its.length, 0)}</div><div class="l">itens de pedidos esperando ir para a fila</div></div>
+    <div class="card kpi"><div class="v">${ativos.length}</div><div class="l">na fila ou em produção</div></div>
+    <div class="card kpi ${demorando.length ? 'bad' : ''}"><div class="v">${demorando.length}</div><div class="l">demorando (&gt; 1,5× o previsto)</div></div>
+    <div class="card kpi ${atrasados.length ? 'bad' : ''}"><div class="v">${atrasados.length}</div><div class="l">com entrega vencida</div></div>
+  </div>
+  <h4>Vindas da aba Pedidos <span class="mut" style="font-weight:400">(${prontas.length} ficha(s))</span> ${prontas.length > 1 ? '<button class="btn" style="font-size:12px" onclick="pgDispensarAntes()">Dispensar antigas…</button>' : ''}</h4>
+  ${prontas.map(g => fichaCard(g, false)).join('') || '<div class="mut" style="margin-bottom:10px">Nenhuma ficha conferida esperando produção.</div>'}
+  ${novas.length ? `<details style="margin-bottom:10px"><summary class="mut">${novas.length} ficha(s) NOVA ainda sem conferência (portal / WhatsApp)</summary>${novas.map(g => fichaCard(g, true)).join('')}</details>` : ''}
+  <h4>Adicionados à mão <button class="btn" style="font-size:12px" onclick="pgAddAberto=!pgAddAberto;render()">＋ Adicionar</button></h4>
+  ${form}
+  ${man.length ? `<div class="card" style="padding:0;margin-bottom:12px"><div class="tw"><table><thead><tr><th>Cliente</th><th>Produto</th><th class="n">Qtd.</th><th>Entrega</th><th class="n">Valor</th><th>Operador</th><th></th></tr></thead><tbody>${man.map(manCard).join('')}</tbody></table></div></div>` : '<div class="mut" style="margin-bottom:12px;font-size:13px">Para serviços sem ficha (estoque de padrão, reposição, pedido que chegou por fora).</div>'}
+  <h3>🏭 Fila por operador</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px">${opsVis.map(col).join('')}</div>
+  <p class="note">Operador sugerido = quem mais rodou a mesma família (tamanho, medida ou tipo) no grupo PRODUÇÃO GLOBO, com peso extra para quem já fez esse produto para esse cliente; entre os parecidos, o de fila menor. Ordem sugerida = entrega mais próxima, juntando a mesma família e papel para trocar menos. Demora conta só seg–sex 7h30–17h30; previsto = mediana por milheiro da mesma família (${Object.keys(H.porChave).length} famílias com histórico). Os 📲 vêm do retrato do grupo (até 1 dia atrasado) e só valem depois de confirmados.</p>
+  <h3>✅ Prontos — últimos <select onchange="pgProntosDias=+this.value;render()">${[1,7,30].map(n => `<option ${n === pgProntosDias ? 'selected' : ''} value="${n}">${n}</option>`).join('')}</select> dias</h3>
+  ${pr.length ? `<div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Terminou</th><th>Cliente</th><th>Produto</th><th>Operador</th><th class="n">Pedido</th><th class="n">Feito</th><th>Tempo</th><th>Cobrança</th></tr></thead><tbody>${pr.map(r => { const d = pgDemora(r), af = r.origem === 'Manual' ? 'AF:' + r.id : 'AF:' + r.ficha; return `<tr><td style="white-space:nowrap">${dtBR(r.fim)}</td><td><b>${esc(r.cliente)}</b>${pgTag(r)} ${pgLinkF(r.ficha)}</td><td>${esc(r.produto)}</td><td>${esc(r.operador)}</td><td class="n">${fmt(fpN(r.mil),1)}</td><td class="n">${r.qtd_feita !== '' ? fmt(fpN(r.qtd_feita),1) : '—'}</td><td><span class="pill ${d.cls}">${durTxt(d.real)} / ~${durTxt(d.prev)}</span></td><td>${afIds.has(af) ? '<span class="pill ok">no A receber</span>' : r.origem === 'Manual' ? '<span class="mut">sem valor</span>' : '<span class="mut">falta item da ficha</span>'}</td></tr>`; }).join('')}</tbody></table></div></div>` : '<div class="mut" style="margin-bottom:16px">Nada pronto neste período.</div>'}
+  <hr style="margin:20px 0;border:0;border-top:1px solid #e5e7eb">`;
+}
+
+/* Pedidos: andamento da ficha na produção */
+function pgFichaPill(f){
+  const R = pgFila().filter(r => r.ficha === f.id && r.status !== 'CANCELADO'); if (!R.length) return '';
+  const n = (f.itens || []).filter(it => fpN(it.mil) > 0).length, pr = R.filter(r => r.status === 'PRONTA').length, ds = R.filter(r => r.status === 'DISPENSADO').length;
+  if (ds === R.length) return ' <span class="pill grey" title="dispensada do gerenciador">🏭 dispensada</span>';
+  if (pr + ds >= n) return ' <span class="pill ok">🏭 pronta</span>';
+  const emp = R.filter(r => r.status === 'EM PRODUÇÃO').length;
+  return ` <span class="pill ${emp ? 'ok' : 'grey'}">🏭 ${emp ? 'em produção' : 'na fila'} · ${pr}/${n}</span>`;
+}
+
+/* A receber: prontos a faturar (provisório). Sai da soma quando a NF-e do pedido aparece. */
+function pgCasaNF(a, usadas){
+  const E = ((REM && REM.emit) || []).filter(n => n.status !== 'CANCELADA' && !usadas.has(n.id));
+  const doc = pgDig(a.cliente_doc), cw = pgPal(a.cliente), v = fpN(a.valor), d0 = addD(String(a.pronta_em || '').slice(0,10) || iso(hoje()), -7);
+  return E.find(n => String(n.emissao || '') >= d0 && Math.abs(fpN(n.valor_total) - v) <= Math.max(1, v * 0.02)
+    && ((doc.length >= 11 && doc === pgDig(n.cnpj_cliente)) || (cw.length && pgPal(n.cliente).some(w => cw.includes(w))))) || null;
+}
+function pgFaturada(id, nf){
+  dialogo('Marcar como faturada', `<label>Nº da NF-e<input name="nf" value="${esc(nf || '')}" style="width:100%"></label>`, 'Salvar',
+    fm => pgGrava([{aba: 'A_faturar', reg: {id, status: 'FATURADA', nf: fm.nf || ''}}], 'Marcada como faturada.'));
+}
+function vAFaturar(){
+  const A = pgAF().filter(a => a.status === 'A FATURAR'); if (!A.length) return `<div class="banner">🏭 <b>Prontos a faturar:</b> nada agora. Quando a produção marca um pedido inteiro como PRONTO, a cobrança entra aqui como “a faturar” e sai quando a NF-e dele chega.</div>`;
+  const usadas = new Set(), L = A.sort((a,b) => a.pronta_em < b.pronta_em ? -1 : 1).map(a => { const n = pgCasaNF(a, usadas); if (n) usadas.add(n.id); return {a, n}; });
+  const sem = L.filter(x => !x.n && x.a.teste !== '1'), H = iso(hoje());
+  return `<h3>🏭 Prontos a faturar <span class="mut" style="font-weight:400;font-size:13px">(provisório — o Start continua oficial)</span></h3>
+  <div class="grid kpis">
+    <div class="card kpi ${sem.length ? 'warn' : ''}"><div class="v">${brl(sem.reduce((t,x) => t + fpN(x.a.valor), 0))}</div><div class="l">${sem.length} pedido(s) pronto(s) sem NF-e</div></div>
+    <div class="card kpi"><div class="v">${L.filter(x => x.n).length}</div><div class="l">NF-e encontrada — confirmar</div></div>
+    <div class="card kpi ${sem.some(x => x.a.pronta_em.slice(0,10) < addD(H,-2)) ? 'bad' : ''}"><div class="v">${sem.filter(x => x.a.pronta_em.slice(0,10) < addD(H,-2)).length}</div><div class="l">prontos há mais de 2 dias sem nota</div></div>
+  </div>
+  <div class="card" style="padding:0;margin-bottom:16px"><div class="tw"><table><thead><tr><th>Pronto em</th><th>Pedido</th><th>Cliente</th><th class="n">Valor</th><th>Vencimento</th><th>NF-e</th><th></th></tr></thead><tbody>
+  ${L.map(({a, n}) => `<tr${a.teste === '1' ? ' style="opacity:.6"' : ''}><td style="white-space:nowrap">${dtBR(a.pronta_em)}</td><td>${pgLinkF(a.ficha)}</td><td><b>${esc(a.cliente)}</b>${a.teste === '1' ? ' <span class="pill grey">🧪 teste · não soma</span>' : ''}<div class="mut" style="font-size:11px">${esc(a.pagamento || '')}</div></td><td class="n">${brl(fpN(a.valor))}</td><td>${a.vencimento ? dBR(a.vencimento) : '<span class="mut">a combinar</span>'}</td>
+    <td>${n ? `<span class="pill ok">NF ${esc(n.numero)} · ${dBR(n.emissao)} · ${brl(fpN(n.valor_total))}</span>` : '<span class="mut">ainda não chegou</span>'}</td>
+    <td style="white-space:nowrap">${n ? `<button class="btn pri" onclick="pgGrava([{aba:'A_faturar',reg:{id:'${esc(a.id)}',status:'FATURADA',nf:'${esc(n.numero)}'}}],'Faturada com a NF ${esc(n.numero)}.')">Confirmar</button>` : `<button class="btn" onclick="pgFaturada('${esc(a.id)}')">Faturada…</button>`} <button class="btn" title="cancelar a cobrança" onclick="pgGrava([{aba:'A_faturar',reg:{id:'${esc(a.id)}',status:'CANCELADO'}}],'Cobrança cancelada.')">✕</button></td></tr>`).join('')}
+  </tbody></table></div></div>
+  <p class="note">Vencimento = dia em que ficou pronto + prazo da forma de pagamento da ficha (ex.: ITAÚ 28 DIAS); sem prazo, usa o da ficha. A NF-e é casada pelo CNPJ/CPF ou nome do cliente e valor (±2%), emitida até 7 dias antes de ficar pronto. Confirmada a NF, a cobrança passa a viver nas parcelas da nota (abaixo) e sai daqui — não conta duas vezes.</p>`;
+}
+
+function vProducao(){ return vProdGerenciador() + vProducaoRetrato(); }
+function vProducaoRetrato(){
   const PR = SEG.prod;
   if (!PR) return `<div class="empty"><div class="ic">🏭</div><b>Produção — sem retrato ainda</b><div>Os dados entram no cofre na próxima republicação diária (dias úteis, 18:20).</div></div>`;
   const E = PR.eventos, M = PR.maquinas, S = prodServicos(E);
@@ -1715,7 +2104,7 @@ function vPedidos(){
       <td style="white-space:normal;min-width:220px;font-size:13px">${f.itens.map(it => `${fmt(fpN(it.mil), 1)} ${fpUn(it)} ${esc(fpProd(it.pid) ? fpStartId(fpProd(it.pid)) : it.prod)}${it.arte_nova ? ' <span class="pill warn">arte nova</span>' : ''}`).join('<br>')}</td>
       <td class="n">${brl(f.total)}</td><td style="font-size:12px">${esc(f.pag)}${f.venc ? `<div class="mut">venc. ${dBR(f.venc)}</div>` : ''}</td>
       <td>${f.entrega ? (f.entrega < H && FP_FLUXO.indexOf(f.status) < 4 && f.status !== 'CANCELADA' ? `<span class="pill bad">${dBR(f.entrega)}</span>` : dBR(f.entrega)) : '—'}</td>
-      <td><span class="pill ${FP_ST[f.status] || 'grey'}">${esc(f.status)}</span></td><td class="cod">${esc(f.start_num || '—')}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Nenhuma ficha neste filtro.</td></tr>'}</tbody></table></div></div>`
+      <td><span class="pill ${FP_ST[f.status] || 'grey'}">${esc(f.status)}</span>${pgFichaPill(f)}</td><td class="cod">${esc(f.start_num || '—')}</td></tr>`).join('') || '<tr><td colspan="9" class="mut">Nenhuma ficha neste filtro.</td></tr>'}</tbody></table></div></div>`
   : `<div class="empty"><div class="ic">🧾</div><b>Nenhuma ficha ainda</b><div>Clique em <b>+ Nova ficha</b>. Ex.: Panetelli Filial, 2 milheiros de K35 5 kg com a arte Panetelli.</div></div>`}
   ${(() => { const ruins = F.filter(f => !fpTeste(f) && f.status !== 'CANCELADA' && fpErros(f).length); return ruins.length ? `<div class="banner"><b>⚠️ ${ruins.length} ficha(s) fora dos painéis</b> até alguém conferir: ${ruins.map(f => `${esc(f.id)} (${esc(fpErros(f).join(', '))})`).join(' · ')}</div>` : ''; })()}
   ${(() => { const dias = [...new Set(F.filter(f => /^ST-/.test(f.id)).map(f => f.data))].sort().reverse().slice(0, 7); return dias.length ? `<h3>Conferência com o Start</h3><div class="card" style="padding:0;margin-bottom:12px"><div class="tw"><table><thead><tr><th>Dia</th><th class="n">Pedidos copiados</th><th class="n">Total copiado</th><th class="n">Entra nos painéis</th></tr></thead><tbody>${dias.map(d => { const X = F.filter(f => /^ST-/.test(f.id) && f.data === d); return `<tr><td>${dBR(d)}</td><td class="n">${X.length}</td><td class="n"><b>${brl(X.reduce((a, f) => a + fpN(f.total), 0))}</b></td><td class="n">${brl(X.filter(fpConta).reduce((a, f) => a + fpN(f.total), 0))}</td></tr>`; }).join('')}</tbody></table></div></div><p class="note">O total copiado de cada dia tem que bater com "Vendas para hoje" do painel do Start naquele dia (18/11: R$ 9.107,45 nos dois). Se não bater, a cópia está incompleta.</p>` : ''; })()}
@@ -2295,7 +2684,7 @@ async function lerAoVivo(){
   render();
 }
 /* Planilha do site (Funcionários, Contas fixas, Pagamentos) pelo porteiro */
-const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','Orcamentos','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos','Nibo_Guias'];
+const SIS_ABAS = ['Funcionarios','Contas_fixas','Pagamentos','Fichas_pedido','Orcamentos','NFe_Recebidas','NFe_Parcelas','NFe_SemXML','NFe_Itens','NFe_Ignorar','NFe_Emitidas','NFe_Emitidas_Parcelas','Artes_Email','Pix_Recebidos','Nibo_Guias','Producao_fila','A_faturar'];
 let REM = null, REM_ERRO = null;
 const objs = (t) => (!t || t.length<1) ? [] : t.slice(1).filter(r=>r[0]).map(r=>Object.fromEntries(t[0].map((k,i)=>[k, r[i]??''])));
 async function lerSis(){
@@ -2303,7 +2692,7 @@ async function lerSis(){
   try {
     const j = await api('tabelas', {abas:SIS_ABAS}); const D = j.dados;
     const pagos = {}; objs(D.Pagamentos).forEach(p => { if (p.status==='PAGO') pagos[p.id] = p; });
-    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), orcs: (typeof orcLer==='function') ? objs(D.Orcamentos||[]).map(orcLer) : [], nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), nibo: objs(D.Nibo_Guias||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
+    REM = { func: objs(D.Funcionarios).filter(f=>f.status!=='REMOVIDO'), contas: objs(D.Contas_fixas).filter(c=>c.status!=='REMOVIDO'), pagos, fichas: objs(D.Fichas_pedido||[]).map(fpLer), orcs: (typeof orcLer==='function') ? objs(D.Orcamentos||[]).map(orcLer) : [], nfe: objs(D.NFe_Recebidas||[]), nfeParc: objs(D.NFe_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), nfeSemXml: objs(D.NFe_SemXML||[]).filter(p=>p.status!=='RESOLVIDO'), nfeItens: objs(D.NFe_Itens||[]), emit: objs(D.NFe_Emitidas||[]), emitParc: objs(D.NFe_Emitidas_Parcelas||[]).filter(p=>p.status!=='REMOVIDO'), artesEmail: objs(D.Artes_Email||[]), pix: objs(D.Pix_Recebidos||[]), nibo: objs(D.Nibo_Guias||[]), fila: objs(D.Producao_fila||[]), afat: objs(D.A_faturar||[]), ignorar: objs(D.NFe_Ignorar||[]).filter(r=>String(r.status||'ATIVA').toUpperCase()==='ATIVA' && r.texto), lido: j.lido };
     precosDasNotas();
     REM_ERRO = null;
   } catch(e) { REM_ERRO = e.message || String(e); }
